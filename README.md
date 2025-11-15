@@ -2,7 +2,7 @@
 The flutter implementation for Identiflora.
 
 # Database Documentation
-Below is all neccessary information regarding the database design, implementation and use. 
+Below is all neccessary information regarding the database design, implementation and use. All database testing has been done with MySQL Server 8.0.44
 
 ## Tables
 ### plant_species
@@ -63,7 +63,6 @@ Specifies one possible species option for an identification submission. Each sub
 **Additional Constraints**
 - Each option for a submission must have a unique **rank**.  
 - Each option for a submission must reference a unique **species**.  
-- Ensures each option/submission pair is unique, so there are no duplicate options under a submission.  
 - Cascading deletes ensure options are removed when their submission or species is deleted.
 
 ---
