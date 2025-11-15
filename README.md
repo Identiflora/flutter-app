@@ -1,2 +1,80 @@
 # flutter-app
 The flutter implementation for Identiflora.
+
+# Database Documentation
+Below is all neccessary information regarding the database design, implementation and use. 
+
+## Tables
+### plant_species
+One entry exists for each plant the model is able to identify.
+
+- **species_id**
+  - **Datatype –** int
+  - **Description –** auto-incrementing primary key identifier.
+- **common_name**
+  - **Datatype –** varchar(255)
+  - **Description –** common name of the plant.
+- **scientific_name**
+  - **Datatype –** varchar(255)
+  - **Description –** scientific (Latin) species name of the plant.
+- **genus**
+  - **Datatype –** varchar(255)
+  - **Description –** genus to which the plant belongs.
+- **img_url**
+  - **Datatype –** varchar(255)
+  - **Description –** URL to an example reference image of the plant.
+
+
+### identification_submission
+Entry is created when a user submits a photo for identification. 
+
+- **identification_id**
+  - **Datatype -** int
+  - **Description -** auto-incrementing primary key identifier.
+- **img_url**
+  - **Datatype -** varchar(255)
+  - **Description -** url to the image the user submitted. 
+- **user_id**
+  - **Datatype -** int
+  - **Description -** references the PK identifier of the user that submitted the photo. 
+- **time_submitted**
+  - **Datatype -** timestamp
+  - **Description -** time when the entry was added to the database. 
+
+### identification_option
+Specifies one possible species option for an identification submission. Each submission may have up to five ranked options.
+
+- **option_id**
+  - **Datatype –** int
+  - **Description –** auto-incrementing primary key identifier for an option.
+- **identification_id**
+  - **Datatype –** int
+  - **Description –** Foreign key, references the submission this option belongs to.
+- **species_id**
+  - **Datatype –** int
+  - **Description –** Foreign key, references the plant species associated with this option.
+- **rank**
+  - **Datatype –** int
+  - **Description –** position of this option within the N-best list (1–5), ensuring each rank is unique per submission.
+
+**Additional Constraints**
+- Each option for a submission must have a unique **rank**.  
+- Each option for a submission must reference a unique **species**.  
+- Ensures each option/submission pair is unique, so there are no duplicate options under a submission.  
+- Cascading deletes ensure options are removed when their submission or species is deleted.
+
+---
+
+### identification_result
+Stores the final chosen result (best-ranked) for an identification submission. Each submission may have at most one result.
+
+- **identification_id**
+  - **Datatype –** int
+  - **Description –** primary key, foreign key referencing the submission. Guarantees one result per submission.
+- **option_id**
+  - **Datatype –** int
+  - **Description –** references the selected option that was chosen for final result.
+
+**Additional Constraints**
+- Ensures the chosen option belongs to the same submission by enforcing the composite foreign key **(identification_id, option_id)**. This ensures that the option_id references an option that is associated with the correct submission.
+- Cascading deletes ensure results are removed automatically if the associated submission or option is deleted.
