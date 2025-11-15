@@ -24,6 +24,7 @@ One entry exists for each plant the model is able to identify.
   - **Datatype –** varchar(255)
   - **Description –** URL to an example reference image of the plant.
 
+---
 
 ### identification_submission
 Entry is created when a user submits a photo for identification. 
@@ -40,6 +41,8 @@ Entry is created when a user submits a photo for identification.
 - **time_submitted**
   - **Datatype -** timestamp
   - **Description -** time when the entry was added to the database. 
+
+---
 
 ### identification_option
 Specifies one possible species option for an identification submission. Each submission may have up to five ranked options.
