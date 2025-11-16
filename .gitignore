@@ -1,4 +1,4 @@
 .venv/
 GBIF_Data/
-mysql_installation_log.txt
-run_sql.txt
+Database/schema/mysql_installation_log.txt
+Database/schema/run_sql.txt
