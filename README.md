@@ -4,6 +4,8 @@ The flutter implementation for Identiflora.
 # Contents
 [Database Documentation](#database_documentation)
 
+[identification_option](###identification_option)
+
 
 # Database Documentation
 Below is all neccessary information regarding the database design, implementation and use. All database testing has been done with MySQL Server 8.0.44
