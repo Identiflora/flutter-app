@@ -32,6 +32,7 @@ VALUES ('alice@example.com',
         'fake_hash_for_demo_only',
         '+1-555-000-1234');
 
+-- save user id to use later
 SET @user_id := LAST_INSERT_ID();
 
 -- ============================================================
@@ -101,8 +102,6 @@ VALUES (@identification_id, @best_option_id, @user_id);
 
 -- ============================================================
 -- 7) Verification queries
---    (You can run these in Workbench or leave them here to see
---     the results directly after sourcing the file.)
 -- ============================================================
 
 -- N-best list for the submission
