@@ -46,6 +46,17 @@ class _CameraWidgetState extends State<CameraWidget> {
     return await _controller.initialize();
   }
 
+  // Logic to preview camera
+  OverflowBox getCameraPreview(CameraController controller, Size size) {
+    return OverflowBox(
+          minHeight: size.height,
+          minWidth: size.width,
+          maxHeight: size.height * controller.value.aspectRatio,
+          maxWidth: size.width * controller.value.aspectRatio,
+          child: CameraPreview(controller)
+        );
+  }
+
   // Find appropriate controller upon init
   @override
   void initState() {
@@ -71,7 +82,7 @@ class _CameraWidgetState extends State<CameraWidget> {
         builder: (context, snapshot) {
           if(snapshot.connectionState == ConnectionState.done) {
             return Stack(children: [
-              Center(child: CameraPreviewWidget(size: size, controller: _controller)),
+              Center(child: getCameraPreview(_controller, size)),
               getCameraButton(_controller)
             ]);
           }
@@ -83,25 +94,6 @@ class _CameraWidgetState extends State<CameraWidget> {
     );
   }}
 
-// Logic to preview camera
-class CameraPreviewWidget extends StatelessWidget {
-  const CameraPreviewWidget({super.key, required this.size, required this.controller,});
-
-  final Size size;
-  final CameraController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return OverflowBox(
-        minHeight: size.height,
-        minWidth: size.width,
-        maxHeight: size.height * controller.value.aspectRatio,
-        maxWidth: size.width * controller.value.aspectRatio,
-        child: CameraPreview(controller)
-      );
-  }
-}
-
 /// Get the picture taking button that is aligned correctly. This also contains the "onPressed" functionality to print the file path so the picture can later be passed.
 SafeArea getCameraButton(CameraController controller) {
   return SafeArea(
@@ -110,10 +102,10 @@ SafeArea getCameraButton(CameraController controller) {
               child: GestureDetector(
                 onTap: () async {
                   final image = await controller.takePicture();
-                  debugPrint("Plant identification image path: ${image.path}" );
+                  debugPrint("Plant identification image path: ${image.path}");
                 }, 
                 child: Image.asset('assets/camera/camera-circle-icon.png', width: 80, height: 80)
               )
-            ),
+            )
           );
 }
