@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:identiflora/main.dart'; // This import should also be replaced with the file the model code is implemented in
 
 /// Get camera info from phone
 Future<CameraDescription> getCamera() async {
@@ -7,13 +9,13 @@ Future<CameraDescription> getCamera() async {
   return cameras.first;
 }
 
-/// Get display widget for camera with photo button and pass picture data, when taken
+/// Get camera display widget
 FutureBuilder<CameraDescription> getCameraWidget() {
   return FutureBuilder<CameraDescription>(
             future: getCamera(), 
             builder: (context, snapshot) {
               if(snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator(color: Colors.black);
+                return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
               }
               else if(snapshot.hasError) {
                 return Text("Camera had error when loading: ${snapshot.error}");
@@ -41,12 +43,12 @@ class CameraWidget extends StatefulWidget {
 class _CameraWidgetState extends State<CameraWidget> {
   late CameraController _controller;
 
-  // Await camera controller connection
+  /// Await camera controller connection
   Future<void> controlCamera() async {
     return await _controller.initialize();
   }
 
-  // Logic to preview camera
+  /// Logic to display camera
   OverflowBox getCameraPreview(CameraController controller, Size size) {
     return OverflowBox(
           minHeight: size.height,
@@ -61,7 +63,7 @@ class _CameraWidgetState extends State<CameraWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = CameraController(widget.camera, ResolutionPreset.medium);
+    _controller = CameraController(widget.camera, ResolutionPreset.max);
   }
 
   // Stop controlling camera when this widget is closed
@@ -71,7 +73,7 @@ class _CameraWidgetState extends State<CameraWidget> {
     super.dispose();
   }
   
-  // Display camera with icon overlays
+  // Display camera with button overlays
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -83,30 +85,107 @@ class _CameraWidgetState extends State<CameraWidget> {
           if(snapshot.connectionState == ConnectionState.done) {
             return Stack(children: [
               Center(child: getCameraPreview(_controller, size)),
-              getCameraButton(_controller)
+              getCameraButton(_controller, context)
             ]);
           }
           else {
-            return const Center(child: CircularProgressIndicator(color: Colors.black));
+            return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
           }
         },
       )
     );
   }}
 
-/// Get the picture taking button that is aligned correctly. This also contains the "onPressed" functionality to print the file path so the picture can later be passed.
-SafeArea getCameraButton(CameraController controller) {
+/// Get the picture taking button that is aligned correctly. This button takes a picture then passes it into a screen object to display the picture.
+SafeArea getCameraButton(CameraController controller, BuildContext pastContext) {
   return SafeArea(
             child: Align(
               alignment: Alignment.bottomCenter, 
-              child: GestureDetector(
-                onTap: () async {
-                  if(controller.value.isTakingPicture) return;
-                  final image = await controller.takePicture();
-                  debugPrint("Plant identification image path: ${image.path}");
-                }, 
-                child: Image.asset('assets/camera/camera-circle-icon.png', width: 80, height: 80)
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: GestureDetector(
+                  onTap: () async {
+                    if(controller.value.isTakingPicture) return;
+                    
+                    final image = await controller.takePicture();
+
+                    if(pastContext.mounted) {
+                      Navigator.push(
+                        pastContext, 
+                        MaterialPageRoute<void>(
+                          builder: (context) => DisplayPictureScreen(imgPath: image.path)
+                        )
+                      );
+                    }
+                  }, 
+                  child: Image.asset('assets/camera/camera-circle-icon.png', width: 80, height: 80)
+                ),
               )
             )
           );
+}
+
+// Display screen for picture that was taken
+class DisplayPictureScreen extends StatelessWidget {
+  final String imgPath;
+
+  const DisplayPictureScreen({super.key, required this.imgPath});
+
+  /// Get the appropriate text button for navigation
+  TextButton getTextButton(BuildContext context, String label, bool identifyPage) {
+    if(identifyPage) {
+      return TextButton(
+        onPressed: () {
+          // Navigate to next page
+          Navigator.push(
+            context, 
+            MaterialPageRoute<void>(
+              // REMINDER: Replace with actual model functionality or move loading screen to proper utils.
+              // This is also the location to pass the taken photo to the model and will require rescalling or cropping before this point
+              builder: (context) => const ModelLoadingScreen()
+            )
+          );
+        }, 
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: const Text("Identify", style: TextStyle(fontSize: 20, color: Color.fromRGBO(145, 187, 32, 1)))
+        )
+      );
+    }
+
+    return TextButton(
+      onPressed: () {
+        // Return to last page
+        Navigator.pop(context);
+      }, 
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: const Text("Retry", style: TextStyle(fontSize: 20, color: Color.fromRGBO(145, 187, 32, 1)))
+      )
+    );
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Image.file(File(imgPath)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  getTextButton(context, "Retry", false),
+                  getTextButton(context, "Identify", true)
+                ],
+              )
+            ]
+          ),
+        )
+      )
+    );
+  }
 }
