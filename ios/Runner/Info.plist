@@ -46,8 +46,10 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Explanation on why the camera access is needed.</string>
+	<string>Our app needs live camera access to take photos of your plant.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Explanation on why the microphone access is needed.</string>
+	<string>Microphone will not be used and this request is to simply to ensure stable camera support. If you are getting this message, please let us know.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Our app needs photo library support for the uploading of plant photos for identification.</string>
 </dict>
 </plist>
