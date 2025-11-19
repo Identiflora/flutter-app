@@ -118,7 +118,7 @@ SafeArea getCameraButton(CameraController controller, BuildContext pastContext) 
                       );
                     }
                   }, 
-                  child: Image.asset('assets/camera/camera-circle-icon.png', width: 80, height: 80)
+                  child: Image.asset('assets/homepage/camera-circle-icon.png', width: 80, height: 80)
                 ),
               )
             )
