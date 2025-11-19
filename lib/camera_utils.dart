@@ -101,6 +101,7 @@ SafeArea getCameraButton(CameraController controller) {
               alignment: Alignment.bottomCenter, 
               child: GestureDetector(
                 onTap: () async {
+                  if(controller.value.isTakingPicture) return;
                   final image = await controller.takePicture();
                   debugPrint("Plant identification image path: ${image.path}");
                 }, 
