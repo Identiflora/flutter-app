@@ -63,7 +63,7 @@ class _CameraWidgetState extends State<CameraWidget> {
   @override
   void initState() {
     super.initState();
-    _controller = CameraController(widget.camera, ResolutionPreset.max);
+    _controller = CameraController(widget.camera, ResolutionPreset.max, enableAudio: false);
   }
 
   // Stop controlling camera when this widget is closed
