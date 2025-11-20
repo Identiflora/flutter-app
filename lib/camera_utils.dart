@@ -79,14 +79,25 @@ class _CameraWidgetState extends State<CameraWidget> {
     final size = MediaQuery.of(context).size;
     
     return Scaffold(
+      backgroundColor: Colors.black,
       body: FutureBuilder<void>(
         future: controlCamera(), 
         builder: (context, snapshot) {
-          if(snapshot.connectionState == ConnectionState.done) {
+          if(snapshot.connectionState == ConnectionState.done && _controller.value.isInitialized) {
             return Stack(children: [
               Center(child: getCameraPreview(_controller, size)),
               getCameraButton(_controller, context)
             ]);
+          }
+          else if(snapshot.connectionState == ConnectionState.done && !_controller.value.isInitialized) {
+            return Center(child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: const Text(
+                  "Identiflora cannot access your camera! Please check that camera permission is allowed.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, color: Color.fromRGBO(145, 187, 32, 1), fontWeight: FontWeight.bold)
+                ),
+            ));
           }
           else {
             return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
