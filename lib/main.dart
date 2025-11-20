@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:identiflora/gallery_utils.dart';
 import 'camera_utils.dart';
 
 void main() {
@@ -16,7 +17,8 @@ class AppSetup extends StatelessWidget {
       title: "Identiflora",
       home: Scaffold(
         body: Stack(children: [
-          getCameraWidget()
+          getCameraWidget(),
+          GalleryWidget()
         ])
       )
     );
