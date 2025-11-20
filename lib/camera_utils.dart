@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:identiflora/main.dart'; // This import should also be replaced with the file the model code is implemented in
+import 'package:permission_handler/permission_handler.dart';
 
 /// Get camera info from phone
 Future<CameraDescription> getCamera() async {
@@ -9,25 +10,71 @@ Future<CameraDescription> getCamera() async {
   return cameras.first;
 }
 
-/// Get camera display widget
-FutureBuilder<CameraDescription> getCameraWidget() {
+/// Get the widget for the first available camera
+FutureBuilder<CameraDescription> getAvailableCameraWidget() {
   return FutureBuilder<CameraDescription>(
-            future: getCamera(), 
-            builder: (context, snapshot) {
-              if(snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
-              }
-              else if(snapshot.hasError) {
-                return Text("Camera had error when loading: ${snapshot.error}");
-              }
-              else if(snapshot.hasData) {
-                return CameraWidget(camera: snapshot.data!);
-              }
-              else {
-                return Text("No camera found.");
-              }
-            }
-          );
+    future: getCamera(), 
+    builder: (context, snapshot) {
+      if(snapshot.connectionState == ConnectionState.waiting) {
+        return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
+      }
+      else if(snapshot.hasError) {
+        return Text("Camera had error when loading: ${snapshot.error}");
+      }
+      else if(snapshot.hasData) {
+        return CameraWidget(camera: snapshot.data!);
+      }
+      else {
+        return Center(child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: const Text(
+              "No camera found. Please ensure camera is available.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, color: Color.fromRGBO(145, 187, 32, 1), fontWeight: FontWeight.bold)
+            ),
+        ));
+      }
+    }
+  );
+}
+
+/// Explictly get camera permission
+Future<bool> getCameraPermission() async {
+  final status = await Permission.camera.request();
+  if(status.isGranted) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+/// Get camera display widget after requesting permission to access camera
+FutureBuilder<bool> getCameraWidget() {
+  return FutureBuilder<bool>(
+    future: getCameraPermission(), 
+    builder: (context, snapshot) {
+      if(snapshot.connectionState == ConnectionState.waiting) {
+        return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
+      }
+      else if(snapshot.hasError) {
+        return Text("Camera had error when loading: ${snapshot.error}");
+      }
+      else if(snapshot.hasData && snapshot.data!) {
+        return getAvailableCameraWidget();
+      }
+      else {
+        return Center(child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: const Text(
+              "Identiflora cannot access your camera! Please check that camera permission is allowed.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, color: Color.fromRGBO(145, 187, 32, 1), fontWeight: FontWeight.bold)
+            ),
+        ));
+      }
+    }
+  );
 }
 
 // Stable caller for the state of camera
@@ -89,6 +136,7 @@ class _CameraWidgetState extends State<CameraWidget> {
               getCameraButton(_controller, context)
             ]);
           }
+          // Prevents null exception if user somehow gets through permissions without agreeing
           else if(snapshot.connectionState == ConnectionState.done && !_controller.value.isInitialized) {
             return Center(child: Padding(
               padding: const EdgeInsets.all(16),

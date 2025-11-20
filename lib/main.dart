@@ -16,6 +16,7 @@ class AppSetup extends StatelessWidget {
     return MaterialApp(
       title: "Identiflora",
       home: Scaffold(
+        backgroundColor: Colors.black,
         body: Stack(children: [
           getCameraWidget(),
           GalleryWidget()
