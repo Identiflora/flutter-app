@@ -2,3 +2,4 @@
 GBIF_Data/
 Database/schema/mysql_installation_log.txt
 Database/schema/run_sql.txt
+model_training_data/
