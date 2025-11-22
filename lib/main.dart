@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/gallery_utils.dart';
 import 'camera_utils.dart';
+import 'login.dart';
+import 'user_guess.dart';
 
 void main() {
   runApp(const AppSetup());
@@ -15,10 +17,13 @@ class AppSetup extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Identiflora",
+      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.green)),
       home: Scaffold(
         backgroundColor: Colors.black,
         body: Stack(children: [
           getCameraWidget(),
+          LoginWidget(),
+          IdentificationWidget(),
           GalleryWidget()
         ])
       )
