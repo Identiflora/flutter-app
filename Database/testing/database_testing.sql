@@ -1,16 +1,17 @@
 -- ============================================================
 -- test_data.sql
--- Standard use case test for identiflora_db
+-- Standard use case test for identiflora_testing_db
 -- ============================================================
 
 -- 0) Use the correct database
-USE identiflora_db;
+USE identiflora_testing_db;
 
 -- ------------------------------------------------------------
 -- 1) Clean out existing data so the test is repeatable
 -- ------------------------------------------------------------
 
--- Delete in dependency order (child → parent) to respect FKs
+-- Delete in dependency order (child + parent) to respect FKs
+DELETE FROM incorrect_identification;
 DELETE FROM identification_result;
 DELETE FROM identification_option;
 DELETE FROM identification_submission;
@@ -82,7 +83,7 @@ SET @identification_id := LAST_INSERT_ID();
 INSERT INTO identification_option (identification_id, species_id, option_rank)
 VALUES (@identification_id, @sunflower_id, 1);
 
-SET @best_option_id := LAST_INSERT_ID();  -- model’s top-ranked option
+SET @best_option_id := LAST_INSERT_ID();  -- model's top-ranked option
 
 -- Rank 2 option
 INSERT INTO identification_option (identification_id, species_id, option_rank)
@@ -94,14 +95,33 @@ VALUES (@identification_id, @oak_id, 3);
 
 -- ============================================================
 -- 6) Store the chosen result
---    (accept the model’s best-ranked option for now)
+--    (accept the model's best-ranked option for now)
 -- ============================================================
 
 INSERT INTO identification_result (identification_id, option_id, user_id)
 VALUES (@identification_id, @best_option_id, @user_id);
 
 -- ============================================================
--- 7) Verification queries
+-- 7) User reports an incorrect identification
+--    Correct species is Oak; incorrect prediction was Sunflower
+--    Note: incorrect_species must be in identification_option; URLs must exist in plant_species.img_url.
+-- ============================================================
+
+INSERT INTO incorrect_identification (
+    identification_id,
+    correct_species_id,
+    incorrect_species_id,
+    time_submitted
+)
+VALUES (
+    @identification_id,
+    @oak_id,
+    @sunflower_id,
+    NOW()
+);
+
+-- ============================================================
+-- 8) Verification queries
 -- ============================================================
 
 -- N-best list for the submission
@@ -140,3 +160,15 @@ JOIN identification_option o
 JOIN plant_species ps
   ON o.species_id = ps.species_id
 WHERE r.identification_id = @identification_id;
+
+-- Incorrect identification report
+SELECT ii.identification_id,
+       ps_correct.common_name   AS correct_common_name,
+       ps_incorrect.common_name AS incorrect_common_name,
+       ii.time_submitted
+FROM incorrect_identification ii
+JOIN plant_species ps_correct
+  ON ii.correct_species_id = ps_correct.species_id
+JOIN plant_species ps_incorrect
+  ON ii.incorrect_species_id = ps_incorrect.species_id
+WHERE ii.identification_id = @identification_id;
