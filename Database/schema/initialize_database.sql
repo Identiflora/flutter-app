@@ -96,7 +96,7 @@ CREATE TABLE incorrect_identification (
 
   -- make sure the incorrect species_id comes from the right source
   FOREIGN KEY (identification_id, incorrect_species_id)
-    REFERENCES identification_option(identification_id, species_id)
+    REFERENCES identification_option(identification_id, species_id)-- may eventually want to change this so it pull id_id from result
     ON DELETE CASCADE,
 
   FOREIGN KEY (identification_id)

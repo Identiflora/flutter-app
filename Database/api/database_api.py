@@ -28,7 +28,7 @@ def add_incorrect_identification(payload: IncorrectIdentificationRequest):
 if __name__ == "__main__":
     uvicorn.run(
         "database_api:app",
-        host="localhost",
+        host=HOST,
         port=int(os.getenv("PORT", "8000")),
         reload=False,
     )

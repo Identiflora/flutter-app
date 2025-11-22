@@ -103,8 +103,8 @@ VALUES (@identification_id, @best_option_id, @user_id);
 
 -- ============================================================
 -- 7) User reports an incorrect identification
---    Correct species is Oak; incorrect prediction was Sunflower
---    Note: incorrect_species must be in identification_option; URLs must exist in plant_species.img_url.
+--    Correct species is Oak; incorrect prediction was Sunflower (also the chosen result)
+--    Note: incorrect_species_id must align with identification_result via the FK.
 -- ============================================================
 
 INSERT INTO incorrect_identification (

@@ -179,9 +179,9 @@ Connection settings are read from environment variables (defaults in parentheses
 ### Run locally
 Start the API (from repo root):
 ```
-uvicorn Database.api.database_api:app --host 0.0.0.0 --port 8000
+uvicorn Database.api.database_api:app --host localhost --port 8000
 ```
-or run the file directly: `python Database/api/database_api.py`
+or run the file directly, change the global variable HOST to desired host: `python Database/api/database_api.py`
 
 ### Endpoint: Report incorrect identification
 - **Method/Path**: `POST /incorrect-identifications`
@@ -218,20 +218,34 @@ or run the file directly: `python Database/api/database_api.py`
 ### Testing script
 `Database/testing/database_testing.sql` seeds `identiflora_testing_db` with example data and exercises the full flow, including the new incorrect_identification FKs. You can run it after initializing the schema to verify constraints and sample inserts.
 
-### Quick API smoke test
-Run the helper script to POST an incorrect identification to a running API instance:
-```
-python Database/api/database_api_testing.py --identification-id 1 --correct-species-id 2 --incorrect-species-id 3
-```
-Uses `API_URL` env var (default `http://localhost:8000`). Ensure the API is running and the IDs exist in your database.
+## File Guide
 
-Example (Windows PowerShell):
-```
-python Database/api/database_api_testing.py `
-  --identification-id 42 `
-  --correct-species-id 10 `
-  --incorrect-species-id 7
-```
-- `--identification-id`: existing `identification_submission.identification_id`
-- `--correct-species-id`: the true `plant_species.species_id`
-- `--incorrect-species-id`: the model-predicted `plant_species.species_id` that appears in `identification_option` for that submission
+- `Database/schema/initialize_database.sql`
+  - Creates the full schema (users, submissions, options, results, incorrect_identification).
+  - Key notes: `img_url` columns are 512 chars; composite FK ensures `incorrect_species_id` is one of the submission’s options; cascading deletes clean up children.
+  - Usage: Run via MySQL `SOURCE Database/schema/initialize_database.sql;` to create the database. To reset for a fresh testing canvas, run DROP DATABASE `identiflora_testing_db;`.
+
+- `Database/testing/database_testing.sql`
+  - Seeds `identiflora_testing_db` with a sample user, species, submission, options, chosen result, and an incorrect_identification row.
+  - Key notes: Assumes the schema is initialized; verifies constraints with select queries.
+  - Usage: `SOURCE Database/testing/database_testing.sql;` after initializing the DB to populate test data.
+
+- `Database/api/database_api_helpers.py`
+  - SQLAlchemy helper module: builds the engine, defines the request model, validates IDs, and inserts into `incorrect_identification`.
+  - Key notes: Uses `mysql+pymysql` connection string; URL-encodes credentials; transaction via `engine.begin()`; only writes IDs and timestamp (URLs of images can be retrieved via joins if needed).
+  - Usage: Imported by database_api.py. Should not be run directly. 
+
+- `Database/api/database_api.py`
+  - FastAPI entrypoint wiring the `/incorrect-identifications` POST route to the helper logic.
+  - Key notes: Instantiates the engine; minimal code beyond app setup and route handler.
+  - Usage: Run with `uvicorn Database.api.database_api:app --host 0.0.0.0 --port 8000` (or `python Database/api/database_api.py`).
+
+- `Database/api/database_api_testing.dart`
+  - Simple testing script for accessing the API with Dart.
+  - Key notes: Only tests submitting an incorrect identification.
+  - Usage: Change global variables for parameters of incorrect_identification for testing, then run the file.
+
+- `lib/database_utils.dart`
+  - Dart helper function `submitIncorrectIdentification` to call the API from Flutter.
+  - Key notes: Uses `HttpClient` to POST JSON; accepts `identificationId`, `correctSpeciesId`, `incorrectSpeciesId`, optional `apiBaseUrl`; returns `true` on 2xx else throws. Add this to button handlers or other app logic.
+  - Usage: Call directly in UI code, e.g., `onPressed: () => submitIncorrectIdentification(identificationId: 1, correctSpeciesId: 2, incorrectSpeciesId: 3);`

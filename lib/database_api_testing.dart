@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'database_utils.dart';
 
+//parameters for incorrect_identification
 int identificationId = 1;
 int correctSpeciesId = 2;
 int incorrectSpeciesId = 3;
