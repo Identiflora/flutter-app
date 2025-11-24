@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'model_incorrect.dart';
 
 class ResultsWidget extends StatefulWidget {
   final String modelChoice;
@@ -132,7 +133,12 @@ class _Results extends State<ResultsWidget> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // Go to five option screen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TopMatchesWidget(),
+                          ),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         // backgroundColor: incorrectColor,

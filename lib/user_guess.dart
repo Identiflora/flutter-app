@@ -77,6 +77,9 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch, 
                 children: [
+                  // probably dont need a loop for this I just copied what the tutorial
+                  // did to construct a list but probably not needed since we will know
+                  // the length in advance
                   for (var option in optionList)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0), 
