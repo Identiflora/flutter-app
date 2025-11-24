@@ -8,6 +8,7 @@ class IdentificationWidget extends StatefulWidget {
   State<StatefulWidget> createState() => _Identification();
 }
 
+// main menu button for testing
 class _Identification extends State<IdentificationWidget>{
   @override
   Widget build(BuildContext context) {
@@ -39,6 +40,7 @@ class UserChoiceScreen extends StatefulWidget {
   State<StatefulWidget> createState() => _UserChoiceScreen();
 }
 
+// setup stubbed plant choices based on strings
 class _UserChoiceScreen extends State<UserChoiceScreen>{
   String userChoice = '';
   String modelChoice = 'Quaking Aspen';
@@ -50,8 +52,12 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
     });
   }
 
+  // choice selections screen, based off just a dynamic side margin but probably
+  // needs defined padding instead
+  // i hope we keep the selection styling i spent way too much time on it
   @override
   Widget build(BuildContext context) {
+    // colors based on the geen theme i put in main
     final colorScheme = Theme.of(context).colorScheme;
     final primaryColor = colorScheme.primary; 
     final outlineColor = colorScheme.outline;
@@ -110,7 +116,6 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                                 );
                               }
                             : null,
-             
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                             shape: RoundedRectangleBorder(
