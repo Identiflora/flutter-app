@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS identiflora_db;
+CREATE DATABASE IF NOT EXISTS identiflora_testing_db;
 
-USE identiflora_db;
+USE identiflora_testing_db;
 
 CREATE TABLE user (
   user_id int
@@ -38,7 +38,8 @@ CREATE TABLE plant_species (
   genus varchar(255),
   img_url varchar(512) NOT NULL,
 
-  PRIMARY KEY (species_id)  
+  PRIMARY KEY (species_id),
+  UNIQUE (img_url)
 );
 
 -- specifies a unique option for the result of identification
@@ -84,3 +85,60 @@ CREATE TABLE identification_result (
     REFERENCES user(user_id)
     ON DELETE CASCADE
 );
+
+CREATE TABLE incorrect_identification (
+  identification_id int,
+  correct_species_id int,
+  incorrect_species_id int,
+  time_submitted timestamp,
+
+  PRIMARY KEY (identification_id),
+
+  -- make sure the incorrect species_id comes from the right source
+  FOREIGN KEY (identification_id, incorrect_species_id)
+    REFERENCES identification_option(identification_id, species_id)-- may eventually want to change this so it pull id_id from result
+    ON DELETE CASCADE,
+
+  FOREIGN KEY (identification_id)
+    REFERENCES identification_submission(identification_id)
+    ON DELETE CASCADE,
+
+  FOREIGN KEY (correct_species_id)
+    REFERENCES plant_species(species_id)
+    ON DELETE CASCADE,
+
+  FOREIGN KEY (incorrect_species_id)
+    REFERENCES plant_species(species_id)
+    ON DELETE CASCADE
+);
+
+-- Stored procedures and functions
+delimiter //
+
+CREATE PROCEDURE check_ident_id_exists (IN ident_id_in int)
+  BEGIN
+    SELECT identification_id FROM identification_submission
+    WHERE identification_id = ident_id_in;
+  END//
+
+CREATE PROCEDURE check_species_id_exists (IN species_id_in int)
+  BEGIN
+    SELECT species_id FROM plant_species
+    WHERE species_id = species_id_in;
+  END//
+
+CREATE PROCEDURE check_incorrect_sub_exists (IN ident_id_in int)
+  BEGIN
+    SELECT identification_id FROM incorrect_identification
+    WHERE identification_id = ident_id_in;
+  END//
+
+CREATE PROCEDURE add_incorrect_id (IN ident_id_in int, IN correct_species_id_in int, IN inc_species_id_in int)
+  BEGIN
+    INSERT INTO incorrect_identification
+      (identification_id, correct_species_id, incorrect_species_id, time_submitted)
+      VALUES (ident_id_in, correct_species_id_in, inc_species_id_in, NOW());
+  END//
+
+delimiter ;
+
