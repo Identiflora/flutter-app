@@ -110,4 +110,25 @@ CREATE TABLE incorrect_identification (
   FOREIGN KEY (incorrect_species_id)
     REFERENCES plant_species(species_id)
     ON DELETE CASCADE
-)
+);
+
+-- Stored procedures and functions
+delimiter //
+
+CREATE PROCEDURE check_ident_id_exists (IN ident_id_in int)
+BEGIN
+  SELECT identification_id FROM identification_submission
+  WHERE identification_id = ident_id_in;
+END//
+
+delimiter ;
+
+delimiter //
+
+CREATE PROCEDURE check_species_id_exists (IN species_id_in int)
+BEGIN
+  SELECT species_id FROM plant_species
+  WHERE species_id = species_id_in;
+END//
+
+delimiter ;

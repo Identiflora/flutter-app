@@ -107,18 +107,18 @@ VALUES (@identification_id, @best_option_id, @user_id);
 --    Note: incorrect_species_id must align with identification_result via the FK.
 -- ============================================================
 
-INSERT INTO incorrect_identification (
-    identification_id,
-    correct_species_id,
-    incorrect_species_id,
-    time_submitted
-)
-VALUES (
-    @identification_id,
-    @oak_id,
-    @sunflower_id,
-    NOW()
-);
+-- INSERT INTO incorrect_identification (
+--     identification_id,
+--     correct_species_id,
+--     incorrect_species_id,
+--     time_submitted
+-- )
+-- VALUES (
+--     @identification_id,
+--     @oak_id,
+--     @sunflower_id,
+--     NOW()
+-- );
 
 -- ============================================================
 -- 8) Verification queries

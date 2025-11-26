@@ -120,7 +120,7 @@ def record_incorrect_identification(payload: IncorrectIdentificationRequest, eng
             # Read-only validation of submission existence.
             ensure_row(
                 conn,
-                "SELECT identification_id FROM identification_submission WHERE identification_id = :id",
+                "CALL check_ident_id_exists(:id)",
                 {"id": payload.identification_id},
                 "Identification submission not found.",
             )
@@ -128,13 +128,13 @@ def record_incorrect_identification(payload: IncorrectIdentificationRequest, eng
             # Read-only validation of species rows.
             ensure_row(
                 conn,
-                "SELECT species_id FROM plant_species WHERE species_id = :id",
+                "CALL check_species_id_exists(:id)",
                 {"id": payload.correct_species_id},
                 "Correct species not found.",
             )
             ensure_row(
                 conn,
-                "SELECT species_id FROM plant_species WHERE species_id = :id",
+                "CALL check_species_id_exists(:id)",
                 {"id": payload.incorrect_species_id},
                 "Incorrect species not found.",
             )
