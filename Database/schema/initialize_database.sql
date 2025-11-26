@@ -116,19 +116,29 @@ CREATE TABLE incorrect_identification (
 delimiter //
 
 CREATE PROCEDURE check_ident_id_exists (IN ident_id_in int)
-BEGIN
-  SELECT identification_id FROM identification_submission
-  WHERE identification_id = ident_id_in;
-END//
-
-delimiter ;
-
-delimiter //
+  BEGIN
+    SELECT identification_id FROM identification_submission
+    WHERE identification_id = ident_id_in;
+  END//
 
 CREATE PROCEDURE check_species_id_exists (IN species_id_in int)
-BEGIN
-  SELECT species_id FROM plant_species
-  WHERE species_id = species_id_in;
-END//
+  BEGIN
+    SELECT species_id FROM plant_species
+    WHERE species_id = species_id_in;
+  END//
+
+CREATE PROCEDURE check_incorrect_sub_exists (IN ident_id_in int)
+  BEGIN
+    SELECT identification_id FROM incorrect_identification
+    WHERE identification_id = ident_id_in;
+  END//
+
+CREATE PROCEDURE add_incorrect_id (IN ident_id_in int, IN correct_species_id_in int, IN inc_species_id_in int)
+  BEGIN
+    INSERT INTO incorrect_identification
+      (identification_id, correct_species_id, incorrect_species_id, time_submitted)
+      VALUES (ident_id_in, correct_species_id_in, inc_species_id_in, NOW());
+  END//
 
 delimiter ;
+

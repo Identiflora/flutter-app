@@ -3,7 +3,7 @@ import 'dart:io';
 import 'database_utils.dart';
 
 //parameters for incorrect_identification
-int identificationId = 4;
+int identificationId = 1;
 int correctSpeciesId = 2;
 int incorrectSpeciesId = 3;
 // String api_url =

@@ -141,7 +141,7 @@ def record_incorrect_identification(payload: IncorrectIdentificationRequest, eng
 
             # Read-only duplicate guard to avoid multiple incorrect records per submission.
             existing = conn.execute(
-                text("SELECT identification_id FROM incorrect_identification WHERE identification_id = :id"),
+                text("CALL check_incorrect_sub_exists(:id)"),
                 {"id": payload.identification_id},
             ).first()
             if existing is not None:
@@ -152,17 +152,11 @@ def record_incorrect_identification(payload: IncorrectIdentificationRequest, eng
 
             # Write: insert the incorrect identification record with timestamp.
             conn.execute(
-                text(
-                    """
-                    INSERT INTO incorrect_identification
-                        (identification_id, correct_species_id, incorrect_species_id, time_submitted)
-                    VALUES (:identification_id, :correct_species_id, :incorrect_species_id, NOW())
-                    """
-                ),
+                text("CALL add_incorrect_id(:ident_id_in, :correct_species_id_in, :inc_species_id_in)"),
                 {
-                    "identification_id": payload.identification_id,
-                    "correct_species_id": payload.correct_species_id,
-                    "incorrect_species_id": payload.incorrect_species_id,
+                    "ident_id_in": payload.identification_id,
+                    "correct_species_id_in": payload.correct_species_id,
+                    "inc_species_id_in": payload.incorrect_species_id,
                 },
             )
 
