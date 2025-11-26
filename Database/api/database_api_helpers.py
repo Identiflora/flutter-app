@@ -124,7 +124,6 @@ def record_incorrect_identification(payload: IncorrectIdentificationRequest, eng
                 {"id": payload.identification_id},
                 "Identification submission not found.",
             )
-
             # Read-only validation of species rows.
             ensure_row(
                 conn,
@@ -144,6 +143,7 @@ def record_incorrect_identification(payload: IncorrectIdentificationRequest, eng
                 text("CALL check_incorrect_sub_exists(:id)"),
                 {"id": payload.identification_id},
             ).first()
+
             if existing is not None:
                 raise HTTPException(
                     status_code=409,
