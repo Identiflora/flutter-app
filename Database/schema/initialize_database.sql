@@ -5,6 +5,7 @@ USE identiflora_testing_db;
 CREATE TABLE user (
   user_id int
     AUTO_INCREMENT,
+  username varchar(225) NOT NULL,
   email varchar(255) NOT NULL,
   password_hash varchar(255) NOT NULL,
   phone varchar(255),
@@ -138,6 +139,36 @@ CREATE PROCEDURE add_incorrect_id (IN ident_id_in int, IN correct_species_id_in 
     INSERT INTO incorrect_identification
       (identification_id, correct_species_id, incorrect_species_id, time_submitted)
       VALUES (ident_id_in, correct_species_id_in, inc_species_id_in, NOW());
+  END//
+
+CREATE PROCEDURE check_user_id_exists (IN user_id_in int)
+  BEGIN
+    SELECT user_id FROM user
+    WHERE user_id = user_id_in;
+  END//
+
+CREATE PROCEDURE check_username_exists (IN username_in int)
+  BEGIN
+    SELECT username FROM user
+    WHERE username = username_in;
+  END//
+
+CREATE PROCEDURE check_user_email_exists (IN user_email_in int)
+  BEGIN
+    SELECT email FROM user
+    WHERE email = user_email_in;
+  END//
+
+CREATE PROCEDURE check_user_password_hash_exists (IN user_password_in int)
+  BEGIN
+    SELECT password_hash FROM user
+    WHERE password_hash = user_password_in;
+  END//
+
+CREATE PROCEDURE check_user_phone_exists (IN user_phone_in int)
+  BEGIN
+    SELECT phone FROM user
+    WHERE phone = user_phone_in;
   END//
 
 delimiter ;
