@@ -24,8 +24,13 @@ class UserAccount {
    required this.password,
  });
 
+@override
+String toString(){
+  return 'User(email: $email, username: $username, password: $password)';
+}
 
 } //end UserAccount
+
 
 
 //CREATE LIST FOR ACCOUNT CREDENTIALS OF USERACOUNT OBJECTS
@@ -106,6 +111,18 @@ class _LoginScreenState extends State<LoginScreen> {
                style: const TextStyle(fontWeight: FontWeight.bold),
              ),
            ),
+
+          ElevatedButton(
+            onPressed: (){
+              print("Curresnt Users:");
+              for (var user in userAccounts){
+                print(user);
+              }
+            },
+            child: const Text("View all current users")
+          )
+
+
          ],
        ),
      ),
@@ -175,20 +192,26 @@ class _SignUpFormState extends State<SignUpForm>{
  final emailControl = TextEditingController();
  final usernameControl = TextEditingController();
  final passwordControl = TextEditingController();
- final confirmController = TextEditingController();
+ final confirmControl = TextEditingController();
 
 
  void signUp(){
    final email = emailControl.text.trim();
    final username = usernameControl.text.trim();
    final password = passwordControl.text.trim();
-   final confirm = confirmController.text.trim();
+   final confirm = confirmControl.text.trim();
   //CHECK IF PASSWORDS MATCH
  if (password != confirm){
-   print("Passwords do not match, please correct");
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: 
+    Text("Password do not match, please correct"),
+    backgroundColor: Colors.red,
+    ),
+  );
    return;
- }
+ } //END SIGNUP 
 
+  print(userAccounts);
 
 //ADDS USER CREDENTIALS TO LIST
  final newUser = UserAccount(
@@ -228,12 +251,21 @@ Widget build(BuildContext contex){
      const SizedBox(height: 16),
 
 
-     TextField(controller: passwordControl, decoration: const InputDecoration(labelText: 'password')),
+     TextField(controller: passwordControl, obscureText: true, decoration: const InputDecoration(labelText: 'password')),
      const SizedBox(height: 16),
 
 
-     TextField(controller: emailControl, decoration: const InputDecoration(labelText: 'confirm password')),
+     TextField(controller:  confirmControl, 
+     obscureText: true,
+     decoration: const InputDecoration(labelText: 'confirm password')),
      const SizedBox(height: 16),
+
+    ElevatedButton(
+      onPressed: signUp,
+      child: const Text("Sign Up"),
+
+    )
+
    ], 
  
  );
