@@ -24,6 +24,7 @@ class UserAccount {
    required this.password,
  });
 
+//ALLOWS ON SCREEN BUTTON TO PRINT ACCOUNT LIST TO CONSOLE
 @override
 String toString(){
   return 'User(email: $email, username: $username, password: $password)';
@@ -35,8 +36,6 @@ String toString(){
 
 //CREATE LIST FOR ACCOUNT CREDENTIALS OF USERACOUNT OBJECTS
 List<UserAccount> userAccounts = [];
-
-
 
 
 
@@ -131,50 +130,81 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 
-class LoginForm extends StatelessWidget {
+class LoginForm extends StatefulWidget {
  const LoginForm({super.key});
 
-
  @override
- Widget build(BuildContext context) {
-   return Column(
-     mainAxisSize: MainAxisSize.min,
-     children: <Widget>[
-       const TextField(
-         decoration: InputDecoration(
-           labelText: 'Email',
-           border: OutlineInputBorder(),
-         ),
-       ),
-       const SizedBox(height: 16),
-       const TextField(
-         obscureText: true,
-         decoration: InputDecoration(
-           labelText: 'Password',
-           border: OutlineInputBorder(),
-         ),
-       ),
-       const SizedBox(height: 24),
-       Center(
-         child: FractionallySizedBox(
-           widthFactor: 0.5,
-           child: ElevatedButton(
-             onPressed: () {
-               // Implement actual login logic here
-             },
-             style: ElevatedButton.styleFrom(
-               shape: RoundedRectangleBorder(
-                 borderRadius: BorderRadius.circular(8.0),
-               ),
-             ),
-             child: const Text('Login', style: TextStyle(fontSize: 18)),
-           ),
-         ),
-       ),
-     ],
-   );
- }
+State<LoginForm> createState() => _LoginFormState();
 }
+
+  class _LoginFormState extends State<LoginForm> {
+    final emailControl = TextEditingController();
+    final passwordControl = TextEditingController();
+
+    Future<bool> passwordCheckViaApi(String email, String password) async{ //Future-value comes from api
+      await Future.delayed(const Duration(seconds:1)); //awaits for api
+      return password == "password"; //temp password
+    } //end class
+
+  void loginPressed() async {
+    final email = emailControl.text.trim();
+    final password = passwordControl.text.trim();
+    
+    if (email.isEmpty || password.isEmpty){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please complete all fields"),
+        backgroundColor: Colors.red,
+      ),
+      );
+     //CHECKS FOR EMPTY FIELDS
+     return;
+  } //END FUNCT
+
+  final bool valid = await passwordCheckViaApi(email, password);
+
+  if (valid) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Successfully logged in"),
+      backgroundColor: Colors.green,  
+      ),
+    ); 
+  } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Incorrect email or password"),
+        backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } //END IFELSE
+
+@override
+Widget build(BuildContext context){
+  return Column(
+    children: [
+      TextField(controller: emailControl,
+      decoration: const InputDecoration(
+        labelText: "Email", border: OutlineInputBorder(),
+      ),   
+      ),
+    const SizedBox(height: 16),   
+    
+    TextField(
+      controller: passwordControl,
+      obscureText: true,
+      decoration: const InputDecoration( labelText: "Password",
+      border: OutlineInputBorder(),
+      ),
+    ),
+    ElevatedButton (
+      onPressed: loginPressed,
+      child: const Text("Login"),
+      ), 
+     ]
+  );
+}
+} //END LOGINFORMSTATE CLASS
+
+
 
 
 //USER SIGNUP CLASS
