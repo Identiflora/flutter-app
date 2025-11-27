@@ -31,6 +31,14 @@ class IncorrectIdentificationRequest(BaseModel):
     correct_species_id: int = Field(..., gt=0, description="Species that should have been returned")
     incorrect_species_id: int = Field(..., gt=0, description="Species the model predicted")
 
+class UserRegistrationRequest(BaseModel):
+    """
+    Request body for reporting user registration. Ensures empty strings trigger invalid requests.
+    """
+
+    user_email: str = Field(..., min_length=1, description="Email from user input")
+    username: str = Field(..., min_length=1, description="Username from user input")
+    password_hash: str = Field(..., min_length=1, description="Password hash created by Flutter with user input")
 
 def build_engine() -> Engine:
     """
@@ -176,4 +184,77 @@ def record_incorrect_identification(payload: IncorrectIdentificationRequest, eng
         raise HTTPException(
             status_code=500,
             detail=f"Database error while creating incorrect identification: {exc}",
+        ) from exc
+    
+def record_user_registration(payload: UserRegistrationRequest, engine: Engine) -> Dict[str, Any]:
+    """
+    Persist a user registration, validating referenced rows and constraints.
+
+    Parameters
+    ----------
+    payload : UserRegistrationRequest
+        Request data containing username, email, and password hash.
+
+    Returns
+    -------
+    dict
+        Confirmation payload mirroring the created row.
+
+    Raises
+    ------
+    HTTPException
+        If validation fails, referenced rows are missing, or database errors occur.
+    """
+    try:
+        with engine.begin() as conn:
+            # Read-only duplicate guard to avoid duplicate emails for submissions.
+            email_existing = conn.execute(
+                text("CALL check_user_email_exists(:email)"),
+                {"email": payload.user_email},
+            ).first()
+
+            if email_existing is not None:
+                raise HTTPException(
+                    status_code=409,
+                    detail="This email has already been recorded.",
+                )
+            
+            # Read-only duplicate guard to avoid duplicate usernames for submissions.
+            username_existing = conn.execute(
+                text("CALL check_username_exists(:username)"),
+                {"username": payload.username},
+            ).first()
+
+            if username_existing is not None:
+                raise HTTPException(
+                    status_code=409,
+                    detail="This username has already been recorded.",
+                )
+
+            # Write: insert the user account information with id and timestamp.
+            conn.execute(
+                text("CALL add_user(:user_email_in, :username_in, :user_password_in)"),
+                {
+                    "user_email_in": payload.user_email,
+                    "username_in": payload.username,
+                    "user_password_in": payload.password_hash
+                },
+            )
+
+            return {
+                "user_email_in": payload.user_email,
+                "username_in": payload.username,
+                "user_password_in": payload.password_hash,
+                "message": "User registration recorded.",
+            }
+
+    except IntegrityError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail="Email or username already registered.",
+        ) from exc
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error while creating user registration: {exc}",
         ) from exc
