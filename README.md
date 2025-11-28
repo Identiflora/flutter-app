@@ -57,6 +57,8 @@ Below is all necessary information regarding the database design, implementation
 1. Download MySQL from here: https://dev.mysql.com/downloads/file/?id=546163, make sure you're downloading MySQL 8.0.44.0
 2. Follow the installer setup
 3. Run this command in terminal to connect to the server: '& "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -p' (If you installed MySQL in a different location, use your path to mysql.exe)
+
+    On Mac: '/usr/local/mysql/bin/mysql -u root -p'
 4. To build the database on your machine, run: 'SOURCE initialize_database.sql;'
 5. The above format can be used to run any .sql file from the mysql terminal.
 

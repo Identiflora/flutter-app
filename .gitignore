@@ -57,3 +57,6 @@ app.*.map.json
 /macos/
 /windows/
 /web/
+
+# Python testing scripts
+Database/api/url_testing.py

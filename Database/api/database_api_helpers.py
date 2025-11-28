@@ -3,13 +3,15 @@ from __future__ import annotations
 
 import os
 from typing import Any, Dict
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urljoin
 
 from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine, Row
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
+
 
 DATABASE_PASSWORD_PATH = "Database/api/database_password.txt"
 DATABASE_NAME = "identiflora_testing_db"
@@ -179,7 +181,7 @@ def record_incorrect_identification(payload: IncorrectIdentificationRequest, eng
         ) from exc
 
 
-def get_plant_species_url(scientific_name: str, engine: Engine) -> str:
+def get_plant_species_url(scientific_name: str, host: str, port: int, img_path: str, engine: Engine) -> str:
     """
     Fetch the image URL for a plant species identified by its scientific name.
 
@@ -187,13 +189,19 @@ def get_plant_species_url(scientific_name: str, engine: Engine) -> str:
     ----------
     scientific_name : str
         Scientific (Latin) name of the plant to query.
+    host: str
+        image server host
+    port: 
+        port to access image server
+    img_path:
+        path to access images
     engine : sqlalchemy.engine.Engine
         Database engine used to perform the query.
 
     Returns
     -------
     str
-        The img_url associated with the plant species.
+        The img_url associated with the plant species. Url is ready to be executed on return.
 
     Raises
     ------
@@ -205,6 +213,7 @@ def get_plant_species_url(scientific_name: str, engine: Engine) -> str:
 
     try:
         with engine.connect() as conn:
+            print(scientific_name)
             row = ensure_row(
                 conn,
                 """
@@ -213,9 +222,35 @@ def get_plant_species_url(scientific_name: str, engine: Engine) -> str:
                 {"scientific_name": scientific_name},
                 "Plant species not found.",
             )
-            return row["img_url"]
+            # join base path with image name
+            img_path = os.path.join(img_path, row['img_url'])
+            return build_base_url(host, port, img_path)
+        
     except SQLAlchemyError as exc:
         raise HTTPException(
             status_code=500,
             detail=f"Database error while fetching plant species URL: {exc}",
         ) from exc
+
+def build_base_url(host: str, port: int, path: str):
+    """
+    Construct a base url from the host, port, and path
+    
+    Parameters
+    --------------------
+    host: str
+        host for the url
+    port: int
+        port for the url
+    path: str
+        path to desired location
+    
+    Returns
+    ---------------------
+    str
+        url of format: http://host:port/path
+
+    """
+    path = path.lstrip('/')
+    host_port = f'{host}:{port}'
+    return os.path.join('http://', host_port, path)
