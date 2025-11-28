@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 
 class LoginWidget extends StatefulWidget {
@@ -37,7 +39,12 @@ String toString(){
 //CREATE LIST FOR ACCOUNT CREDENTIALS OF USERACOUNT OBJECTS
 List<UserAccount> userAccounts = [];
 
-
+//HASH ACCOUNT PASSWORDS FUNCT
+String hashPassword(String password){
+  final bytes = utf8.encode(password); //TURN PASS INTO BYTES
+  final digest = sha256.convert(bytes); //APPLY HASHING
+  return digest.toString(); //RETURN HASHED STRING
+}
 
 
 class _Login extends State<LoginWidget>{
@@ -160,7 +167,9 @@ State<LoginForm> createState() => _LoginFormState();
      return;
   } //END FUNCT
 
-  final bool valid = await passwordCheckViaApi(email, password);
+//ADDED FOR PASS HASHING - USE CREATED FUNCT ABOVE
+  final hashedPassword = hashPassword(password);
+  final bool valid = await passwordCheckViaApi(email, hashedPassword);
 
   if (valid) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -230,6 +239,7 @@ class _SignUpFormState extends State<SignUpForm>{
    final username = usernameControl.text.trim();
    final password = passwordControl.text.trim();
    final confirm = confirmControl.text.trim();
+  
   //CHECK IF PASSWORDS MATCH
  if (password != confirm){
   ScaffoldMessenger.of(context).showSnackBar(
@@ -243,11 +253,14 @@ class _SignUpFormState extends State<SignUpForm>{
 
   print(userAccounts);
 
+//ONLY AFTER CONFIRMING PASSWORDS - HASH 
+final hashedPassword = hashPassword(password);
+
 //ADDS USER CREDENTIALS TO LIST
  final newUser = UserAccount(
    email: email,
    username: username,
-   password: password,
+   password: hashedPassword,
  );
  userAccounts.add(newUser);
 
@@ -256,7 +269,7 @@ class _SignUpFormState extends State<SignUpForm>{
  print("New user has been signed up");
  print("Email is $email");
  print("Username is $username");
- print("password is $password");
+ print("password is $hashedPassword");
 
 
  Navigator.pop(context);
