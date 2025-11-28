@@ -5,8 +5,9 @@ import os
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
-from database_api_helpers import build_engine, IncorrectIdentificationRequest, record_incorrect_identification
+from database_api_helpers import build_engine, IncorrectIdentificationRequest, record_incorrect_identification, get_plant_species
 
 HOST = "localhost"
 
@@ -23,6 +24,16 @@ engine = build_engine()
 def add_incorrect_identification(payload: IncorrectIdentificationRequest):
     """Route handler that records an incorrect identification via helper logic."""
     return record_incorrect_identification(payload, engine)
+
+@app.get("/plant-species")
+def get_plant_species_router(sci_name: str):
+
+    return get_plant_species_url()
+
+app.mount(
+    "/Classes",
+    StaticFiles(directory='/Users/jackson/Classes')
+)
 
 
 if __name__ == "__main__":

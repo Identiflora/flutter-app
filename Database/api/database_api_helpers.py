@@ -177,3 +177,45 @@ def record_incorrect_identification(payload: IncorrectIdentificationRequest, eng
             status_code=500,
             detail=f"Database error while creating incorrect identification: {exc}",
         ) from exc
+
+
+def get_plant_species_url(scientific_name: str, engine: Engine) -> str:
+    """
+    Fetch the image URL for a plant species identified by its scientific name.
+
+    Parameters
+    ----------
+    scientific_name : str
+        Scientific (Latin) name of the plant to query.
+    engine : sqlalchemy.engine.Engine
+        Database engine used to perform the query.
+
+    Returns
+    -------
+    str
+        The img_url associated with the plant species.
+
+    Raises
+    ------
+    HTTPException
+        400 if the name is empty, 404 if not found, 500 for database errors.
+    """
+    if not scientific_name or not scientific_name.strip():
+        raise HTTPException(status_code=400, detail="Scientific name must be provided.")
+
+    try:
+        with engine.connect() as conn:
+            row = ensure_row(
+                conn,
+                """
+                CALL get_plant_species_img_url(:scientific_name)
+                """,
+                {"scientific_name": scientific_name},
+                "Plant species not found.",
+            )
+            return row["img_url"]
+    except SQLAlchemyError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error while fetching plant species URL: {exc}",
+        ) from exc

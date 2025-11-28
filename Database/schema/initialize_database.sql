@@ -39,6 +39,7 @@ CREATE TABLE plant_species (
   img_url varchar(512) NOT NULL,
 
   PRIMARY KEY (species_id),
+  UNIQUE (scientific_name),
   UNIQUE (img_url)
 );
 
@@ -138,6 +139,12 @@ CREATE PROCEDURE add_incorrect_id (IN ident_id_in int, IN correct_species_id_in 
     INSERT INTO incorrect_identification
       (identification_id, correct_species_id, incorrect_species_id, time_submitted)
       VALUES (ident_id_in, correct_species_id_in, inc_species_id_in, NOW());
+  END//
+
+CREATE PROCEDURE get_plant_species_img_url (IN sci_name varchar(255))
+  BEGIN
+    SELECT img_url FROM plant_species
+    WHERE scientific_name = sci_name;
   END//
 
 delimiter ;

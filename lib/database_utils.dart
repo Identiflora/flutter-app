@@ -49,3 +49,7 @@ Future<bool> submitIncorrectIdentification({
     client.close(force: true);
   }
 }
+
+Future<bool> getPlantSpecies() async{
+
+}
