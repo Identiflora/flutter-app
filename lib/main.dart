@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/gallery_utils.dart';
+import 'package:identiflora/leaderboard.dart';
 import 'camera_utils.dart';
 import 'login.dart';
 import 'user_guess.dart';
+import 'leaderboard.dart';
 
 void main() {
   runApp(const AppSetup());
@@ -24,12 +26,14 @@ class AppSetup extends StatelessWidget {
           getCameraWidget(),
           LoginWidget(),
           IdentificationWidget(),
-          GalleryWidget()
+          GalleryWidget(),
+          LeaderboardWidget(),
         ])
       )
     );
   }
 }
+
 
 // Temporary loading screen for the model. This should be moved to a new utils file or replaced with the appropriate code when created
 class ModelLoadingScreen extends StatelessWidget {
