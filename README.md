@@ -217,6 +217,18 @@ or run the file directly, change the global variable HOST to desired host: `pyth
   - `409 Conflict`: An incorrect identification already exists for this submission.
   - `500 Internal Server Error`: Database/connectivity issues.
 
+### Endpoint: Get plant species img url
+- **Method/Path**: `GET /plant-species-url`
+- **Purpose**: Retrieve url associated with a certain plant species scientific name
+- **Parameters**:
+  - scientific_name: scientific name associated with the desired plant img_url
+  - host: host associated with image server (same as api)
+  - port: port associated with image server (same as api)
+  - img_path: path to images. Currently '/plant-images'
+  - engine: Engine
+- **Behavior**:
+  - Returns a working img_url that can be used to download or view the image
+
 ### Testing script
 `Database/testing/database_testing.sql` seeds `identiflora_testing_db` with example data and exercises the full flow, including the new incorrect_identification FKs. You can run it after initializing the schema to verify constraints and sample inserts.
 
