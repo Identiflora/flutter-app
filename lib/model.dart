@@ -12,7 +12,7 @@ class OfflinePlantService {
   static const int INPUT_SIZE = 224;
   static const int NUM_CHANNELS = 3;
 
-  // PlantNet Standard Normalization (from utils.py)
+  // PlantNet Standard Normalization
   static const List<double> MEAN = [0.485, 0.456, 0.406];
   static const List<double> STD = [0.229, 0.224, 0.225];
 
@@ -24,10 +24,8 @@ class OfflinePlantService {
       // Load the labels
       final labelData = await rootBundle.loadString('assets/model/labels.txt');
       _labels = labelData.split('\n');
-      
-      print("✅ Model loaded successfully. Input shape: ${_interpreter!.getInputTensor(0).shape}");
     } catch (e) {
-      print("❌ Error loading model: $e");
+      // whatever error handling we go with
     }
   }
 
@@ -49,32 +47,26 @@ class OfflinePlantService {
     final resizedImage = img.copyResize(image, width: INPUT_SIZE, height: INPUT_SIZE);
 
     // 2. Preprocess (Normalize to Float32)
-    // Input tensor shape: [1, 3, 224, 224] or [1, 224, 224, 3] depending on conversion
-    // We assume standard [1, 3, 224, 224] for PyTorch models converted via AI Edge
     var input = Float32List(1 * 3 * INPUT_SIZE * INPUT_SIZE);
     
-    // IMPORTANT: Check your model input shape! 
-    // If getting "shape mismatch" errors, swap the loops to do [y][x][c] instead.
+
     int pixelIndex = 0;
-    for (int c = 0; c < 3; c++) { // Channels first (PyTorch style)
+    for (int c = 0; c < 3; c++) { 
       for (int y = 0; y < INPUT_SIZE; y++) {
         for (int x = 0; x < INPUT_SIZE; x++) {
           var pixel = resizedImage.getPixel(x, y);
           
-          // Extract RGB values (0-255)
           double val = 0;
           if (c == 0) val = pixel.r.toDouble();
           if (c == 1) val = pixel.g.toDouble();
           if (c == 2) val = pixel.b.toDouble();
 
-          // Normalize: (Value/255 - Mean) / Std
           input[pixelIndex++] = ((val / 255.0) - MEAN[c]) / STD[c];
         }
       }
     }
 
     // 3. Reshape for the model
-    // Try [1, 3, 224, 224] first. If that fails, try [1, 224, 224, 3].
     var inputTensor = input.reshape([1, 3, INPUT_SIZE, INPUT_SIZE]); 
     
     // 4. Run Inference
@@ -83,7 +75,7 @@ class OfflinePlantService {
 
     // 5. Parse Output with Softmax
     List<double> rawLogits = List<double>.from(outputTensor[0]);
-    List<double> probabilities = softmax(rawLogits); // <--- NEW STEP
+    List<double> probabilities = softmax(rawLogits);
 
     int bestIndex = 0;
     double bestScore = 0.0;
