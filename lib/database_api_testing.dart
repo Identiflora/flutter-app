@@ -7,7 +7,7 @@ int identificationId = 1;
 int correctSpeciesId = 2;
 int incorrectSpeciesId = 3;
 const apiBaseUrl = 'http://localhost:8000';
-const sampleScientificName = 'Quercus robur';
+const sampleScientificName = 'test_sci_name';
 
 Future<void> main(List<String> arguments) async {
   await _testSubmitIncorrectIdentification();
