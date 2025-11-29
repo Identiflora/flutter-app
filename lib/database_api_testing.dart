@@ -6,12 +6,36 @@ import 'database_utils.dart';
 int identificationId = 1;
 int correctSpeciesId = 2;
 int incorrectSpeciesId = 3;
-// String api_url =
+const apiBaseUrl = 'http://localhost:8000';
+const sampleScientificName = 'Quercus robur';
 
 Future<void> main(List<String> arguments) async {
-  submitIncorrectIdentification(
-    identificationId: identificationId,
-    correctSpeciesId: correctSpeciesId,
-    incorrectSpeciesId: incorrectSpeciesId,
-  );
+  await _testSubmitIncorrectIdentification();
+  await _testGetPlantSpeciesUrl();
+}
+
+Future<void> _testSubmitIncorrectIdentification() async {
+  try {
+    final ok = await submitIncorrectIdentification(
+      identificationId: identificationId,
+      correctSpeciesId: correctSpeciesId,
+      incorrectSpeciesId: incorrectSpeciesId,
+      apiBaseUrl: apiBaseUrl,
+    );
+    stdout.writeln('submitIncorrectIdentification success: $ok');
+  } catch (err) {
+    stderr.writeln('submitIncorrectIdentification failed: $err');
+  }
+}
+
+Future<void> _testGetPlantSpeciesUrl() async {
+  try {
+    final url = await getPlantSpeciesUrl(
+      scientificName: sampleScientificName,
+      apiBaseUrl: apiBaseUrl,
+    );
+    stdout.writeln('getPlantSpeciesUrl returned: $url');
+  } catch (err) {
+    stderr.writeln('getPlantSpeciesUrl failed: $err');
+  }
 }

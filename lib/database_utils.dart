@@ -50,6 +50,52 @@ Future<bool> submitIncorrectIdentification({
   }
 }
 
-Future<bool> getPlantSpecies() async{
+/// Fetch the image URL for a plant species using its scientific name.
+/// Returns the resolved URL as a string or throws an [HttpException] on API errors.
+Future<String> getPlantSpeciesUrl({
+  required String scientificName,
+  String apiBaseUrl = 'http://localhost:8000',
+}) async {
+  final trimmedName = scientificName.trim();
+  if (trimmedName.isEmpty) {
+    throw ArgumentError('scientificName must not be empty.');
+  }
 
+  final base = Uri.parse(apiBaseUrl);
+  final uri = Uri(
+    scheme: base.scheme, // preserve http/https from provided base
+    host: base.host, // reuse host from base URL
+    port: base.hasPort ? base.port : null, // carry port if present
+    path: base.path.endsWith('/')
+        ? '${base.path}plant-species-url'
+        : '${base.path}/plant-species-url', // append endpoint safely
+    queryParameters: {'sci_name': trimmedName}, // pass scientific name as query param
+  );
+
+  final client = HttpClient();
+  try {
+    final request = await client.getUrl(uri);
+    final response = await request.close();
+    final responseBody = await utf8.decodeStream(response);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      // FastAPI may return a raw string or JSON-string; handle both.
+      try {
+        final decoded = jsonDecode(responseBody);
+        if (decoded is String) {
+          return decoded;
+        }
+      } catch (_) {
+        // Fall through to returning the raw body.
+      }
+      return responseBody;
+    } else {
+      throw HttpException(
+        'API error ${response.statusCode}: $responseBody',
+        uri: uri,
+      );
+    }
+  } finally {
+    client.close(force: true);
+  }
 }

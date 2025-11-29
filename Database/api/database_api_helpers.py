@@ -194,7 +194,7 @@ def get_plant_species_url(scientific_name: str, host: str, port: int, img_path: 
     port: 
         port to access image server
     img_path:
-        path to access images
+        path to access images (eg. /plant-images)
     engine : sqlalchemy.engine.Engine
         Database engine used to perform the query.
 
@@ -208,12 +208,12 @@ def get_plant_species_url(scientific_name: str, host: str, port: int, img_path: 
     HTTPException
         400 if the name is empty, 404 if not found, 500 for database errors.
     """
+    # make sure scientific name has characters and is not an invalid name such as " "
     if not scientific_name or not scientific_name.strip():
         raise HTTPException(status_code=400, detail="Scientific name must be provided.")
 
     try:
         with engine.connect() as conn:
-            print(scientific_name)
             row = ensure_row(
                 conn,
                 """
