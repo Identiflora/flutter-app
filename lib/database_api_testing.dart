@@ -20,7 +20,7 @@ Future<void> main(List<String> arguments) async {
     incorrectSpeciesId: incorrectSpeciesId,
   );
 
-  bool registrationResult = await submitUserRegistration(
+  int registrationUserID = await submitUserRegistration(
     email: email, 
     username: username, 
     passwordHash: passwordHash
@@ -37,7 +37,7 @@ Future<void> main(List<String> arguments) async {
   );
 
   // Test the results that are returned for other functionality
-  debugPrint("Sign Up Result: $registrationResult");
+  debugPrint("Sign Up Result: $registrationUserID");
   debugPrint("Login Result: $userID");
   debugPrint("Wrong Credentials Login Result: $userID2");
 }

@@ -164,6 +164,16 @@ CREATE PROCEDURE add_user (IN user_email_in varchar(225), IN username_in varchar
     INSERT INTO user
       (username, email, password_hash, time_joined)
       VALUES (username_in, user_email_in, user_password_in, NOW());
+
+    -- Get user ID for new user
+    SELECT user_id FROM user
+    WHERE username = username_in AND email = user_email_in AND password_hash = user_password_in;
+  END//
+
+CREATE PROCEDURE get_user (IN user_id_in int)
+  BEGIN
+    SELECT username FROM user
+    WHERE user_id = user_id_in;
   END//
 
 CREATE PROCEDURE login_user (IN user_email_in varchar(225))

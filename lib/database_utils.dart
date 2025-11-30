@@ -57,7 +57,7 @@ Future<bool> submitIncorrectIdentification({
 ///     username: usernameVar, 
 ///     passwordHash: hashVar
 ///   );
-Future<bool> submitUserRegistration({
+Future<int> submitUserRegistration({
   required String email,
   required String username,
   required String passwordHash,
@@ -85,11 +85,13 @@ Future<bool> submitUserRegistration({
     final responseBody = await utf8.decodeStream(response);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return true;
+      final jsonResponse = jsonDecode(responseBody);
+      final userID = jsonResponse['user_id'] as int;
+      return userID;
     }
     // Return false if duplicate at any point is found
     else if (response.statusCode == 409){
-      return false;
+      return -1;
     }
     else {
       // Surface other responses for debugging purposes.
