@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:identiflora/leaderboard.dart';
 
 
 class LoginWidget extends StatefulWidget {
@@ -118,6 +119,8 @@ class _LoginScreenState extends State<LoginScreen> {
              ),
            ),
 
+/*  COMMENTING OUT BCS USER ACCOUNTS NOW VIEWABLE
+    VIA THE LEADERBOARD
           ElevatedButton(
             onPressed: (){
               print("Curresnt Users:");
@@ -127,7 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
             },
             child: const Text("View all current users")
           )
-
+*/
 
          ],
        ),
@@ -263,6 +266,11 @@ final hashedPassword = hashPassword(password);
    password: hashedPassword,
  );
  userAccounts.add(newUser);
+
+//ADD NEW USER TO RANDOM SPOT ON LEADERBOARD
+ LeaderBoardControl.addUser(
+  LeaderboardUser(userName: username)
+ );
 
 
  //PRINT USER CREDINTIALS TO CONSOLE
