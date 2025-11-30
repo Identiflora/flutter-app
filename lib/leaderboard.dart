@@ -30,7 +30,7 @@ Widget build(BuildContext context) {
        alignment: Alignment.bottomRight,
        child: Padding(
          padding: const EdgeInsets.symmetric(horizontal:16),
-         child: ElevatedButton(onPressed: () {
+         child: GestureDetector(onTap: () {
            Navigator.push(
                context,
                MaterialPageRoute(
@@ -38,7 +38,7 @@ Widget build(BuildContext context) {
                ),
            );
          },
-         child: Text('Leaderboard'))
+         child: Image.asset('assets/homepage/leaderboard_icon.png', width: 80, height: 80))
        )
      ),
    );
