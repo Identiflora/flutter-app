@@ -127,6 +127,7 @@ State<LoginForm> createState() => _LoginFormState();
       backgroundColor: Colors.green,  
       ),
     ); 
+    Navigator.pop(context);
   } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Incorrect email or password"),
