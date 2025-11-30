@@ -9,6 +9,7 @@ CREATE TABLE user (
   email varchar(255) NOT NULL,
   password_hash varchar(255) NOT NULL,
   phone varchar(255),
+  global_points int,
   time_joined timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (user_id),
