@@ -5,6 +5,7 @@ Database/schema/mysql_installation_log.txt
 Database/schema/run_sql.txt
 model_training_data/
 Database/api/database_password.txt
+Database/api/aws_password.txt
 
 # Miscellaneous
 *.class
@@ -60,3 +61,4 @@ app.*.map.json
 
 # Python testing scripts
 Database/api/url_testing.py
+Database/aws_password.txt
