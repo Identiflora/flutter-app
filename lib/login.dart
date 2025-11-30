@@ -55,7 +55,8 @@ class _Login extends State<LoginWidget>{
        alignment: Alignment.topLeft,
        child: Padding(
          padding: const EdgeInsets.symmetric(horizontal:16),
-         child: ElevatedButton(onPressed: () {
+         child: GestureDetector(
+          onTap: () {
            Navigator.push(
                context,
                MaterialPageRoute(
@@ -63,7 +64,7 @@ class _Login extends State<LoginWidget>{
                ),
            );
          },
-         child: Text('Login'))
+         child: Image.asset('assets/homepage/account_icon.png', width: 80, height: 80))
        )
      ),
    );
