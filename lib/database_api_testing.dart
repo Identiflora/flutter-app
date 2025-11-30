@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'database_utils.dart';
@@ -36,8 +34,18 @@ Future<void> main(List<String> arguments) async {
     passwordHash: passwordHash2
   );
 
+  String recievedUsername = await fetchUsername(
+    userID: userID
+  );
+
+  String recievedUsername2 = await fetchUsername(
+    userID: 1
+  );
+
   // Test the results that are returned for other functionality
   debugPrint("Sign Up Result: $registrationUserID");
   debugPrint("Login Result: $userID");
   debugPrint("Wrong Credentials Login Result: $userID2");
+  debugPrint("Username Result: $recievedUsername");
+  debugPrint("SQL Test Username Result: $recievedUsername2");
 }

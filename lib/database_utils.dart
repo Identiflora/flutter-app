@@ -158,3 +158,46 @@ Future<int> submitUserLogin({
     client.close(force: true);
   }
 }
+
+/// Send a username fetch request to the API.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => fetchUsername(
+///     uderID: IDVar
+///   );
+Future<String> fetchUsername({
+  required int userID,
+  String apiBaseUrl = 'http://localhost:8000',
+}) async {
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/$userID');
+
+  final client = HttpClient();
+  try {
+    // Create and send the POST request with JSON body.
+    final request = await client.getUrl(uri);
+
+    // Await the response and read the body for error context.
+    final response = await request.close();
+    final responseBody = await utf8.decodeStream(response);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(responseBody);
+      final username = jsonResponse['username'] as String;
+      return username;
+    }
+    // Return -1 if invalid user
+    else if (response.statusCode == 401){
+      return "";
+    }
+    else {
+      // Surface other responses for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: $responseBody',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP client is closed even if an error occurs.
+    client.close(force: true);
+  }
+}
