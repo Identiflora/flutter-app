@@ -1,43 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-
+import 'package:identiflora/database_utils.dart';
 
 class LoginWidget extends StatefulWidget {
  const LoginWidget({super.key});
 
-
  @override
  State<LoginWidget> createState() =>_Login();
 }
-
-
-//CREATE CLASS FOR USER ACCOUNTS
-class UserAccount {
- final String email; //cant be changed, like const
- final String username;
- final String password;
-
-
- //CONSTRUCTOR
- UserAccount({
-   required this.email, //must be entered
-   required this.username,
-   required this.password,
- });
-
-//ALLOWS ON SCREEN BUTTON TO PRINT ACCOUNT LIST TO CONSOLE
-@override
-String toString(){
-  return 'User(email: $email, username: $username, password: $password)';
-}
-
-} //end UserAccount
-
-
-
-//CREATE LIST FOR ACCOUNT CREDENTIALS OF USERACOUNT OBJECTS
-List<UserAccount> userAccounts = [];
 
 //HASH ACCOUNT PASSWORDS FUNCT
 String hashPassword(String password){
@@ -45,7 +16,6 @@ String hashPassword(String password){
   final digest = sha256.convert(bytes); //APPLY HASHING
   return digest.toString(); //RETURN HASHED STRING
 }
-
 
 class _Login extends State<LoginWidget>{
  @override
@@ -69,23 +39,17 @@ class _Login extends State<LoginWidget>{
      ),
    );
  }
-
-
 }
-
 
 class LoginScreen extends StatefulWidget {
  const LoginScreen({super.key});
-
 
  @override
  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-
 class _LoginScreenState extends State<LoginScreen> {
  bool isLoginView = true; // true for Login, false for Sign Up
-
 
  void toggleView() {
    setState(() {
@@ -118,18 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
                style: const TextStyle(fontWeight: FontWeight.bold),
              ),
            ),
-
-          ElevatedButton(
-            onPressed: (){
-              print("Curresnt Users:");
-              for (var user in userAccounts){
-                print(user);
-              }
-            },
-            child: const Text("View all current users")
-          )
-
-
          ],
        ),
      ),
@@ -149,16 +101,12 @@ State<LoginForm> createState() => _LoginFormState();
     final emailControl = TextEditingController();
     final passwordControl = TextEditingController();
 
-    Future<bool> passwordCheckViaApi(String email, String password) async{ //Future-value comes from api
-      await Future.delayed(const Duration(seconds:1)); //awaits for api
-      return password == "password"; //temp password
-    } //end class
 
   void loginPressed() async {
     final email = emailControl.text.trim();
     final password = passwordControl.text.trim();
     
-    if (email.isEmpty || password.isEmpty){
+    if (email.isEmpty || password.isEmpty){   
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please complete all fields"),
         backgroundColor: Colors.red,
@@ -170,9 +118,10 @@ State<LoginForm> createState() => _LoginFormState();
 
 //ADDED FOR PASS HASHING - USE CREATED FUNCT ABOVE
   final hashedPassword = hashPassword(password);
-  final bool valid = await passwordCheckViaApi(email, hashedPassword);
+  final int userID = await submitUserLogin(email: email , passwordHash: hashedPassword);
+  //LINE ABOVE ASSIGNED -1 IF USERID EXITS
 
-  if (valid) {
+  if (userID > 0) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Successfully logged in"),
       backgroundColor: Colors.green,  
@@ -235,7 +184,7 @@ class _SignUpFormState extends State<SignUpForm>{
  final confirmControl = TextEditingController();
 
 
- void signUp(){
+ void signUp() async {
    final email = emailControl.text.trim();
    final username = usernameControl.text.trim();
    final password = passwordControl.text.trim();
@@ -252,28 +201,24 @@ class _SignUpFormState extends State<SignUpForm>{
    return;
  } //END SIGNUP 
 
-  print(userAccounts);
 
 //ONLY AFTER CONFIRMING PASSWORDS - HASH 
 final hashedPassword = hashPassword(password);
 
 //ADDS USER CREDENTIALS TO LIST
- final newUser = UserAccount(
-   email: email,
-   username: username,
-   password: hashedPassword,
- );
- userAccounts.add(newUser);
-
-
- //PRINT USER CREDINTIALS TO CONSOLE
- print("New user has been signed up");
- print("Email is $email");
- print("Username is $username");
- print("password is $hashedPassword");
-
-
- Navigator.pop(context);
+ final int userID = await submitUserRegistration(email: email, username: username, passwordHash: hashedPassword);
+//RETURNS -1 IF DUPLICATE ACCOUNT
+if (userID <= 0){
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: 
+    Text("Account already exists"),
+    backgroundColor: Colors.red,
+    ),
+  );
+   return;
+ } else {
+     Navigator.pop(context);
+ }
 
 
  }//end sign up
@@ -287,21 +232,21 @@ final hashedPassword = hashPassword(password);
 Widget build(BuildContext contex){
  return Column(
    children: [
-     TextField(controller: emailControl, decoration: const InputDecoration(labelText: 'email')),
+     TextField(controller: emailControl, decoration: const InputDecoration(labelText: 'Email')),
      const SizedBox(height: 16),
 
 
-     TextField(controller: usernameControl, decoration: const InputDecoration(labelText: 'username')),
+     TextField(controller: usernameControl, decoration: const InputDecoration(labelText: 'Username')),
      const SizedBox(height: 16),
 
 
-     TextField(controller: passwordControl, obscureText: true, decoration: const InputDecoration(labelText: 'password')),
+     TextField(controller: passwordControl, obscureText: true, decoration: const InputDecoration(labelText: 'Password')),
      const SizedBox(height: 16),
 
 
      TextField(controller:  confirmControl, 
      obscureText: true,
-     decoration: const InputDecoration(labelText: 'confirm password')),
+     decoration: const InputDecoration(labelText: 'Confirm Password')),
      const SizedBox(height: 16),
 
     ElevatedButton(
