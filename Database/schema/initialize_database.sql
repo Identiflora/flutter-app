@@ -9,6 +9,7 @@ CREATE TABLE user (
   email varchar(255) NOT NULL,
   password_hash varchar(255) NOT NULL,
   phone varchar(255),
+  global_points int,
   time_joined timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (user_id),
@@ -141,12 +142,6 @@ CREATE PROCEDURE add_incorrect_id (IN ident_id_in int, IN correct_species_id_in 
       VALUES (ident_id_in, correct_species_id_in, inc_species_id_in, NOW());
   END//
 
-CREATE PROCEDURE check_user_id_exists (IN user_id_in int)
-  BEGIN
-    SELECT user_id FROM user
-    WHERE user_id = user_id_in;
-  END//
-
 CREATE PROCEDURE check_username_exists (IN username_in varchar(225))
   BEGIN
     SELECT username FROM user
@@ -165,17 +160,27 @@ CREATE PROCEDURE check_user_password_hash_exists (IN user_password_in varchar(22
     WHERE password_hash = user_password_in;
   END//
 
-CREATE PROCEDURE check_user_phone_exists (IN user_phone_in varchar(225))
-  BEGIN
-    SELECT phone FROM user
-    WHERE phone = user_phone_in;
-  END//
-
 CREATE PROCEDURE add_user (IN user_email_in varchar(225), IN username_in varchar(225), IN user_password_in varchar(225))
   BEGIN
     INSERT INTO user
       (username, email, password_hash, time_joined)
       VALUES (username_in, user_email_in, user_password_in, NOW());
+
+    -- Get user ID for new user
+    SELECT user_id FROM user
+    WHERE username = username_in AND email = user_email_in AND password_hash = user_password_in;
+  END//
+
+CREATE PROCEDURE get_user (IN user_id_in int)
+  BEGIN
+    SELECT username FROM user
+    WHERE user_id = user_id_in;
+  END//
+
+CREATE PROCEDURE login_user (IN user_email_in varchar(225))
+  BEGIN
+    SELECT user_id, password_hash FROM user
+    WHERE email = user_email_in;
   END//
 
 delimiter ;
