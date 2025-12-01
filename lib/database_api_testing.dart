@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'database_utils.dart';
 
@@ -56,9 +55,9 @@ Future<void> _testSubmitIncorrectIdentification() async {
       incorrectSpeciesId: incorrectSpeciesId,
       apiBaseUrl: apiBaseUrl,
     );
-    stdout.writeln('submitIncorrectIdentification success: $ok');
+    debugPrint('submitIncorrectIdentification success: $ok');
   } catch (err) {
-    stderr.writeln('submitIncorrectIdentification failed: $err');
+    debugPrint('submitIncorrectIdentification failed: $err');
   }
 }
 
@@ -68,8 +67,8 @@ Future<void> _testGetPlantSpeciesUrl() async {
       scientificName: sampleScientificName,
       apiBaseUrl: apiBaseUrl,
     );
-    stdout.writeln('getPlantSpeciesUrl returned: $url');
+    debugPrint('getPlantSpeciesUrl returned: $url');
   } catch (err) {
-    stderr.writeln('getPlantSpeciesUrl failed: $err');
+    debugPrint('getPlantSpeciesUrl failed: $err');
   }
 }
