@@ -1,59 +1,32 @@
 import 'package:flutter/material.dart';
 import 'guess_result.dart';
 
-class IdentificationWidget extends StatefulWidget {
-  const IdentificationWidget({super.key});
-
-  @override
-  State<StatefulWidget> createState() => _Identification();
-}
-
-// main menu button for testing
-class _Identification extends State<IdentificationWidget>{
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Align(
-        alignment: Alignment.topRight,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal:16),
-          child: ElevatedButton(onPressed: () {
-            Navigator.push(
-                context, 
-                MaterialPageRoute(
-                  builder: (context) => const UserChoiceScreen(), 
-                ),
-            );
-          }, 
-          child: const Text('Model Identification'))
-        )
-      ),
-    );
-  }
-}
 
 
 class UserChoiceScreen extends StatefulWidget {
-  const UserChoiceScreen({super.key});
+  final List<Map<String, dynamic>> predictions;
+
+  const UserChoiceScreen({
+    super.key, 
+    required this.predictions
+  });
   
   @override
   State<StatefulWidget> createState() => _UserChoiceScreen();
 }
 
-// setup stubbed plant choices based on strings
 class _UserChoiceScreen extends State<UserChoiceScreen>{
-  String userChoice = '';
-  String modelChoice = 'Quaking Aspen';
-  var optionList = ['Quaking Aspen', 'Sugar Pine', 'Ponderosa Pine', 'Jeffery Pine', 'White Fir'];
+  int? userChoice; // do need this though
 
-  void selectOption(String option) {
+  void selectOption(int index) {
     setState(() {
-      userChoice = option;
+      userChoice = index;
     });
   }
 
-  // choice selections screen, based off just a dynamic side margin but probably
-  // needs defined padding instead
+  // choice selections screen, based off just a dynamic side margin (FractionallySizedBox) but probably
+  // needs defined padding instead, i'm just a fan of it from html experience
+
   // i hope we keep the selection styling i spent way too much time on it
   @override
   Widget build(BuildContext context) {
@@ -80,28 +53,29 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                   // probably dont need a loop for this I just copied what the tutorial
                   // did to construct a list but probably not needed since we will know
                   // the length in advance
-                  for (var option in optionList)
+                  // However, this could allow to randomize the order of options easily by having
+                  // entry start at a random value between 0-4 to print options, just having it
+                  // loop back around after 4
+                  for (var entry in widget.predictions.asMap().entries)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0), 
                       child: TextButton(
-                        onPressed: () => selectOption(option), 
-                        
+                        onPressed: () => selectOption(entry.key),
                         style: TextButton.styleFrom(
-                          foregroundColor: userChoice == option ? primaryColor : onSurfaceColor,
-                          backgroundColor: userChoice == option ? primaryColor.withValues(alpha: 0.1) : Colors.transparent,
+                          foregroundColor: userChoice == entry.key ? primaryColor : onSurfaceColor,
+                          backgroundColor: userChoice == entry.key ? primaryColor.withValues(alpha: 0.1) : Colors.transparent,
                           side: BorderSide(
-                            color: userChoice == option ? primaryColor : outlineColor, 
+                            color: userChoice == entry.key ? primaryColor : outlineColor, 
                             width: 2,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           padding: const EdgeInsets.all(16.0),
-                          
                           elevation: 0,
                         ),
                         child: Text(
-                          option,
+                          entry.value['label'],
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -111,11 +85,14 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                     ),
                   const Spacer(),
                   ElevatedButton(
-                          onPressed: userChoice.isNotEmpty 
+                          onPressed: userChoice != null
                             ? () {
                                 Navigator.push(context,
                                   MaterialPageRoute(
-                                    builder: (context) => ResultsWidget(modelChoice: modelChoice, userChoice: userChoice)),
+                                    builder: (context) => ResultsWidget(
+                                      userChoiceIndex: userChoice!, 
+                                      allPredictions: widget.predictions)
+                                  ),
                                 );
                               }
                             : null,

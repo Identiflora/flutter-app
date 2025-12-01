@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 
 // object for plant information for the grid cards
-// assuming that scientific name will be needed as i think thats what the model
-// uses to identify each plant
 class PlantMatch {
   final String commonName;
   final String scientificName; 
-  final int confidenceScore;
+  final double confidenceScore;
 
   PlantMatch({
     required this.commonName,
@@ -16,30 +14,37 @@ class PlantMatch {
 }
 
 class TopMatchesWidget extends StatefulWidget {
-  const TopMatchesWidget({super.key});
+  final List<Map<String, dynamic>> predictions;
+
+  const TopMatchesWidget({
+    super.key,
+    required this.predictions, 
+  });
 
   @override
   State<TopMatchesWidget> createState() => _TopMatchesWidgetState();
 }
 
 class _TopMatchesWidgetState extends State<TopMatchesWidget> {
-  // dummy plant data
-  final List<PlantMatch> matches = [
-    PlantMatch(commonName: 'Quaking Aspen', scientificName: 'Populus tremuloides', confidenceScore: 92),
-    PlantMatch(commonName: 'Sugar Pine', scientificName: 'Pinus lambertiana', confidenceScore: 88),
-    PlantMatch(commonName: 'Ponderosa Pine', scientificName: 'Pinus ponderosa', confidenceScore: 85),
-    PlantMatch(commonName: 'Jeffery Pine', scientificName: 'Pinus jeffreyi', confidenceScore: 79),
-    PlantMatch(commonName: 'White Fir', scientificName: 'Abies concolor', confidenceScore: 74),
-  ];
 
   @override
   Widget build(BuildContext context) {
-    final Color confidenceColor = Theme.of(context).colorScheme.primary;
-    
     const TextStyle mainTextStyle = TextStyle(
       fontSize: 22,
       color: Colors.black,
     );
+
+    final List<PlantMatch> matches = widget.predictions.map((pred) {
+      return PlantMatch(
+        // no implementation for commonName yet, needs either a second label text document
+        // with common name or get it get from database
+        commonName: 'Common Name TBD', 
+        scientificName: pred['label'], 
+        confidenceScore: pred['score'],
+        // maybe plant image could included here as well, still not sure how that will
+        // work with getting it from the database
+      );
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -62,16 +67,29 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
               ),
               const SizedBox(height: 24),
               Expanded(
+                // This should lowkey maybe just be a single column scrollable grid but
+                // I dont wanna mess it up rn
                 child: GridView.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 16.0,
                     mainAxisSpacing: 16.0,
-                    childAspectRatio: 0.75,
+                    childAspectRatio: 0.8,
                   ),
                   itemCount: matches.length,
                   itemBuilder: (context, index) {
                     final match = matches[index];
+
+                    Color confidenceColor;
+                    // these ranges might to be tweaked based on what the average
+                    // confidence scores seem to actually be in practice
+                    if (match.confidenceScore >= 0.6) {
+                      confidenceColor = Colors.green;
+                    } else if (match.confidenceScore >= 0.3) {
+                      confidenceColor = Colors.orange;
+                    } else {
+                      confidenceColor = Colors.red;
+                    }
                     return Card(
                       elevation: 2,
                       shape: RoundedRectangleBorder(
@@ -80,6 +98,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                       child: InkWell(
                         onTap: () {
                           // Maybe opens full preview of image and then submission confirmation?
+                          // also where database would be sent information on the model being incorrect
                         },
                         borderRadius: BorderRadius.circular(12.0),
                         child: Column(
@@ -90,6 +109,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                 borderRadius: const BorderRadius.vertical(
                                   top: Radius.circular(12.0),
                                 ),
+                                // Plant image, might need to be reformatted if we are pulling from database
                                 child: const Placeholder(
                                   color: Colors.grey,
                                   strokeWidth: 1.0,
@@ -100,6 +120,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                               padding: const EdgeInsets.all(8.0),
                               child: Column(
                                 children: [
+                                  // Common Name
                                   Text(
                                     match.commonName,
                                     textAlign: TextAlign.center,
@@ -111,8 +132,24 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 4),
+                                  
+                                  // Scientific Name
                                   Text(
-                                    '${match.confidenceScore}% Likely',
+                                    match.scientificName,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+
+                                  // Confidence Score
+                                  Text(
+                                    '${(match.confidenceScore * 100).toStringAsFixed(1)}% Likely',
                                     style: TextStyle(
                                       color: confidenceColor,
                                       fontWeight: FontWeight.bold,
