@@ -186,7 +186,7 @@ Future<String> fetchUsername({
       return username;
     }
     // Return -1 if invalid user
-    else if (response.statusCode == 401){
+    else if (response.statusCode == 404){
       return "";
     }
     else {

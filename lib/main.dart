@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/gallery_utils.dart';
+import 'package:identiflora/leaderboard.dart';
 import 'camera_utils.dart';
 import 'account_utils.dart';
 import 'user_guess.dart';
@@ -24,7 +25,8 @@ class AppSetup extends StatelessWidget {
           getCameraWidget(),
           LoginWidget(),
           IdentificationWidget(),
-          GalleryWidget()
+          GalleryWidget(),
+          LeaderboardWidget(),
         ])
       )
     );

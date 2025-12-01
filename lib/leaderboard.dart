@@ -65,30 +65,36 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         title: const Text("Leaderboard"),
       ), //END APPBAR
       
-      body: Builder(
-        builder: (context){
-          final leaderboard =LeaderBoardControl.users;
-
-          if (leaderboard.isEmpty){
-            return const Center( child: Text("No current accounts"),)
-            ;
+      body: FutureBuilder<List<LeaderboardUser>>(
+        future: addAllUsers(),
+        builder: (context, snapshot){
+          if(snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
           }
+          else if(snapshot.hasData && snapshot.data != null) {
+            final leaderboard = snapshot.data;
 
-      return ListView.builder(
-        itemCount: leaderboard.length,
-        itemBuilder: (context, index){
-          final user = leaderboard[index];
+            if (leaderboard!.isEmpty){
+              return const Center(child: Text("No current accounts"),);
+            }
 
-          return ListTile(
-            leading: Text("#${index +1}"),
-            title: Text(user.userName),
-            trailing: Text("${user.userScore} pts"),
-          );
-        },
-      );
+            return ListView.builder(
+              itemCount: leaderboard.length,
+              itemBuilder: (context, index){
+                final user = leaderboard[index];
 
-      },
-      
+                return ListTile(
+                  leading: Text("#${index +1}"),
+                  title: Text(user.userName),
+                  trailing: Text("${user.userScore} pts"),
+                );
+              },
+            );
+          }
+          else {
+            return Text("No current accounts in database");
+          }
+        }
       ),
    );
  
@@ -112,26 +118,31 @@ class LeaderboardUser {
 
 } //END LEADERBOARDUSER CLASS
 
+Future<List<LeaderboardUser>> addAllUsers() async {
+  final List<LeaderboardUser> users = [];
+
+  String userName = "";
+  int userID = 1;
+  do {
+    userName = await fetchUsername(userID: userID);
+    LeaderboardUser tempUser = LeaderboardUser(userName: userName, userId: userID, userScore: 0);
+    
+    if (userName != ""){
+      users.insert(userID - 1, tempUser); //ADDS USERS TO LIST
+    }
+
+    userID ++;
+  } while (userName != "");
+
+  return users;
+}
+
 
 // CLASS THAT CREATES USERS RANDOM INDEX, AND ADDS THEM TO LEADERBOARD LIST
 class LeaderBoardControl{
   static final Random _rng = Random(); //CREATES RANDOM LEADERBOARD INDEX FOR USER ACCOUNT
   static final List<LeaderboardUser> users = [];
   int databaseLastIndex = 0;
-  void addAllUsers() async {
-    String userName = '';
-    int userID = 1;
-    do {
-      userName = await fetchUsername(userID: userID);
-      LeaderboardUser tempUser = LeaderboardUser(userName: userName, userId: userID, userScore: 0);
-      if (userName != ''){
-        users.insert(userID, tempUser); //ADDS USERS TO LIST
-      }
-
-      userID ++;
-    } while (userName != '');
-    databaseLastIndex = userID;
-  }
 
  static void addUser(LeaderboardUser user){
     final index = _rng.nextInt(users.length +1); //RANGE IS USERS +1
