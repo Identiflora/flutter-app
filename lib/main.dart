@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/gallery_utils.dart';
+import 'package:identiflora/leaderboard_utils.dart';
 import 'camera_utils.dart';
+import 'account_utils.dart';
 
 void main() {
   runApp(const AppSetup());
@@ -15,11 +17,14 @@ class AppSetup extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Identiflora",
+      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.green)),
       home: Scaffold(
         backgroundColor: Colors.black,
         body: Stack(children: [
           getCameraWidget(),
-          GalleryWidget()
+          LoginWidget(),
+          GalleryWidget(),
+          LeaderboardWidget(),
         ])
       )
     );
