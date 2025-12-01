@@ -69,7 +69,8 @@ Future<String> getPlantSpeciesUrl({
     path: base.path.endsWith('/')
         ? '${base.path}plant-species-url'
         : '${base.path}/plant-species-url', // append endpoint safely
-    queryParameters: {'sci_name': trimmedName}, // pass scientific name as query param
+    // API expects the query param to be named "scientific_name"
+    queryParameters: {'scientific_name': trimmedName},
   );
 
   final client = HttpClient();
