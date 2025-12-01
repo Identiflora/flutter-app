@@ -11,6 +11,8 @@ class OfflinePlantService {
 
   static const int INPUT_SIZE = 224;
   static const int NUM_CHANNELS = 3;
+  // added this for when the # of classes changes after transfer learning
+  static const int NUM_CLASSES = 1081;
 
   // PlantNet Standard Normalization
   static const List<double> MEAN = [0.485, 0.456, 0.406];
@@ -21,7 +23,7 @@ class OfflinePlantService {
       // Load the model
       _interpreter = await Interpreter.fromAsset('assets/model/plantnet.tflite');
       
-      // Load the labels
+      // Load the scientific name labels
       final labelData = await rootBundle.loadString('assets/model/labels.txt');
       _labels = labelData.split('\n');
     } catch (e) {
@@ -30,23 +32,23 @@ class OfflinePlantService {
   }
 
   List<double> softmax(List<double> logits) {
-  double maxLogit = logits.reduce((curr, next) => curr > next ? curr : next);
-  List<double> exps = logits.map((e) => exp(e - maxLogit)).toList();
-  double sumExps = exps.reduce((a, b) => a + b);
-  return exps.map((e) => e / sumExps).toList();
+    double maxLogit = logits.reduce((curr, next) => curr > next ? curr : next);
+    List<double> exps = logits.map((e) => exp(e - maxLogit)).toList();
+    double sumExps = exps.reduce((a, b) => a + b);
+    return exps.map((e) => e / sumExps).toList();
   }
 
   Future<List<Map<String, dynamic>>> predict(File imageFile) async {
     if (_interpreter == null) await loadModel();
 
-    // 1. Decode and Resize Image
+    // Decode and Resize Image
     final imageData = await imageFile.readAsBytes();
     final image = img.decodeImage(imageData);
     // if (image == null) return "Could not decode image";
 
     final resizedImage = img.copyResize(image!, width: INPUT_SIZE, height: INPUT_SIZE);
 
-    // 2. Preprocess (Normalize to Float32)
+    // Preprocess (Normalize to Float32)
     var input = Float32List(1 * 3 * INPUT_SIZE * INPUT_SIZE);
     
 
@@ -66,25 +68,33 @@ class OfflinePlantService {
       }
     }
 
-    // 3. Reshape for the model
+    // Reshape for the model
     var inputTensor = input.reshape([1, 3, INPUT_SIZE, INPUT_SIZE]); 
     
-    // 4. Run Inference
-    var outputTensor = List.filled(1 * 1081, 0.0).reshape([1, 1081]);
+    // Run Inference
+    var outputTensor = List.filled(1 * NUM_CLASSES, 0.0).reshape([1, 1081]);
     _interpreter!.run(inputTensor, outputTensor);
 
-    // 5. Parse Output with Softmax
+    // Parse Output with Softmax
     List<double> rawLogits = List<double>.from(outputTensor[0]);
+    List<double> probabilities = softmax(rawLogits);
     List<Map<String, dynamic>> sortedResults = [];
     for (int i = 0; i < rawLogits.length; i++) {
       sortedResults.add({
-        'index': i,
-        'score': rawLogits[i], 
+        // NOTE FOR DATABASE: if we match the id's of the plant classes (class_index) 
+        // that the model uses with what we save as the identification number 
+        // in the database that would be goated
+        'class_index': i,
+        // this saves the confidence score as a converted percentage, it might be more sound to save
+        // the raw score and then apply the softmax when its actually needed but idk
+        'score': probabilities[i], 
         'label': _labels != null ? _labels![i] : 'Class $i',
       });
     }
 
     // Sort by score, still have to make the choice options not show in descending order though
+    // I like sorting them like this as cell 0 will always be top option and the show all 5 options
+    // screen will display in order of confidence score inherently
     sortedResults.sort((a, b) => (b['score'] as double).compareTo(a['score']));
 
     return sortedResults.take(5).toList(); 

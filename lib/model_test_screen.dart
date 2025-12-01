@@ -1,3 +1,7 @@
+// This was just used for testing that the model works at all, still could be useful
+// in the future to give the model an image and immediately get what the top result
+// is
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -44,10 +48,12 @@ class _ModelTestScreenState extends State<ModelTestScreen> {
     try {
       await Future.delayed(const Duration(milliseconds: 100)); 
       
-      final result = await _plantService.predict(_selectedImage!);
+      List<Map<String, dynamic>> result = await _plantService.predict(_selectedImage!);
+      String topName = result[0]['label'];
+      double topScore = result[0]['score'];
       
       setState(() {
-        _output = result;
+        _output = "$topName (${(topScore * 100).toStringAsFixed(1)}%)";
         _isLoading = false;
       });
     } catch (e) {

@@ -1,36 +1,6 @@
 import 'package:flutter/material.dart';
 import 'guess_result.dart';
 
-class IdentificationWidget extends StatefulWidget {
-  const IdentificationWidget({super.key});
-
-  @override
-  State<StatefulWidget> createState() => _Identification();
-}
-
-// main menu button for testing
-class _Identification extends State<IdentificationWidget>{
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Align(
-        alignment: Alignment.topRight,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal:16),
-          child: ElevatedButton(onPressed: () {
-            Navigator.push(
-                context, 
-                MaterialPageRoute(
-                  builder: (context) => const UserChoiceScreen(), 
-                ),
-            );
-          }, 
-          child: const Text('Model Identification'))
-        )
-      ),
-    );
-  }
-}
 
 
 class UserChoiceScreen extends StatefulWidget {
@@ -45,11 +15,8 @@ class UserChoiceScreen extends StatefulWidget {
   State<StatefulWidget> createState() => _UserChoiceScreen();
 }
 
-// setup stubbed plant choices based on strings
 class _UserChoiceScreen extends State<UserChoiceScreen>{
-  int? userChoice;
-  // String modelChoice = 'Quaking Aspen';
-  // var optionList = ['Quaking Aspen', 'Sugar Pine', 'Ponderosa Pine', 'Jeffery Pine', 'White Fir'];
+  int? userChoice; // do need this though
 
   void selectOption(int index) {
     setState(() {
@@ -57,8 +24,9 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
     });
   }
 
-  // choice selections screen, based off just a dynamic side margin but probably
-  // needs defined padding instead
+  // choice selections screen, based off just a dynamic side margin (FractionallySizedBox) but probably
+  // needs defined padding instead, i'm just a fan of it from html experience
+
   // i hope we keep the selection styling i spent way too much time on it
   @override
   Widget build(BuildContext context) {
@@ -85,6 +53,9 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                   // probably dont need a loop for this I just copied what the tutorial
                   // did to construct a list but probably not needed since we will know
                   // the length in advance
+                  // However, this could allow to randomize the order of options easily by having
+                  // entry start at a random value between 0-4 to print options, just having it
+                  // loop back around after 4
                   for (var entry in widget.predictions.asMap().entries)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0), 
@@ -118,7 +89,9 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                             ? () {
                                 Navigator.push(context,
                                   MaterialPageRoute(
-                                    builder: (context) => ResultsWidget(userChoiceIndex: userChoice!, allPredictions: widget.predictions)
+                                    builder: (context) => ResultsWidget(
+                                      userChoiceIndex: userChoice!, 
+                                      allPredictions: widget.predictions)
                                   ),
                                 );
                               }

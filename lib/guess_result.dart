@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'model_incorrect.dart';
 
 class ResultsWidget extends StatefulWidget {
-  final String modelChoice;
-  final String userChoice;
+  final int userChoiceIndex;
+  final List<Map<String, dynamic>> allPredictions;
+  
   const ResultsWidget({
+    required this.userChoiceIndex,
+    required this.allPredictions,
     super.key,
-    required this.modelChoice,
-    required this.userChoice,
   });
 
   @override
@@ -17,7 +18,14 @@ class ResultsWidget extends StatefulWidget {
 class _Results extends State<ResultsWidget> {
   @override
   Widget build(BuildContext context) {
-    final bool choicesMatch = widget.modelChoice == widget.userChoice;
+    final Map<String, dynamic> topMatch = widget.allPredictions[0];
+    final String modelTopName = topMatch['label'];
+
+    final Map<String, dynamic> userPick = widget.allPredictions[widget.userChoiceIndex];
+    final String userPickedName = userPick['label'];
+
+    final bool isCorrect = widget.userChoiceIndex == 0;
+
     // correct color based off themeing with a hard dark red for incorrect
     final Color incorrectColor = const Color.fromARGB(255, 180, 39, 39);
     final Color correctColor = Theme.of(context).colorScheme.primary;
@@ -52,11 +60,13 @@ class _Results extends State<ResultsWidget> {
                 text: TextSpan(
                   style: mainTextStyle,
                   children: <TextSpan>[
-                    if (choicesMatch) ...[
+                    // if anyone sees this why does this if else need these ...
+                    // I dont get it but it doesnt work without it
+                    if (isCorrect) ...[
                       // Correct guess
                       const TextSpan(text: "You said this plant is a\n"),
                       TextSpan(
-                        text: widget.userChoice, 
+                        text: userPickedName, 
                         style: plantNameStyle.copyWith(color: correctColor),
                       ),
                       const TextSpan(text: "\nand were correct!"),
@@ -64,22 +74,21 @@ class _Results extends State<ResultsWidget> {
                       // Incorrect guess
                       const TextSpan(text: "You said this plant is a\n"),
                       TextSpan(
-                        text: "${widget.userChoice}...\n",
+                        text: "$userPickedName...\n",
                         style: plantNameStyle.copyWith(color: incorrectColor),
                       ),
                       const TextSpan(text: "but it is actually a\n"),
                       TextSpan(
-                        text: widget.modelChoice,
+                        text: modelTopName,
                         style: plantNameStyle.copyWith(color: correctColor),
                       ),
                     ],
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
 
-              // --- Plant Image Placeholder ---
+              // Plant image placeholder, need to call API in future for image
               SizedBox(
                 height: 300,
                 child: ClipRRect(
@@ -105,7 +114,7 @@ class _Results extends State<ResultsWidget> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        if (choicesMatch) {
+                        if (isCorrect) {
                           // Scoring implementation
                         }
                         else {
@@ -136,7 +145,7 @@ class _Results extends State<ResultsWidget> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const TopMatchesWidget(),
+                            builder: (context) => TopMatchesWidget(predictions: widget.allPredictions),
                           ),
                         );
                       },
