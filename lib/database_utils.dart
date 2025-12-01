@@ -12,7 +12,7 @@ Future<bool> submitIncorrectIdentification({
   required int identificationId,
   required int correctSpeciesId,
   required int incorrectSpeciesId,
-  String apiBaseUrl = 'http://localhost:8000',
+  String apiBaseUrl = 'https://identiflora-api.onrender.com',
 }) async {
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/incorrect-identifications');
@@ -54,7 +54,7 @@ Future<bool> submitIncorrectIdentification({
 /// Returns the resolved URL as a string or throws an [HttpException] on API errors.
 Future<String> getPlantSpeciesUrl({
   required String scientificName,
-  String apiBaseUrl = 'http://localhost:8000',
+  String apiBaseUrl = 'https://identiflora-api.onrender.com',
 }) async {
   final trimmedName = scientificName.trim();
   if (trimmedName.isEmpty) {

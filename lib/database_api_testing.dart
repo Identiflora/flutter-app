@@ -6,7 +6,7 @@ import 'database_utils.dart';
 int identificationId = 1;
 int correctSpeciesId = 2;
 int incorrectSpeciesId = 3;
-const apiBaseUrl = 'http://localhost:8000';
+const apiBaseUrl = 'https://identiflora-api.onrender.com';
 const sampleScientificName = 'test_sci_name';
 
 Future<void> main(List<String> arguments) async {
