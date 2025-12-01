@@ -36,15 +36,15 @@ class OfflinePlantService {
   return exps.map((e) => e / sumExps).toList();
   }
 
-  Future<String> predict(File imageFile) async {
+  Future<List<Map<String, dynamic>>> predict(File imageFile) async {
     if (_interpreter == null) await loadModel();
 
     // 1. Decode and Resize Image
     final imageData = await imageFile.readAsBytes();
     final image = img.decodeImage(imageData);
-    if (image == null) return "Could not decode image";
+    // if (image == null) return "Could not decode image";
 
-    final resizedImage = img.copyResize(image, width: INPUT_SIZE, height: INPUT_SIZE);
+    final resizedImage = img.copyResize(image!, width: INPUT_SIZE, height: INPUT_SIZE);
 
     // 2. Preprocess (Normalize to Float32)
     var input = Float32List(1 * 3 * INPUT_SIZE * INPUT_SIZE);
@@ -75,22 +75,18 @@ class OfflinePlantService {
 
     // 5. Parse Output with Softmax
     List<double> rawLogits = List<double>.from(outputTensor[0]);
-    List<double> probabilities = softmax(rawLogits);
-
-    int bestIndex = 0;
-    double bestScore = 0.0;
-
-    for (int i = 0; i < probabilities.length; i++) {
-      if (probabilities[i] > bestScore) {
-        bestScore = probabilities[i];
-        bestIndex = i;
-      }
+    List<Map<String, dynamic>> sortedResults = [];
+    for (int i = 0; i < rawLogits.length; i++) {
+      sortedResults.add({
+        'index': i,
+        'score': rawLogits[i], 
+        'label': _labels != null ? _labels![i] : 'Class $i',
+      });
     }
 
-    if (_labels != null && bestIndex < _labels!.length) {
-      return "${_labels![bestIndex]} (${(bestScore * 100).toStringAsFixed(1)}%)";
-    }
-    
-    return "Class $bestIndex (Score: ${(bestScore * 100).toStringAsFixed(1)}%)";
+    // Sort by score, still have to make the choice options not show in descending order though
+    sortedResults.sort((a, b) => (b['score'] as double).compareTo(a['score']));
+
+    return sortedResults.take(5).toList(); 
   }
 }

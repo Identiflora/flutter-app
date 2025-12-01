@@ -34,7 +34,12 @@ class _Identification extends State<IdentificationWidget>{
 
 
 class UserChoiceScreen extends StatefulWidget {
-  const UserChoiceScreen({super.key});
+  final List<Map<String, dynamic>> predictions;
+
+  const UserChoiceScreen({
+    super.key, 
+    required this.predictions
+  });
   
   @override
   State<StatefulWidget> createState() => _UserChoiceScreen();
@@ -42,13 +47,13 @@ class UserChoiceScreen extends StatefulWidget {
 
 // setup stubbed plant choices based on strings
 class _UserChoiceScreen extends State<UserChoiceScreen>{
-  String userChoice = '';
-  String modelChoice = 'Quaking Aspen';
-  var optionList = ['Quaking Aspen', 'Sugar Pine', 'Ponderosa Pine', 'Jeffery Pine', 'White Fir'];
+  int? userChoice;
+  // String modelChoice = 'Quaking Aspen';
+  // var optionList = ['Quaking Aspen', 'Sugar Pine', 'Ponderosa Pine', 'Jeffery Pine', 'White Fir'];
 
-  void selectOption(String option) {
+  void selectOption(int index) {
     setState(() {
-      userChoice = option;
+      userChoice = index;
     });
   }
 
@@ -80,28 +85,26 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                   // probably dont need a loop for this I just copied what the tutorial
                   // did to construct a list but probably not needed since we will know
                   // the length in advance
-                  for (var option in optionList)
+                  for (var entry in widget.predictions.asMap().entries)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0), 
                       child: TextButton(
-                        onPressed: () => selectOption(option), 
-                        
+                        onPressed: () => selectOption(entry.key),
                         style: TextButton.styleFrom(
-                          foregroundColor: userChoice == option ? primaryColor : onSurfaceColor,
-                          backgroundColor: userChoice == option ? primaryColor.withValues(alpha: 0.1) : Colors.transparent,
+                          foregroundColor: userChoice == entry.key ? primaryColor : onSurfaceColor,
+                          backgroundColor: userChoice == entry.key ? primaryColor.withValues(alpha: 0.1) : Colors.transparent,
                           side: BorderSide(
-                            color: userChoice == option ? primaryColor : outlineColor, 
+                            color: userChoice == entry.key ? primaryColor : outlineColor, 
                             width: 2,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           padding: const EdgeInsets.all(16.0),
-                          
                           elevation: 0,
                         ),
                         child: Text(
-                          option,
+                          entry.value['label'],
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -111,11 +114,12 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                     ),
                   const Spacer(),
                   ElevatedButton(
-                          onPressed: userChoice.isNotEmpty 
+                          onPressed: userChoice != null
                             ? () {
                                 Navigator.push(context,
                                   MaterialPageRoute(
-                                    builder: (context) => ResultsWidget(modelChoice: modelChoice, userChoice: userChoice)),
+                                    builder: (context) => ResultsWidget(userChoiceIndex: userChoice!, allPredictions: widget.predictions)
+                                  ),
                                 );
                               }
                             : null,
