@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:identiflora/main.dart'; // This import should also be replaced with the file the model code is implemented in
 import 'package:permission_handler/permission_handler.dart';
 import 'package:identiflora/model.dart';
+import 'package:identiflora/user_guess.dart';
 
 /// Get camera info from phone
 Future<CameraDescription> getCamera() async {
@@ -188,21 +188,26 @@ SafeArea getCameraButton(CameraController controller, BuildContext pastContext) 
 // Display screen for picture that was taken
 class DisplayPictureScreen extends StatelessWidget {
   final String imgPath;
+  final OfflinePlantService _plantService = OfflinePlantService();
 
-  const DisplayPictureScreen({super.key, required this.imgPath});
+  DisplayPictureScreen({super.key, required this.imgPath});
 
   /// Get the appropriate text button for navigation
   TextButton getTextButton(BuildContext context, String label, bool identifyPage) {
     if(identifyPage) {
       return TextButton(
-        onPressed: () {
+        onPressed: () async {
+          List<Map<String, dynamic>> results = await _plantService.predict(File(imgPath));
           // Navigate to next page
           Navigator.push(
+            // ignore: use_build_context_synchronously
             context, 
             MaterialPageRoute<void>(
               // REMINDER: Replace with actual model functionality or move loading screen to proper utils.
               // This is also the location to pass the taken photo to the model and will require rescalling or cropping before this point
-              builder: (context) => const ModelLoadingScreen()
+              builder: (context) => UserChoiceScreen(
+                predictions: results,
+              ),
             )
           );
         }, 
