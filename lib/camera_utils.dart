@@ -203,7 +203,6 @@ class DisplayPictureScreen extends StatelessWidget {
             // ignore: use_build_context_synchronously
             context, 
             MaterialPageRoute<void>(
-              // REMINDER: Replace with actual model functionality or move loading screen to proper utils.
               // This is also the location to pass the taken photo to the model and will require rescalling or cropping before this point
               builder: (context) => UserChoiceScreen(
                 predictions: results,

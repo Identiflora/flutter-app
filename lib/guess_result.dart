@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:identiflora/main.dart';
 import 'model_incorrect.dart';
 
 class ResultsWidget extends StatefulWidget {
@@ -114,10 +115,20 @@ class _Results extends State<ResultsWidget> {
                     child: ElevatedButton(
                       onPressed: () {
                         if (isCorrect) {
-                          // Scoring implementation
+                          Navigator.push(
+                            context, 
+                            MaterialPageRoute<void>(
+                              builder: (context) => AppSetup(),
+                            )
+                          );
                         }
                         else {
-                          // Return to homescreen?
+                          Navigator.push(
+                            context, 
+                            MaterialPageRoute<void>(
+                              builder: (context) => AppSetup(),
+                            )
+                          );
                         }
                       },
                       style: ElevatedButton.styleFrom(

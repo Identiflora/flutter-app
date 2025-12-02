@@ -9,32 +9,6 @@ import 'package:identiflora/gallery_utils.dart';
 import 'package:identiflora/leaderboard_utils.dart';
 import 'camera_utils.dart';
 import 'account_utils.dart';
-import 'plant_capture.dart';
-
-// Button on the top right of the main screen to start plant identification process
-class PlantIdentificationTest extends StatelessWidget {
-  const PlantIdentificationTest({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Align(
-        alignment: Alignment.topRight,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal:16),
-          child: ElevatedButton(onPressed: () {
-            Navigator.push(
-                context, 
-                MaterialPageRoute(
-                  builder: (context) => const PlantCaptureScreen(), 
-                ),
-            );
-          }, 
-          child: const Text('Model Identification'))
-        )
-      ),
-    );
-  }
-}
 
 void main() {
   runApp(const AppSetup());
@@ -55,7 +29,6 @@ class AppSetup extends StatelessWidget {
         body: Stack(children: [
           getCameraWidget(),
           LoginWidget(),
-          PlantIdentificationTest(),
           GalleryWidget(),
           LeaderboardWidget(),
         ])
