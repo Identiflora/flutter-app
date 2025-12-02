@@ -3,6 +3,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:identiflora/main.dart'; // This import should also be replaced with the file the model code is implemented in
 import 'package:permission_handler/permission_handler.dart';
+import 'package:identiflora/model.dart';
 
 /// Get camera info from phone
 Future<CameraDescription> getCamera() async {

@@ -122,13 +122,14 @@ Future<List<LeaderboardUser>> addAllUsers() async {
   final List<LeaderboardUser> users = [];
 
   String userName = "";
-  int userID = 1;
+  int userID = 2;
   do {
     userName = await fetchUsername(userID: userID);
     LeaderboardUser tempUser = LeaderboardUser(userName: userName, userId: userID, userScore: 0);
+    debugPrint(userName);
     
     if (userName != ""){
-      users.insert(userID - 1, tempUser); //ADDS USERS TO LIST
+      users.insert(userID - 2, tempUser); //ADDS USERS TO LIST
     }
 
     userID ++;

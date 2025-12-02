@@ -9,7 +9,6 @@ import 'package:identiflora/gallery_utils.dart';
 import 'package:identiflora/leaderboard_utils.dart';
 import 'camera_utils.dart';
 import 'account_utils.dart';
-// import 'login.dart';
 import 'plant_capture.dart';
 
 // Button on the top right of the main screen to start plant identification process
@@ -55,9 +54,10 @@ class AppSetup extends StatelessWidget {
         backgroundColor: Colors.black,
         body: Stack(children: [
           getCameraWidget(),
-          // LoginWidget(),
+          LoginWidget(),
           PlantIdentificationTest(),
-          GalleryWidget()
+          GalleryWidget(),
+          LeaderboardWidget(),
         ])
       )
     );

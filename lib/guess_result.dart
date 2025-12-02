@@ -4,10 +4,12 @@ import 'model_incorrect.dart';
 class ResultsWidget extends StatefulWidget {
   final int userChoiceIndex;
   final List<Map<String, dynamic>> allPredictions;
+  final String imgURL;
   
   const ResultsWidget({
     required this.userChoiceIndex,
     required this.allPredictions,
+    required this.imgURL,
     super.key,
   });
 
@@ -93,10 +95,7 @@ class _Results extends State<ResultsWidget> {
                 height: 300,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
-                  child: const Placeholder(
-                    color: Colors.grey, 
-                    strokeWidth: 2.0,   
-                  ),
+                  child: Image.network(widget.imgURL)
                 ),
               ),
 

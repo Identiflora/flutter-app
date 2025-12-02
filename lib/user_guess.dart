@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:identiflora/database_utils.dart';
 import 'guess_result.dart';
 
 
@@ -16,6 +17,7 @@ class UserChoiceScreen extends StatefulWidget {
 }
 
 class _UserChoiceScreen extends State<UserChoiceScreen>{
+  late String imgURL;
   int? userChoice; // do need this though
 
   void selectOption(int index) {
@@ -86,12 +88,14 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                   const Spacer(),
                   ElevatedButton(
                           onPressed: userChoice != null
-                            ? () {
+                            ? () async {
+                                imgURL = await getPlantSpeciesUrl(scientificName: widget.predictions[0]['label']);
                                 Navigator.push(context,
                                   MaterialPageRoute(
                                     builder: (context) => ResultsWidget(
                                       userChoiceIndex: userChoice!, 
-                                      allPredictions: widget.predictions)
+                                      allPredictions: widget.predictions,
+                                      imgURL: imgURL)
                                   ),
                                 );
                               }
