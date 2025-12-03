@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/main.dart';
 
 // object for plant information for the grid cards
 class PlantMatch {
@@ -107,8 +108,13 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                             ),
                             child: InkWell(
                               onTap: () {
-                                // Maybe opens full preview of image and then submission confirmation?
-                                // also where database would be sent information on the model being incorrect
+                                // opens full preview of image with submission confirmation
+                                Navigator.push(
+                                  context, 
+                                  MaterialPageRoute<void>(
+                                    builder: (context) => DisplayBigPlantScreen(match: match, imgPath: snapshot.data!),
+                                  )
+                                );
                               },
                               borderRadius: BorderRadius.circular(12.0),
                               child: Column(
@@ -188,3 +194,76 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
 }
 
 // still need a none of these match button
+
+// Display screen for zoomed in plant picture
+class DisplayBigPlantScreen extends StatelessWidget {
+  final PlantMatch match;
+  final String imgPath;
+
+  const DisplayBigPlantScreen({super.key, required this.match, required this.imgPath});
+
+  /// Get the appropriate text button for navigation
+  ElevatedButton getButton(BuildContext context, bool identifyPage) {
+    if(identifyPage) {
+      return ElevatedButton(
+        onPressed: () {
+          // Navigate to next page
+          Navigator.pop(context);
+        }, 
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: const Text("No", style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 180, 39, 39)))
+        )
+      );
+    }
+
+    return ElevatedButton(
+      onPressed: () async {
+        // where database would be sent information on the model being incorrect
+
+        Navigator.push(
+          context, 
+          MaterialPageRoute<void>(
+            builder: (context) => AppSetup(),
+          )
+        );
+      }, 
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text("Yes", style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary))
+      )
+    );
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    final String name = match.commonName;
+    final String sciName = match.scientificName;
+    final double confidence = match.confidenceScore * 100;
+
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Text("Is this the plant that should have been identified?", style: TextStyle(fontSize: 22, color: Colors.black), textAlign: TextAlign.center,),
+                Text("$name\n$sciName\n${confidence.toStringAsFixed(1)}% Likely", style: TextStyle(fontSize: 22, color: Colors.black), textAlign: TextAlign.center,),
+                Image.network(imgPath),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    getButton(context, true),
+                    getButton(context, false)
+                  ],
+                )
+              ]
+            ),
+          ),
+        )
+      )
+    );
+  }
+}
