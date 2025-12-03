@@ -22,7 +22,7 @@ class _Login extends State<LoginWidget>{
  Widget build(BuildContext context) {
    return SafeArea(
      child: Align(
-       alignment: Alignment.topLeft,
+       alignment: Alignment.topRight,
        child: Padding(
          padding: const EdgeInsets.symmetric(horizontal:16),
          child: GestureDetector(

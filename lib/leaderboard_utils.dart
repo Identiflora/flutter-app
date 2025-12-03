@@ -28,7 +28,7 @@ class _Leaderboard extends State<LeaderboardWidget>{
 Widget build(BuildContext context) {
    return SafeArea(
      child: Align(
-       alignment: Alignment.bottomRight,
+       alignment: Alignment.topLeft,
        child: Padding(
          padding: const EdgeInsets.symmetric(horizontal:16),
          child: GestureDetector(onTap: () {
