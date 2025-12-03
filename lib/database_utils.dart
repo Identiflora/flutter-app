@@ -213,7 +213,7 @@ Future<int> submitUserLogin({
 /// Send a username fetch request to the API.
 /// Can be used directly in a Flutter button:
 ///   onPressed: () => fetchUsername(
-///     uderID: IDVar
+///     userID: IDVar
 ///   );
 Future<String> fetchUsername({
   required int userID,
@@ -236,7 +236,7 @@ Future<String> fetchUsername({
       final username = jsonResponse['username'] as String;
       return username;
     }
-    // Return -1 if invalid user
+    // Return blank string if invalid username
     else if (response.statusCode == 404){
       return "";
     }
