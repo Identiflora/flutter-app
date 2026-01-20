@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/camera_utils.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 // Stable caller for the state of photo gallery
 class GalleryWidget extends StatefulWidget {
@@ -22,22 +21,18 @@ class _GalleryWidgetState extends State<GalleryWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GestureDetector(
             onTap: () async {
-              final status = await Permission.photos.request();
+              // Get image
+              final ImagePicker picker = ImagePicker();
+              final image = await picker.pickImage(source: ImageSource.gallery);
 
-              if(status.isGranted) {
-                // Get image
-                final ImagePicker picker = ImagePicker();
-                final image = await picker.pickImage(source: ImageSource.gallery);
-
-                // Pass image to display picture screen
-                if(image != null && context.mounted) {
-                  Navigator.push(
-                    context, 
-                    MaterialPageRoute<void>(
-                      builder: (context) => DisplayPictureScreen(imgPath: image.path)
-                    )
-                  );
-                }
+              // Pass image to display picture screen
+              if(image != null && context.mounted) {
+                Navigator.push(
+                  context, 
+                  MaterialPageRoute<void>(
+                    builder: (context) => DisplayPictureScreen(imgPath: image.path)
+                  )
+                );
               }
             },
             child: Image.asset('assets/homepage/photo_gallery_icon.png', width: 80, height: 80)
