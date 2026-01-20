@@ -17,7 +17,7 @@ FutureBuilder<CameraDescription> getAvailableCameraWidget() {
     future: getCamera(), 
     builder: (context, snapshot) {
       if(snapshot.connectionState == ConnectionState.waiting) {
-        return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
+        return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
       }
       else if(snapshot.hasError) {
         return Text("Camera had error when loading: ${snapshot.error}");
@@ -28,10 +28,10 @@ FutureBuilder<CameraDescription> getAvailableCameraWidget() {
       else {
         return Center(child: Padding(
           padding: const EdgeInsets.all(16),
-          child: const Text(
+          child: Text(
               "No camera found. Please ensure camera is available.",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, color: Color.fromRGBO(145, 187, 32, 1), fontWeight: FontWeight.bold)
+              style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)
             ),
         ));
       }
@@ -56,7 +56,7 @@ FutureBuilder<bool> getCameraWidget() {
     future: getCameraPermission(), 
     builder: (context, snapshot) {
       if(snapshot.connectionState == ConnectionState.waiting) {
-        return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
+        return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
       }
       else if(snapshot.hasError) {
         return Text("Camera had error when loading: ${snapshot.error}");
@@ -67,10 +67,10 @@ FutureBuilder<bool> getCameraWidget() {
       else {
         return Center(child: Padding(
           padding: const EdgeInsets.all(16),
-          child: const Text(
+          child: Text(
               "Identiflora cannot access your camera! Please check that camera permission is allowed.",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, color: Color.fromRGBO(145, 187, 32, 1), fontWeight: FontWeight.bold)
+              style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)
             ),
         ));
       }
@@ -127,7 +127,6 @@ class _CameraWidgetState extends State<CameraWidget> {
     final size = MediaQuery.of(context).size;
     
     return Scaffold(
-      backgroundColor: Colors.black,
       body: FutureBuilder<void>(
         future: controlCamera(), 
         builder: (context, snapshot) {
@@ -141,15 +140,15 @@ class _CameraWidgetState extends State<CameraWidget> {
           else if(snapshot.connectionState == ConnectionState.done && !_controller.value.isInitialized) {
             return Center(child: Padding(
               padding: const EdgeInsets.all(16),
-              child: const Text(
+              child: Text(
                   "Identiflora cannot access your camera! Please check that camera permission is allowed.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 20, color: Color.fromRGBO(145, 187, 32, 1), fontWeight: FontWeight.bold)
+                  style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)
                 ),
             ));
           }
           else {
-            return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
+            return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
           }
         },
       )
@@ -212,7 +211,7 @@ class DisplayPictureScreen extends StatelessWidget {
         }, 
         child: FittedBox(
           fit: BoxFit.scaleDown,
-          child: const Text("Identify", style: TextStyle(fontSize: 20, color: Color.fromRGBO(145, 187, 32, 1)))
+          child: Text("Identify", style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary))
         )
       );
     }
@@ -224,7 +223,7 @@ class DisplayPictureScreen extends StatelessWidget {
       }, 
       child: FittedBox(
         fit: BoxFit.scaleDown,
-        child: const Text("Retry", style: TextStyle(fontSize: 20, color: Color.fromRGBO(145, 187, 32, 1)))
+        child: Text("Retry", style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary))
       )
     );
   }
@@ -232,7 +231,6 @@ class DisplayPictureScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       body: SafeArea(
         child: Center(
           child: Column(

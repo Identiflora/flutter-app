@@ -25,7 +25,6 @@ class AppSetup extends StatelessWidget {
       title: "Identiflora",
       theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.green)),
       home: Scaffold(
-        backgroundColor: Colors.black,
         body: Stack(children: [
           getCameraWidget(),
           LoginWidget(),
@@ -52,15 +51,15 @@ class ModelLoadingScreen extends StatelessWidget {
           children: [
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: const Text(
+              child: Text(
                 "Please wait...\nIdentifying your plant!",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, color: Color.fromRGBO(145, 187, 32, 1), fontWeight: FontWeight.bold)
+                style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)
               )
             ),
             Padding(
               padding: const EdgeInsets.only(top: 32.0),
-              child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)),
+              child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
             )
           ]
         ),
