@@ -252,3 +252,43 @@ Future<String> fetchUsername({
     client.close(force: true);
   }
 }
+
+/// Send a user count request to the API.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => fetchUserCount();
+Future<int> fetchUserCount({
+  String apiBaseUrl = 'https://identiflora-api.onrender.com',
+}) async {
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/user-count');
+
+  final client = HttpClient();
+  try {
+    // Create and send the GET request with JSON body.
+    final request = await client.postUrl(uri);
+
+    // Await the response and read the body for error context.
+    final response = await request.close();
+    final responseBody = await utf8.decodeStream(response);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(responseBody);
+      final userCount = jsonResponse['user_count'] as int;
+      return userCount;
+    }
+    // Return blank string if invalid username
+    else if (response.statusCode == 404){
+      return -1;
+    }
+    else {
+      // Surface other responses for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: $responseBody',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP client is closed even if an error occurs.
+    client.close(force: true);
+  }
+}

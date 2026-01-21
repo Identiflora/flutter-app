@@ -18,25 +18,34 @@ Future<void> main(List<String> arguments) async {
   int registrationUserID = await submitUserRegistration(
     email: email, 
     username: username, 
-    passwordHash: passwordHash
+    passwordHash: passwordHash,
+    apiBaseUrl: apiBaseUrl
   );
 
   int userID = await submitUserLogin(
     email: email, 
-    passwordHash: passwordHash
+    passwordHash: passwordHash,
+    apiBaseUrl: apiBaseUrl
   );
 
   int userID2 = await submitUserLogin(
     email: email, 
-    passwordHash: passwordHash2
+    passwordHash: passwordHash2,
+    apiBaseUrl: apiBaseUrl
   );
 
   String recievedUsername = await fetchUsername(
-    userID: userID
+    userID: userID,
+    apiBaseUrl: apiBaseUrl
   );
 
   String recievedUsername2 = await fetchUsername(
-    userID: 1
+    userID: 1,
+    apiBaseUrl: apiBaseUrl
+  );
+
+  int userCount = await fetchUserCount(
+    apiBaseUrl: apiBaseUrl
   );
 
   // Test the results that are returned for other functionality
@@ -45,6 +54,7 @@ Future<void> main(List<String> arguments) async {
   debugPrint("Wrong Credentials Login Result: $userID2");
   debugPrint("Username Result: $recievedUsername");
   debugPrint("SQL Test Username Result: $recievedUsername2");
+  debugPrint("SQL Test User Count: $userCount");
 }
 
 Future<void> _testSubmitIncorrectIdentification() async {
