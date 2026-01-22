@@ -119,21 +119,27 @@ class LeaderboardUser {
 } //END LEADERBOARDUSER CLASS
 
 Future<List<LeaderboardUser>> addAllUsers() async {
-  final List<LeaderboardUser> users = [];
-
+  List<LeaderboardUser> users = [];
+  LeaderboardUser tempUser;
   String userName = "";
-  int userID = 2;
+  int userID = 1, userCount, dbUserCount = await fetchUserCount(), userScore, maxUsers = 50;
+
+  // LOAD ALL USERS WITH SCORES
+  userCount = userScore = 0;
   do {
     userName = await fetchUsername(userID: userID);
-    LeaderboardUser tempUser = LeaderboardUser(userName: userName, userId: userID, userScore: 0);
-    debugPrint(userName);
-    
+    userScore = await fetchUserGlobalPts(userID: userID);
+    // IF USER WAS FETCHED, ADD TO LIST AND INTEGRATE COUNT BY 1
     if (userName != ""){
-      users.insert(userID - 2, tempUser); //ADDS USERS TO LIST
+      tempUser = LeaderboardUser(userName: userName, userId: userID, userScore: userScore);
+      users.insert(userCount, tempUser); // ADDS USERS TO LIST
+      userCount++;
     }
-
-    userID ++;
-  } while (userName != "");
+    userID++;
+  } while (userCount < dbUserCount);
+  
+  users.sort((a, b) => -a.userScore.compareTo(b.userScore)); // SORT USERS BY SCORE
+  users = users.take(maxUsers).toList(); // TAKE ONLY TOP NUMBER OF MAX USERS FOR DISPLAY
 
   return users;
 }

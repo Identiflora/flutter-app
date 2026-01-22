@@ -276,8 +276,8 @@ Future<int> fetchUserGlobalPts({
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final jsonResponse = jsonDecode(responseBody);
-      final user_pts = jsonResponse['pts'] as int;
-      return user_pts;
+      final userPts = jsonResponse['pts'] as int;
+      return userPts;
     }
     // Return blank string if invalid username
     else if (response.statusCode == 404){
