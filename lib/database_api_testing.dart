@@ -44,8 +44,13 @@ Future<void> main(List<String> arguments) async {
     apiBaseUrl: apiBaseUrl
   );
 
+  int userPts = await fetchUserGlobalPts(
+    userID: 1,
+    // apiBaseUrl: apiBaseUrl (UNCOMMENT AFTER NEWLY DEPLOYED API)
+  );
+
   int userCount = await fetchUserCount(
-    apiBaseUrl: apiBaseUrl
+    // apiBaseUrl: apiBaseUrl (UNCOMMENT AFTER NEWLY DEPLOYED API)
   );
 
   // Test the results that are returned for other functionality
@@ -54,7 +59,10 @@ Future<void> main(List<String> arguments) async {
   debugPrint("Wrong Credentials Login Result: $userID2");
   debugPrint("Username Result: $recievedUsername");
   debugPrint("SQL Test Username Result: $recievedUsername2");
+  debugPrint("SQL Test User Pts: $userPts");
   debugPrint("SQL Test User Count: $userCount");
+
+  throw Exception("PLEASE UPDATE ONCE API IS REDEPLOYED");
 }
 
 Future<void> _testSubmitIncorrectIdentification() async {
