@@ -75,7 +75,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             final leaderboard = snapshot.data;
 
             if (leaderboard!.isEmpty){
-              return const Center(child: Text("No current accounts"),);
+              return const Center(child: Text("No accounts found in database"));
             }
 
             return ListView.builder(
@@ -92,7 +92,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             );
           }
           else {
-            return Text("No current accounts in database");
+            return const Center(child: Text("No accounts found in database"));
           }
         }
       ),
