@@ -69,7 +69,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         future: addAllUsers(),
         builder: (context, snapshot){
           if(snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
+            return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
           }
           else if(snapshot.hasData && snapshot.data != null) {
             final leaderboard = snapshot.data;
