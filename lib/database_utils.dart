@@ -220,7 +220,7 @@ Future<String> fetchUsername({
   String apiBaseUrl = 'https://identiflora-api.onrender.com',
 }) async {
   // Build the request URL for the FastAPI endpoint.
-  final uri = Uri.parse(apiBaseUrl).resolve('/user/$userID'); // CHANGE TO '/username/$userID' AFTER NEW API DEPLOYMENT
+  final uri = Uri.parse(apiBaseUrl).resolve('/username/$userID');
 
   final client = HttpClient();
   try {
@@ -260,7 +260,7 @@ Future<String> fetchUsername({
 ///   );
 Future<int> fetchUserGlobalPts({
   required int userID,
-  String apiBaseUrl = 'http://localhost:8000', // ALSO CHANGE ONCE API IS NEWLY DEPLOYED
+  String apiBaseUrl = 'https://identiflora-api.onrender.com',
 }) async {
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/user-pts/$userID');
@@ -300,7 +300,7 @@ Future<int> fetchUserGlobalPts({
 /// Can be used directly in a Flutter button:
 ///   onPressed: () => fetchUserCount();
 Future<int> fetchUserCount({
-  String apiBaseUrl = 'http://localhost:8000', // ALSO CHANGE ONCE API IS NEWLY DEPLOYED
+  String apiBaseUrl = 'https://identiflora-api.onrender.com',
 }) async {
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/user-count');
