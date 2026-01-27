@@ -46,6 +46,22 @@ Widget build(BuildContext context) {
  }
 }
 
+List<PopupMenuEntry<String>> getPopupOptions(String? leaderboardType) {
+  switch(leaderboardType) {
+    case "Global": return <PopupMenuEntry<String>> [
+            const PopupMenuItem(value: "Friends", child: Text("Friends")),
+            const PopupMenuItem(value: "Regional", child: Text("Regional"))
+          ];
+    case "Friends": return <PopupMenuEntry<String>> [
+            const PopupMenuItem(value: "Friends", child: Text("Friends")),
+            const PopupMenuItem(value: "Regional", child: Text("Regional"))
+          ];
+    default: return <PopupMenuEntry<String>> [
+            const PopupMenuItem(value: "Global", child: Text("Global")),
+            const PopupMenuItem(value: "Friends", child: Text("Friends"))
+          ];
+  }
+}
 
 /* CODE FOR LEADERBOARD SCREEN/ROUTE*/
 class LeaderboardScreen extends StatefulWidget {
@@ -56,49 +72,70 @@ class LeaderboardScreen extends StatefulWidget {
 }
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
- bool isLoginView = true; // true for Login, false for Sign Up
+  String? leaderboardType = "Global";
 
  @override
  Widget build(BuildContext context) {
-   return Scaffold(
-      appBar: AppBar(
-        title: const Text("Leaderboard"),
-      ), //END APPBAR
-      
-      body: FutureBuilder<List<LeaderboardUser>>(
-        future: addAllUsers(),
-        builder: (context, snapshot){
-          if(snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
-          }
-          else if(snapshot.hasData && snapshot.data != null) {
-            final leaderboard = snapshot.data;
+  return Scaffold(
+    appBar: AppBar(
+      // backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      title: Text("$leaderboardType Leaderboard"),
+      actions: [
+        PopupMenuButton<String>(
+          itemBuilder: (BuildContext context) => getPopupOptions(leaderboardType),
+          onSelected: (String value) {
+            setState(() {
+              leaderboardType = value;
+            });
 
-            if (leaderboard!.isEmpty){
-              return const Center(child: Text("No accounts found in database"));
-            }
-
-            return ListView.builder(
-              itemCount: leaderboard.length,
-              itemBuilder: (context, index){
-                final user = leaderboard[index];
-
-                return ListTile(
-                  leading: Text("#${index +1}"),
-                  title: Text(user.userName),
-                  trailing: Text("${user.userScore} pts"),
-                );
-              },
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+                content: Text("Now Displaying $value Leaderboard", style: TextStyle(color: Colors.black))
+              )
             );
-          }
-          else {
-            return const Center(child: Text("No accounts found in database"));
-          }
+          },
+        )
+      ],
+    ), //END APPBAR
+    
+    body: FutureBuilder<List<LeaderboardUser>> (
+      future: addAllUsers(leaderboardType), // REMINDER FOR LATER: Add leaderboardType parameter here so that adding users can be dynamic
+      builder: (context, snapshot){
+        String? lowercaseLeaderboardType = leaderboardType?.toLowerCase();
+
+        if(snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
         }
-      ),
-   );
- 
-   //END SCAFFOLD
+        else if(snapshot.hasData && snapshot.data != null) {
+          final leaderboard = snapshot.data;
+
+          if (leaderboard!.isEmpty){
+            return Center(child: Text("No $lowercaseLeaderboardType accounts found in database"));
+          }
+
+          return ListView.separated(
+            itemCount: leaderboard.length,
+            separatorBuilder: (BuildContext context, int index) => const Divider(),
+            itemBuilder: (context, index){
+              final user = leaderboard[index];
+
+              return ListTile(
+                leading: Text("#${index +1}"),
+                title: Text(user.userName),
+                trailing: Text("${user.userScore} pts"),
+              );
+            },
+          );
+        }
+        else {
+          return Center(child: Text("No $lowercaseLeaderboardType accounts found in database"));
+        }
+      }
+    ),
+  );
+
+  //END SCAFFOLD
 }
 
 } //END LEADERBOARDSCREEN STATE CLASS
@@ -118,7 +155,7 @@ class LeaderboardUser {
 
 } //END LEADERBOARDUSER CLASS
 
-Future<List<LeaderboardUser>> addAllUsers() async {
+Future<List<LeaderboardUser>> addAllUsers(String? leaderboardType) async {
   List<LeaderboardUser> users = [];
   LeaderboardUser tempUser;
   String userName = "";
@@ -126,17 +163,19 @@ Future<List<LeaderboardUser>> addAllUsers() async {
 
   // LOAD ALL USERS WITH SCORES
   userCount = userScore = 0;
-  do {
-    userName = await fetchUsername(userID: userID);
-    userScore = await fetchUserGlobalPts(userID: userID);
-    // IF USER WAS FETCHED, ADD TO LIST AND INTEGRATE COUNT BY 1
-    if (userName != ""){
-      tempUser = LeaderboardUser(userName: userName, userId: userID, userScore: userScore);
-      users.insert(userCount, tempUser); // ADDS USERS TO LIST
-      userCount++;
-    }
-    userID++;
-  } while (userCount < dbUserCount);
+  if(leaderboardType == "Global") {
+    do {
+      userName = await fetchUsername(userID: userID);
+      // IF USER WAS FETCHED, ADD TO LIST AND INTEGRATE COUNT BY 1
+      if (userName != ""){
+        userScore = await fetchUserGlobalPts(userID: userID);
+        tempUser = LeaderboardUser(userName: userName, userId: userID, userScore: userScore);
+        users.insert(userCount, tempUser); // ADDS USERS TO LIST
+        userCount++;
+      }
+      userID++;
+    } while (userCount < dbUserCount);
+  }
   
   users.sort((a, b) => -a.userScore.compareTo(b.userScore)); // SORT USERS BY SCORE
   users = users.take(maxUsers).toList(); // TAKE ONLY TOP NUMBER OF MAX USERS FOR DISPLAY
