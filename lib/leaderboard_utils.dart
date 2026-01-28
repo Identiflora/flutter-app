@@ -78,8 +78,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
  Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
-      // backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       title: Text("$leaderboardType Leaderboard"),
+      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      elevation: 5.0,
+      shadowColor: Theme.of(context).colorScheme.shadow,
       actions: [
         PopupMenuButton<String>(
           itemBuilder: (BuildContext context) => getPopupOptions(leaderboardType),
@@ -91,7 +93,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-                content: Text("Now Displaying $value Leaderboard", style: TextStyle(color: Colors.black))
+                content: Text("Now Displaying $value Leaderboard", style: const TextStyle(color: Colors.black))
               )
             );
           },
@@ -99,39 +101,42 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       ],
     ), //END APPBAR
     
-    body: FutureBuilder<List<LeaderboardUser>> (
-      future: addAllUsers(leaderboardType), // REMINDER FOR LATER: Add leaderboardType parameter here so that adding users can be dynamic
-      builder: (context, snapshot){
-        String? lowercaseLeaderboardType = leaderboardType?.toLowerCase();
-
-        if(snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
-        }
-        else if(snapshot.hasData && snapshot.data != null) {
-          final leaderboard = snapshot.data;
-
-          if (leaderboard!.isEmpty){
+    body: Padding(
+      padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 5.0),
+      child: FutureBuilder<List<LeaderboardUser>> (
+        future: addAllUsers(leaderboardType), // REMINDER FOR LATER: Add leaderboardType parameter here so that adding users can be dynamic
+        builder: (context, snapshot){
+          String? lowercaseLeaderboardType = leaderboardType?.toLowerCase();
+      
+          if(snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
+          }
+          else if(snapshot.hasData && snapshot.data != null) {
+            final leaderboard = snapshot.data;
+      
+            if (leaderboard!.isEmpty){
+              return Center(child: Text("No $lowercaseLeaderboardType accounts found in database"));
+            }
+      
+            return ListView.separated(
+              itemCount: leaderboard.length,
+              separatorBuilder: (BuildContext context, int index) => const Divider(),
+              itemBuilder: (context, index){
+                final user = leaderboard[index];
+      
+                return ListTile(
+                  leading: Text("#${index +1}"),
+                  title: Text(user.userName),
+                  trailing: Text("${user.userScore} pts"),
+                );
+              },
+            );
+          }
+          else {
             return Center(child: Text("No $lowercaseLeaderboardType accounts found in database"));
           }
-
-          return ListView.separated(
-            itemCount: leaderboard.length,
-            separatorBuilder: (BuildContext context, int index) => const Divider(),
-            itemBuilder: (context, index){
-              final user = leaderboard[index];
-
-              return ListTile(
-                leading: Text("#${index +1}"),
-                title: Text(user.userName),
-                trailing: Text("${user.userScore} pts"),
-              );
-            },
-          );
         }
-        else {
-          return Center(child: Text("No $lowercaseLeaderboardType accounts found in database"));
-        }
-      }
+      ),
     ),
   );
 
@@ -159,11 +164,12 @@ Future<List<LeaderboardUser>> addAllUsers(String? leaderboardType) async {
   List<LeaderboardUser> users = [];
   LeaderboardUser tempUser;
   String userName = "";
-  int userID = 1, userCount, dbUserCount = await fetchUserCount(), userScore, maxUsers = 50;
+  int userID = 1, userCount, dbUserCount, userScore, maxUsers = 100;
 
   // LOAD ALL USERS WITH SCORES
-  userCount = userScore = 0;
+  dbUserCount = userCount = userScore = 0;
   if(leaderboardType == "Global") {
+    dbUserCount = await fetchUserCount();
     do {
       userName = await fetchUsername(userID: userID);
       // IF USER WAS FETCHED, ADD TO LIST AND INTEGRATE COUNT BY 1
