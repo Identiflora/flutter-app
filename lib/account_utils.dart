@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:identiflora/database_utils.dart';
+import 'auth_objects.dart';
 
 class LoginWidget extends StatefulWidget {
  const LoginWidget({super.key});
@@ -114,28 +115,31 @@ State<LoginForm> createState() => _LoginFormState();
       );
      //CHECKS FOR EMPTY FIELDS
      return;
-  } //END FUNCT
+    } //END FUNCT
 
-//ADDED FOR PASS HASHING - USE CREATED FUNCT ABOVE
-  final hashedPassword = hashPassword(password);
-  final int userID = await submitUserLogin(email: email , passwordHash: hashedPassword);
-  //LINE ABOVE ASSIGNED -1 IF USERID EXITS
+    //ADDED FOR PASS HASHING - USE CREATED FUNCT ABOVE
+    final hashedPassword = hashPassword(password);
+    try {
+      final AuthToken token = await submitUserLogin(email: email , passwordHash: hashedPassword);
 
-  if (userID > 0) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Successfully logged in"),
-      backgroundColor: Colors.green,  
-      ),
-    ); 
-    Navigator.pop(context);
-  } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Incorrect email or password"),
-        backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted){
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Successfully logged in"),
+          backgroundColor: Colors.green,  
+          ),
+        );
+      }
+    } catch (err) {
+      if (mounted){
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Login failed: $err"),
+          backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
     }
-  } //END IFELSE
+  } //END LOGINPRESSED FUNCT
 
 @override
 Widget build(BuildContext context){

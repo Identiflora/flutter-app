@@ -190,7 +190,7 @@ Future<AuthToken> submitUserLogin({
 
     // Explicitly handle 401 Unauthorized
     if (response.statusCode == 401) {
-      throw AuthException('Invalid credentials', statusCode: 401);
+      throw AuthException('Invalid credentials: ${response.body}', statusCode: 401);
     }
 
     // Handle other non-200 errors

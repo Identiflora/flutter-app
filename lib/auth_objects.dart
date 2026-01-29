@@ -1,3 +1,6 @@
+
+// still need to implement: Token secure storage using flutter_secure_storage package
+
 class AuthToken {
   final String tokenType;
   final String accessToken;

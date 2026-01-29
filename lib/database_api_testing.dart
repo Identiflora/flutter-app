@@ -113,4 +113,28 @@ Future<void> _testUserAuthentication() async {
   } catch (err) {
     print('user login failed: $err');
   }
+
+  //login test user with incorrect email
+  try {
+    final ok = await submitUserLogin(
+      email: "wrong_email@in.com",
+      passwordHash: "test_password_hash_1",
+      apiBaseUrl: testApiBaseUrl,
+    );
+    print('user login success: ${ok.toString()}');
+  } catch (err) {
+    print('user login failed: $err');
+  }
+
+  //login test user with incorrect password
+  try {
+    final ok = await submitUserLogin(
+      email: "wrong_email@in.com",
+      passwordHash: "incorrect_hash_1",
+      apiBaseUrl: testApiBaseUrl,
+    );
+    print('user login success: ${ok.toString()}');
+  } catch (err) {
+    print('user login failed: $err');
+  }
 }
