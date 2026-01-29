@@ -19,6 +19,7 @@ dependencies:
   tflite_flutter: ^0.12.1
   image: ^4.1.7
   http: ^1.0.0
+  flutter_dotenv: ^5.0.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -31,3 +32,4 @@ flutter:
   assets: 
     - assets/homepage/
     - assets/model/
+    - .env
