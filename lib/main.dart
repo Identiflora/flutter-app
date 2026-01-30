@@ -10,9 +10,10 @@ import 'package:identiflora/leaderboard_utils.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'camera_utils.dart';
 import 'account_utils.dart';
+import 'environment.dart';
 
 Future<void> main() async {
-  await dotenv.load();
+  await dotenv.load(fileName: Environment.fileName);
   runApp(const AppSetup());
 }
 

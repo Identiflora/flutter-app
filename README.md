@@ -1,6 +1,23 @@
 ﻿# flutter-app
 The flutter implementation for Identiflora.
 
+# Environment
+
+The environment class (in lib/environment.dart) is setup to allow easy swapping between local development and cloud testing. There are just a couple of things to complete locally to set it up. 
+
+1. Create 2 files with the following names: 
+    - `.env.production` (for cloud testing)
+    - `.env.development` (for local development)
+2. IMPORTANT: Double check that both of these files are present in .gitignore. 
+3. Use the environment variable names from `.env.example` to populate both files. 
+4. It is setup so that if you build in debug mode, it will use `.env.development`, and if you run without debugging it will use `.env.production`. 
+
+
+
+
+
+# BELOW INFORMATION IS OUTDATED AND NEEDS TO BE MOVED
+
 # GBIF Data Formatting Script
 
 This script prepares a subset of the GBIF / Pl@ntNet dataset for model training. It:

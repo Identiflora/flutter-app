@@ -63,3 +63,5 @@ app.*.map.json
 Database/api/url_testing.py
 Database/aws_password.txt
 /.env
+/.env.development
+/.env.production
