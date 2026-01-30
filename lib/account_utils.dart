@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:identiflora/database_utils.dart';
 import 'auth_objects.dart';
+import 'cache_utils.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -119,7 +120,9 @@ class _LoginFormState extends State<LoginForm> {
         email: email,
         passwordHash: hashedPassword,
       );
-      debugPrint("Received token: ${token.accessToken}");
+      debugPrint("Received token for $email: ${token.accessToken}");
+      //SAVE USERID AND AUTHTOKEN TO DEVICE
+      await saveAuthToken(token.accessToken);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
