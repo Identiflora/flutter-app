@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'auth_objects.dart';
+import 'environment.dart';
 
 /// Send an incorrect-identification report to the API.
 /// Can be used directly in a Flutter button:
@@ -114,8 +116,8 @@ Future<int> submitUserRegistration({
   required String email,
   required String username,
   required String passwordHash,
-  String apiBaseUrl = 'https://identiflora-api.onrender.com',
 }) async {
+  String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/user/register');
 
@@ -168,8 +170,9 @@ Future<int> submitUserRegistration({
 Future<AuthToken> submitUserLogin({
   required String email,
   required String passwordHash,
-  String apiBaseUrl = 'https://identiflora-api.onrender.com'
 }) async {
+  String apiBaseUrl = Environment.apiUrl;
+  debugPrint('API Base URL: $apiBaseUrl');
   final uri = Uri.parse(apiBaseUrl).resolve('/user/login');
 
   // Start http client
@@ -190,7 +193,10 @@ Future<AuthToken> submitUserLogin({
 
     // Explicitly handle 401 Unauthorized
     if (response.statusCode == 401) {
-      throw AuthException('Invalid credentials: ${response.body}', statusCode: 401);
+      throw AuthException(
+        'Invalid credentials: ${response.body}',
+        statusCode: 401,
+      );
     }
 
     // Handle other non-200 errors

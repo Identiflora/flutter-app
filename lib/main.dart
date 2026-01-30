@@ -14,6 +14,7 @@ import 'environment.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: Environment.fileName);
+  debugPrint('Using environment file: ${Environment.fileName}');
   runApp(const AppSetup());
 }
 

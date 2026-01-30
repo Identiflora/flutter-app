@@ -12,7 +12,11 @@ The environment class (in lib/environment.dart) is setup to allow easy swapping 
 3. Use the environment variable names from `.env.example` to populate both files. 
 4. It is setup so that if you build in debug mode, it will use `.env.development`, and if you run without debugging it will use `.env.production`. 
 
+## Usage:
 
+If you need to add a new environment variable for any reason, you must add it to all of the `.env` files, and add a get method for it in the Environment class. 
+
+Once a get method is implemented, environment variables can be accessed using Environment.exampleVariable. 
 
 
 

@@ -32,4 +32,5 @@ flutter:
   assets: 
     - assets/homepage/
     - assets/model/
-    - .env
+    - .env.development
+    - .env.production
