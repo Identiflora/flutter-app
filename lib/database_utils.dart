@@ -112,7 +112,7 @@ Future<String> getPlantSpeciesUrl({
 ///     username: usernameVar,
 ///     passwordHash: hashVar
 ///   );
-Future<int> submitUserRegistration({
+Future<AuthToken> submitUserRegistration({
   required String email,
   required String username,
   required String passwordHash,
@@ -128,35 +128,42 @@ Future<int> submitUserRegistration({
     'password_hash': passwordHash,
   });
 
-  final client = HttpClient();
+  final httpClient = http.Client();
   try {
     // Create and send the POST request with JSON body.
-    final request = await client.postUrl(uri);
-    request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-    request.add(utf8.encode(payload));
+    final response = await httpClient.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: payload,
+    );
 
-    // Await the response and read the body for error context.
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
-
+    // 200-299 indicates success
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      final jsonResponse = jsonDecode(responseBody);
-      final userID = jsonResponse['user_id'] as int;
-      return userID;
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      return AuthToken.fromJson(jsonMap);
     }
-    // Return false if duplicate at any point is found
-    else if (response.statusCode == 409) {
-      return -1;
-    } else {
-      // Surface other responses for debugging purposes.
-      throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
-        uri: uri,
+
+    // Explicitly handle 401 Unauthorized
+    if (response.statusCode == 401) {
+      throw AuthException(
+        'Invalid credentials: ${response.body}',
+        statusCode: 401,
       );
     }
+
+    // Handle other non-200 errors
+    throw AuthException(
+      'Server error: ${response.body}',
+      statusCode: response.statusCode,
+    );
+  } catch (e) {
+    // Catch generic errors (like no internet) and rethrow as AuthException
+    // or let them bubble up if they are already handled.
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
   } finally {
-    // Ensure the HTTP client is closed even if an error occurs.
-    client.close(force: true);
+    // close out http client
+    httpClient.close();
   }
 }
 

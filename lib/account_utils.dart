@@ -121,7 +121,7 @@ class _LoginFormState extends State<LoginForm> {
         passwordHash: hashedPassword,
       );
       debugPrint("Received token for $email: ${token.accessToken}");
-      //SAVE USERID AND AUTHTOKEN TO DEVICE
+      //SAVE AUTHTOKEN TO DEVICE
       await saveAuthToken(token.accessToken);
 
       if (mounted) {
@@ -206,24 +206,34 @@ class _SignUpFormState extends State<SignUpForm> {
 
     //ONLY AFTER CONFIRMING PASSWORDS - HASH
     final hashedPassword = hashPassword(password);
-
-    //ADDS USER CREDENTIALS TO LIST
-    final int userID = await submitUserRegistration(
-      email: email,
-      username: username,
-      passwordHash: hashedPassword,
-    );
-    //RETURNS -1 IF DUPLICATE ACCOUNT
-    if (userID <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Account already exists"),
-          backgroundColor: Colors.red,
-        ),
+    try {
+      final AuthToken token = await submitUserRegistration(
+        email: email,
+        username: username,
+        passwordHash: hashedPassword,
       );
+      debugPrint("Received token for $email: ${token.accessToken}");
+      //SAVE AUTHTOKEN TO DEVICE
+      await saveAuthToken(token.accessToken);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Successfully logged in"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (err) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Login failed: $err"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
       return;
-    } else {
-      Navigator.pop(context);
     }
   } //end sign up
 
