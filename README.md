@@ -12,7 +12,9 @@ The environment class (in lib/environment.dart) is setup to allow easy swapping 
 3. Use the environment variable names from `.env.example` to populate both files. 
 4. It is setup so that if you build in debug mode, it will use `.env.development`, and if you run in release mode it will use `.env.production`. To run in release mode, use 
 
-    ```flutter run --release```
+    ```bash
+   flutter run --release
+    ```
 
 ## Usage:
 
