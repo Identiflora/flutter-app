@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.4
   flutter_secure_storage: ^9.2.4
   crypto: ^3.0.3
   permission_handler: ^12.0.1
@@ -30,7 +31,13 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets: 
+    - assets/brand/
     - assets/homepage/
     - assets/model/
     - .env.development
     - .env.production
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/brand/Identiflora_logo.png"
