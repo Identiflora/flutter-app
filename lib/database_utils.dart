@@ -16,8 +16,8 @@ Future<bool> submitIncorrectIdentification({
   required int identificationId,
   required int correctSpeciesId,
   required int incorrectSpeciesId,
-  String apiBaseUrl = 'https://identiflora-api.onrender.com',
 }) async {
+  String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/incorrect-identifications');
 
@@ -58,8 +58,9 @@ Future<bool> submitIncorrectIdentification({
 /// Returns the resolved URL as a string or throws an [HttpException] on API errors.
 Future<String> getPlantSpeciesUrl({
   required String scientificName,
-  String apiBaseUrl = 'https://identiflora-api.onrender.com',
 }) async {
+  String apiBaseUrl = Environment.apiUrl;
+
   final trimmedName = scientificName.trim();
   if (trimmedName.isEmpty) {
     throw ArgumentError('scientificName must not be empty.');
@@ -169,7 +170,7 @@ Future<AuthToken> submitUserLogin({
   required String passwordHash,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
-  debugPrint('API Base URL: $apiBaseUrl');
+  
   final uri = Uri.parse(apiBaseUrl).resolve('/user/login');
 
   // Start http client
@@ -265,8 +266,8 @@ Future<AuthToken> submitUserLogin({
 ///   );
 Future<String> fetchUsername({
   required int userID,
-  String apiBaseUrl = 'https://identiflora-api.onrender.com',
 }) async {
+  String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/username/$userID');
 
@@ -307,8 +308,8 @@ Future<String> fetchUsername({
 ///   );
 Future<int> fetchUserGlobalPts({
   required int userID,
-  String apiBaseUrl = 'https://identiflora-api.onrender.com',
 }) async {
+  String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/user-pts/$userID');
 
@@ -345,9 +346,8 @@ Future<int> fetchUserGlobalPts({
 /// Send a user count request to the API.
 /// Can be used directly in a Flutter button:
 ///   onPressed: () => fetchUserCount();
-Future<int> fetchUserCount({
-  String apiBaseUrl = 'https://identiflora-api.onrender.com',
-}) async {
+Future<int> fetchUserCount() async {
+  String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/user-count');
 
