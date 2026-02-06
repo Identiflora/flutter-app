@@ -45,6 +45,7 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
             elevation: 5.0,
             shadowColor: Theme.of(context).colorScheme.shadow, 
+            centerTitle: true,
           ),
           body: Padding(
             padding: const EdgeInsets.only(top: 12.0),
@@ -60,9 +61,19 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                     // However, this could allow to randomize the order of options easily by having
                     // entry start at a random value between 0-4 to print options, just having it
                     // loop back around after 4
+                    const Text("Guess what plant this is from the options below!", 
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                        color: Colors.black,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const Spacer(flex: 3),
                     for (var entry in widget.predictions.asMap().entries)
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0), 
+                        padding: entry.key == widget.predictions.asMap().length ? const EdgeInsets.only() : const EdgeInsets.only(bottom: 8.0),
                         child: TextButton(
                           onPressed: () => selectOption(entry.key),
                           style: TextButton.styleFrom(
@@ -87,7 +98,7 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                           ),
                         ),
                       ),
-                    const Spacer(),
+                    const Spacer(flex: 2),
                     ElevatedButton(
                             onPressed: userChoice != null
                               ? () async {
