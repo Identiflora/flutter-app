@@ -9,7 +9,7 @@ The environment class (in lib/environment.dart) is setup to allow easy swapping 
     - `.env.production` (for cloud testing)
     - `.env.development` (for local development)
 2. IMPORTANT: Double check that both of these files are present in .gitignore. 
-3. Use the environment variable names from `.env.example` to populate both files. 
+3. Use the environment variable names from `.env.example` to populate both files (You will need to replace the value of the variables). 
 4. It is setup so that if you build in debug mode, it will use `.env.development`, and if you run in release mode it will use `.env.production`. To run in release mode, use 
 
     ```bash
