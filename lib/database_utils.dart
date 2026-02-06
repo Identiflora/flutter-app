@@ -65,17 +65,7 @@ Future<String> getPlantSpeciesUrl({
     throw ArgumentError('scientificName must not be empty.');
   }
 
-  final base = Uri.parse(apiBaseUrl);
-  final uri = Uri(
-    scheme: base.scheme, // preserve http/https from provided base
-    host: base.host, // reuse host from base URL
-    port: base.hasPort ? base.port : null, // carry port if present
-    path: base.path.endsWith('/')
-        ? '${base.path}plant-species-url'
-        : '${base.path}/plant-species-url', // append endpoint safely
-    // API expects the query param to be named "scientific_name"
-    queryParameters: {'scientific_name': trimmedName},
-  );
+  final uri = Uri.parse(apiBaseUrl).resolve('/plant-species-url/$trimmedName');
 
   final client = HttpClient();
   try {

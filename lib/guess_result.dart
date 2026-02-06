@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:identiflora/main.dart';
 import 'model_incorrect.dart';
 
 class ResultsWidget extends StatefulWidget {
@@ -23,9 +22,14 @@ class _Results extends State<ResultsWidget> {
   Widget build(BuildContext context) {
     final Map<String, dynamic> topMatch = widget.allPredictions[0];
     final String modelTopName = topMatch['label'];
-
-    final Map<String, dynamic> userPick = widget.allPredictions[widget.userChoiceIndex];
-    final String userPickedName = userPick['label'];
+    final Map<String, dynamic> userPick;
+    String userPickedName = "";
+    
+    // Check for bounds and skip case
+    if(widget.userChoiceIndex <= 4 && widget.userChoiceIndex >= 0) {
+      userPick = widget.allPredictions[widget.userChoiceIndex];
+      userPickedName = userPick['label'];
+    }
 
     final bool isCorrect = widget.userChoiceIndex == 0;
 
@@ -46,15 +50,15 @@ class _Results extends State<ResultsWidget> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Results',
-          style: TextStyle(fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
-        ),
+        title: const Text('Results'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 5.0,
+        shadowColor: Theme.of(context).colorScheme.shadow, 
         centerTitle: true,
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24.0, 8.0, 24.0, 24.0),
+          padding: const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -73,7 +77,7 @@ class _Results extends State<ResultsWidget> {
                         style: plantNameStyle.copyWith(color: correctColor),
                       ),
                       const TextSpan(text: "\nand were correct!"),
-                    ] else ...[
+                    ] else if(userPickedName != "")...[
                       // Incorrect guess
                       const TextSpan(text: "You said this plant is a\n"),
                       TextSpan(
@@ -81,6 +85,14 @@ class _Results extends State<ResultsWidget> {
                         style: plantNameStyle.copyWith(color: incorrectColor),
                       ),
                       const TextSpan(text: "but it is actually a\n"),
+                      TextSpan(
+                        text: modelTopName,
+                        style: plantNameStyle.copyWith(color: correctColor),
+                      ),
+                    ]
+                    else ...[
+                      // Skipped Guess
+                      const TextSpan(text: "This plant is a\n"),
                       TextSpan(
                         text: modelTopName,
                         style: plantNameStyle.copyWith(color: correctColor),
@@ -96,7 +108,7 @@ class _Results extends State<ResultsWidget> {
                 height: 300,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
-                  child: Image.network(widget.imgURL)
+                  child: widget.imgURL == "" ? Placeholder() : Image.network(widget.imgURL)
                 ),
               ),
 
@@ -115,20 +127,10 @@ class _Results extends State<ResultsWidget> {
                     child: ElevatedButton(
                       onPressed: () {
                         if (isCorrect) {
-                          Navigator.push(
-                            context, 
-                            MaterialPageRoute<void>(
-                              builder: (context) => AppSetup(),
-                            )
-                          );
+                          Navigator.popUntil(context, ModalRoute.withName("/"));
                         }
                         else {
-                          Navigator.push(
-                            context, 
-                            MaterialPageRoute<void>(
-                              builder: (context) => AppSetup(),
-                            )
-                          );
+                          Navigator.popUntil(context, ModalRoute.withName("/"));
                         }
                       },
                       style: ElevatedButton.styleFrom(
