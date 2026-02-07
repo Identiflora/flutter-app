@@ -101,18 +101,15 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                     const Spacer(flex: 2),
                     ElevatedButton(
                             onPressed: userChoice != null
-                              ? () async {
-                                  imgURL = await getPlantSpeciesUrl(scientificName: widget.predictions[0]['label']);
-                                  if(context.mounted) {
-                                    Navigator.push(context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ResultsWidget(
-                                          userChoiceIndex: userChoice!, 
-                                          allPredictions: widget.predictions,
-                                          imgURL: imgURL)
-                                      ),
-                                    );
-                                  }
+                              ? () {
+                                  Navigator.push(context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UserChoiceLoadingScreen(
+                                        userChoiceIndex: userChoice!, 
+                                        allPredictions: widget.predictions,
+                                      )
+                                    ),
+                                  );
                                 }
                               : null,
                             style: ElevatedButton.styleFrom(
@@ -129,18 +126,15 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                     const Spacer(),
                     ElevatedButton(
                       onPressed: userChoice == null
-                        ? () async {
-                            imgURL = await getPlantSpeciesUrl(scientificName: widget.predictions[0]['label']);
-                            if(context.mounted) {
-                              Navigator.push(context,
-                                MaterialPageRoute(
-                                  builder: (context) => ResultsWidget(
-                                    userChoiceIndex: -1, 
-                                    allPredictions: widget.predictions,
-                                    imgURL: imgURL)
-                                ),
-                              );
-                            }
+                        ? () {
+                            Navigator.push(context,
+                              MaterialPageRoute(
+                                builder: (context) => UserChoiceLoadingScreen(
+                                  userChoiceIndex: -1, 
+                                  allPredictions: widget.predictions,
+                                )
+                              ),
+                            );
                           }
                         : null,
                       style: ElevatedButton.styleFrom(
@@ -162,3 +156,93 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
     );
   }
 }
+
+class UserChoiceLoadingScreen extends StatelessWidget {
+  final int userChoiceIndex;
+  final List<Map<String, dynamic>> allPredictions;
+
+  const UserChoiceLoadingScreen({
+    super.key,
+    required this.userChoiceIndex,
+    required this.allPredictions
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Loading...'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 5.0,
+        shadowColor: Theme.of(context).colorScheme.shadow, 
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: FutureBuilder<String>(
+          future: getPlantSpeciesUrl(scientificName: allPredictions[0]['label']), 
+          builder: (context, snapshot) {
+            if(snapshot.connectionState == ConnectionState.waiting) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text("Please wait while we retrieve this identification information...", 
+                      textAlign: TextAlign.center, 
+                      style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                  )
+                ]
+              );
+            }
+            else if(snapshot.hasData && snapshot.data != null) {
+              // Run navigation after next frame
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.push(context,
+                  MaterialPageRoute(
+                    builder: (context) => ResultsWidget(
+                      userChoiceIndex: userChoiceIndex, 
+                      allPredictions: allPredictions,
+                      imgURL: snapshot.data!)
+                  ),
+                );
+              });
+
+              // Return a found message for current frame
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text("Identification information found! One moment...", 
+                      textAlign: TextAlign.center, 
+                      style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                  ),
+                ]
+              );
+            }
+            else {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text("Sorry, but we cannot seem to retrieve that information!\nPlease press the back arrow and try again in a moment.", 
+                  textAlign: TextAlign.center, 
+                  style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                ),
+              );
+            }
+          }
+        )
+      ),
+    );
+  }
+}
+
