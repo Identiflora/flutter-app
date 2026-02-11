@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:identiflora/cache_utils.dart';
 import 'auth_objects.dart';
 import 'environment.dart';
 
@@ -367,6 +368,62 @@ Future<int> fetchUserCount() async {
     // Return blank string if invalid username
     else if (response.statusCode == 404) {
       return -1;
+    } else {
+      // Surface other responses for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: $responseBody',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP client is closed even if an error occurs.
+    client.close(force: true);
+  }
+}
+
+/// Send an update of user global points to the API.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => submitIncorrectIdentification(
+///     addPoints: points
+///   );
+Future<bool> submitUserGlobalPoints({
+  required int addPoints
+}) async {
+  final authToken = await getAuthToken();
+
+  if(addPoints <= 0 || authToken == null) {
+    return false;
+  }
+
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/add-global-user-pts');
+
+  // Prepare JSON payload expected by the API.
+  final payload = jsonEncode({
+    'user_token': authToken,
+    'add_points': addPoints
+  });
+
+  final client = HttpClient();
+  try {
+    // Create and send the POST request with JSON body.
+    final request = await client.postUrl(uri);
+    request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+    request.add(utf8.encode(payload));
+
+    // Await the response and read the body for error context.
+    final response = await request.close();
+    final responseBody = await utf8.decodeStream(response);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(responseBody);
+      final success = jsonResponse['success'] as bool;
+      return success;
+    }
+    // Return blank string if invalid username
+    else if (response.statusCode == 404) {
+      return false;
     } else {
       // Surface other responses for debugging purposes.
       throw HttpException(

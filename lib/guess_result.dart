@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:identiflora/database_utils.dart';
 import 'model_incorrect.dart';
 
 class ResultsWidget extends StatefulWidget {
@@ -125,9 +126,11 @@ class _Results extends State<ResultsWidget> {
                   // Yes Button
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (isCorrect) {
-                          Navigator.popUntil(context, ModalRoute.withName("/"));
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (context) => UserPointsLoadingScreen(),
+                          ));
                         }
                         else {
                           Navigator.popUntil(context, ModalRoute.withName("/"));
@@ -183,6 +186,113 @@ class _Results extends State<ResultsWidget> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class UserPointsLoadingScreen extends StatelessWidget {
+  const UserPointsLoadingScreen({
+    super.key,
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Loading...'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 5.0,
+        shadowColor: Theme.of(context).colorScheme.shadow, 
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: FutureBuilder<bool>(
+          future: submitUserGlobalPoints(addPoints: 1), 
+          builder: (context, snapshot) {
+            if(snapshot.connectionState == ConnectionState.waiting) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text("Please wait while we update your points...", 
+                      textAlign: TextAlign.center, 
+                      style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                  )
+                ]
+              );
+            }
+            else if(snapshot.hasData && snapshot.data != null && snapshot.data == true) {
+              // Run navigation after next frame
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.popUntil(context, ModalRoute.withName("/"));
+              });
+
+              // Return a found message for current frame
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text("Points updated! One moment...", 
+                      textAlign: TextAlign.center, 
+                      style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                  )
+                ]
+              );
+            }
+            else if(snapshot.hasData && snapshot.data != null && snapshot.data == false) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text("We could not find your account to update points for. Please check that you are logged in and try again.",
+                      textAlign: TextAlign.center, 
+                      style: TextStyle(fontSize: 20)
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.popUntil(context, ModalRoute.withName("/"));
+                    }, 
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    child: const Text("Return to Homepage")
+                  )
+                ],
+              );
+            }
+            else {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text("Sorry, but we cannot seem to update that information!\nPlease press the back arrow and try again in a moment.", 
+                  textAlign: TextAlign.center, 
+                  style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                ),
+              );
+            }
+                            },
+        )
       ),
     );
   }
