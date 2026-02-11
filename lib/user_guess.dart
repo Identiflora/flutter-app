@@ -19,11 +19,20 @@ class UserChoiceScreen extends StatefulWidget {
 class _UserChoiceScreen extends State<UserChoiceScreen>{
   late String imgURL;
   int? userChoice; // do need this though
+  late final String correctChoice;
 
   void selectOption(int index) {
     setState(() {
       userChoice = index;
     });
+  }
+
+  @override
+  void initState() {
+    correctChoice = widget.predictions.first['label'];
+    debugPrint(correctChoice);
+    widget.predictions.shuffle();
+    super.initState();
   }
 
   // choice selections screen, based off just a dynamic side margin (FractionallySizedBox) but probably
@@ -36,9 +45,9 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
     final colorScheme = Theme.of(context).colorScheme;
     final primaryColor = colorScheme.primary; 
     final outlineColor = colorScheme.outline;
-    final onSurfaceColor = colorScheme.onSurface; 
+    final onSurfaceColor = colorScheme.onSurface;
+    final int correctIndex = widget.predictions.indexWhere((element) => element['label'] == correctChoice);
 
-    
     return Scaffold(
           appBar: AppBar(
             title: const Text('What do you think?'),
@@ -106,6 +115,7 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                                     MaterialPageRoute(
                                       builder: (context) => UserChoiceLoadingScreen(
                                         userChoiceIndex: userChoice!, 
+                                        correctIndex: correctIndex,
                                         allPredictions: widget.predictions,
                                       )
                                     ),
@@ -131,6 +141,7 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                               MaterialPageRoute(
                                 builder: (context) => UserChoiceLoadingScreen(
                                   userChoiceIndex: -1, 
+                                  correctIndex: correctIndex,
                                   allPredictions: widget.predictions,
                                 )
                               ),
@@ -159,11 +170,13 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
 
 class UserChoiceLoadingScreen extends StatelessWidget {
   final int userChoiceIndex;
+  final int correctIndex;
   final List<Map<String, dynamic>> allPredictions;
 
   const UserChoiceLoadingScreen({
     super.key,
     required this.userChoiceIndex,
+    required this.correctIndex,
     required this.allPredictions
   });
   
@@ -179,7 +192,7 @@ class UserChoiceLoadingScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: FutureBuilder<String>(
-          future: getPlantSpeciesUrl(scientificName: allPredictions[0]['label']), 
+          future: getPlantSpeciesUrl(scientificName: allPredictions[correctIndex]['label']), 
           builder: (context, snapshot) {
             if(snapshot.connectionState == ConnectionState.waiting) {
               return Column(
@@ -202,10 +215,15 @@ class UserChoiceLoadingScreen extends StatelessWidget {
             else if(snapshot.hasData && snapshot.data != null) {
               // Run navigation after next frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
+                // Remove loading screen from stack
+                Navigator.pop(context);
+
+                // Navigate to new screen
                 Navigator.push(context,
                   MaterialPageRoute(
                     builder: (context) => ResultsWidget(
                       userChoiceIndex: userChoiceIndex, 
+                      correctIndex: correctIndex,
                       allPredictions: allPredictions,
                       imgURL: snapshot.data!)
                   ),

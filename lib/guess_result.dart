@@ -4,11 +4,13 @@ import 'model_incorrect.dart';
 
 class ResultsWidget extends StatefulWidget {
   final int userChoiceIndex;
+  final int correctIndex;
   final List<Map<String, dynamic>> allPredictions;
   final String imgURL;
   
   const ResultsWidget({
     required this.userChoiceIndex,
+    required this.correctIndex,
     required this.allPredictions,
     required this.imgURL,
     super.key,
@@ -21,7 +23,7 @@ class ResultsWidget extends StatefulWidget {
 class _Results extends State<ResultsWidget> {
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> topMatch = widget.allPredictions[0];
+    final Map<String, dynamic> topMatch = widget.allPredictions[widget.correctIndex];
     final String modelTopName = topMatch['label'];
     final Map<String, dynamic> userPick;
     String userPickedName = "";
@@ -32,7 +34,7 @@ class _Results extends State<ResultsWidget> {
       userPickedName = userPick['label'];
     }
 
-    final bool isCorrect = widget.userChoiceIndex == 0;
+    final bool isCorrect = widget.userChoiceIndex == widget.correctIndex;
 
     // correct color based off themeing with a hard dark red for incorrect
     final Color incorrectColor = const Color.fromARGB(255, 180, 39, 39);
@@ -48,6 +50,8 @@ class _Results extends State<ResultsWidget> {
     final TextStyle plantNameStyle = mainTextStyle.copyWith(
       fontWeight: FontWeight.bold,
     );
+
+    final int addPoints = 1;
 
     return Scaffold(
       appBar: AppBar(
@@ -129,7 +133,7 @@ class _Results extends State<ResultsWidget> {
                       onPressed: () async {
                         if (isCorrect) {
                           Navigator.push(context, MaterialPageRoute(
-                            builder: (context) => UserPointsLoadingScreen(),
+                            builder: (context) => UserPointsLoadingScreen(newPoints: addPoints),
                           ));
                         }
                         else {
@@ -192,8 +196,10 @@ class _Results extends State<ResultsWidget> {
 }
 
 class UserPointsLoadingScreen extends StatelessWidget {
+  final int newPoints;
+
   const UserPointsLoadingScreen({
-    super.key,
+    super.key, required this.newPoints
   });
   
   @override
@@ -208,24 +214,26 @@ class UserPointsLoadingScreen extends StatelessWidget {
       ),
       body: SafeArea(
         child: FutureBuilder<bool>(
-          future: submitUserGlobalPoints(addPoints: 1), 
+          future: submitUserGlobalPoints(addPoints: newPoints), 
           builder: (context, snapshot) {
             if(snapshot.connectionState == ConnectionState.waiting) {
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text("Please wait while we update your points...", 
-                      textAlign: TextAlign.center, 
-                      style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text("Please wait while we update your points...", 
+                        textAlign: TextAlign.center, 
+                        style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16.0),
-                    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
-                  )
-                ]
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                    )
+                  ]
+                ),
               );
             }
             else if(snapshot.hasData && snapshot.data != null && snapshot.data == true) {
@@ -235,24 +243,26 @@ class UserPointsLoadingScreen extends StatelessWidget {
               });
 
               // Return a found message for current frame
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text("Points updated! One moment...", 
-                      textAlign: TextAlign.center, 
-                      style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text("Points updated! One moment...", 
+                        textAlign: TextAlign.center, 
+                        style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16.0),
-                    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
-                  )
-                ]
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                    )
+                  ]
+                ),
               );
             }
-            else if(snapshot.hasData && snapshot.data != null && snapshot.data == false) {
+            else {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -282,16 +292,7 @@ class UserPointsLoadingScreen extends StatelessWidget {
                 ],
               );
             }
-            else {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text("Sorry, but we cannot seem to update that information!\nPlease press the back arrow and try again in a moment.", 
-                  textAlign: TextAlign.center, 
-                  style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
-                ),
-              );
-            }
-                            },
+          },
         )
       ),
     );
