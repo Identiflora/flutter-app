@@ -234,15 +234,18 @@ class DisplayPictureScreen extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.file(File(imgPath)),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  getTextButton(context, "Retry", false),
-                  getTextButton(context, "Identify", true)
-                ],
+              Flexible(child: Image.file(File(imgPath))),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    getTextButton(context, "Retry", false),
+                    getTextButton(context, "Identify", true)
+                  ],
+                ),
               )
             ]
           ),
