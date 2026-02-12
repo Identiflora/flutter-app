@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/environment.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
 
@@ -131,6 +135,8 @@ class _LoginFormState extends State<LoginForm> {
             backgroundColor: Colors.green,
           ),
         );
+
+        Navigator.popUntil(context, ModalRoute.withName("/"));
       }
     } catch (err) {
       if (mounted) {
@@ -144,6 +150,22 @@ class _LoginFormState extends State<LoginForm> {
       return;
     }
   } //END LOGINPRESSED FUNCT
+
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      GoogleSignIn.instance.initialize(clientId: Environment.googleClientID, serverClientId: Environment.googleServerID);
+      final GoogleSignInAccount user = await GoogleSignIn.instance.authenticate();
+      final GoogleSignInAuthentication auth = user.authentication;
+      final String? token = auth.idToken;
+      if(token != null) {
+        debugPrint("TOKEN HERE $token");
+        // Send to database
+      }
+    }
+    catch (err) {
+      debugPrint("$err");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +189,7 @@ class _LoginFormState extends State<LoginForm> {
           ),
         ),
         ElevatedButton(onPressed: loginPressed, child: const Text("Login")),
+        ElevatedButton.icon(onPressed: _handleGoogleSignIn, icon: const Icon(Icons.login), label: const Text("Google Login"))
       ],
     );
   }

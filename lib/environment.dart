@@ -12,4 +12,12 @@ class Environment {
   static String get apiUrl {
     return dotenv.env['API_URL'] ?? 'API_URL not found';
   }
+
+  static String get googleClientID {
+    return dotenv.env['GOOGLE_CLIENT_ID'] ?? 'GOOGLE_CLIENT_ID not found';
+  }
+
+  static String get googleServerID {
+    return dotenv.env['GOOGLE_SERVER_ID'] ?? 'GOOGLE_SERVER_ID not found';
+  }
 }
