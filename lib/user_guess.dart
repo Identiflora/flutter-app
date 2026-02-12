@@ -249,12 +249,39 @@ class UserChoiceLoadingScreen extends StatelessWidget {
               );
             }
             else {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text("Sorry, but we cannot seem to retrieve that information!\nPlease press the back arrow and try again in a moment.", 
-                  textAlign: TextAlign.center, 
-                  style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
-                ),
+              // Run navigation after next frame
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                // Remove loading screen from stack
+                Navigator.pop(context);
+
+                // Navigate to new screen
+                Navigator.push(context,
+                  MaterialPageRoute(
+                    builder: (context) => ResultsWidget(
+                      userChoiceIndex: userChoiceIndex, 
+                      correctIndex: correctIndex,
+                      allPredictions: allPredictions,
+                      imgURL: "")
+                  ),
+                );
+              });
+
+              // Return a found message for current frame
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text("Unable to find identification information. One moment...", 
+                      textAlign: TextAlign.center, 
+                      style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                  ),
+                ]
               );
             }
           }

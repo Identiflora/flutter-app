@@ -82,7 +82,7 @@ class _Results extends State<ResultsWidget> {
                         style: plantNameStyle.copyWith(color: correctColor),
                       ),
                       const TextSpan(text: "\nand were correct!"),
-                    ] else if(userPickedName != "")...[
+                    ] else if(widget.userChoiceIndex != -1)...[
                       // Incorrect guess
                       const TextSpan(text: "You said this plant is a\n"),
                       TextSpan(
