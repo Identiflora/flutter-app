@@ -158,8 +158,7 @@ class _LoginFormState extends State<LoginForm> {
       final GoogleSignInAuthentication auth = user.authentication;
       final String? token = auth.idToken;
       if(token != null) {
-        debugPrint("TOKEN HERE $token");
-        // Send to database
+        submitUserGoogleLogin(token: token);
       }
     }
     catch (err) {
