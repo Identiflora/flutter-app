@@ -34,6 +34,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
     const TextStyle mainTextStyle = TextStyle(
       fontSize: 22,
       color: Colors.black,
+      fontWeight: FontWeight.bold
     );
 
     final List<PlantMatch> matches = widget.predictions.map((pred) {
@@ -50,10 +51,10 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Sorry about that!',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Sorry about that!',),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 5.0,
+        shadowColor: Theme.of(context).colorScheme.shadow, 
         centerTitle: true,
       ),
       body: SafeArea(
@@ -62,12 +63,14 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                "If you don't mind, could you select the plant you believe it is?",
-                textAlign: TextAlign.center,
-                style: mainTextStyle,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 16.0, 8.0, 24.0),
+                child: const Text(
+                  "If you don't mind, could you select the plant you believe it is?",
+                  textAlign: TextAlign.center,
+                  style: mainTextStyle,
+                ),
               ),
-              const SizedBox(height: 24),
               Expanded(
                 // This should lowkey maybe just be a single column scrollable grid but
                 // I dont wanna mess it up rn
@@ -76,7 +79,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 16.0,
                     mainAxisSpacing: 16.0,
-                    childAspectRatio: 0.8,
+                    childAspectRatio: 0.5,
                   ),
                   itemCount: matches.length,
                   itemBuilder: (context, index) {
@@ -95,10 +98,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                       future: getPlantSpeciesUrl(scientificName: match.scientificName),
                       builder: (context, snapshot) {
                         if(snapshot.connectionState == ConnectionState.waiting) {
-                          return Center(child: const CircularProgressIndicator(color: Color.fromRGBO(145, 187, 32, 1)));
-                        }
-                        else if(snapshot.hasError) {
-                          return Text("Plant image had error when loading: ${snapshot.error}");
+                          return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
                         }
                         else if(snapshot.hasData && snapshot.data != null) {
                           return Card(
@@ -121,16 +121,17 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Expanded(
-                                    child: ClipRRect(
-                                      borderRadius: const BorderRadius.vertical(
-                                        top: Radius.circular(12.0),
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                        // Plant image, might need to be reformatted if we are pulling from database
+                                        child: Image.network(snapshot.data!),
                                       ),
-                                      // Plant image, might need to be reformatted if we are pulling from database
-                                      child: Image.network(snapshot.data!),
                                     ),
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.all(8.0),
+                                    padding: const EdgeInsets.fromLTRB(10.0, 8.0, 10.0, 8.0),
                                     child: Column(
                                       children: [
                                         // Common Name
@@ -152,10 +153,10 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                           textAlign: TextAlign.center,
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 15,
+                                            fontSize: 14,
                                             fontStyle: FontStyle.italic,
                                           ),
-                                          maxLines: 2,
+                                          maxLines: 3,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 4),
@@ -166,7 +167,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                           style: TextStyle(
                                             color: confidenceColor,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 14,
+                                            fontSize: 15,
                                           ),
                                         ),
                                       ],
@@ -178,7 +179,80 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                           );
                         }
                         else {
-                          return const Placeholder(color: Colors.grey, strokeWidth: 1.0,);
+                          return Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                // opens full preview of image with submission confirmation
+                                Navigator.push(
+                                  context, 
+                                  MaterialPageRoute<void>(
+                                    builder: (context) => DisplayBigPlantScreen(match: match, imgPath: snapshot.data!),
+                                  )
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0),
+                                      child: ClipRRect(
+                                        child: const Placeholder(color: Colors.grey, strokeWidth: 1.0,)
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(10.0, 8.0, 10.0, 8.0),
+                                    child: Column(
+                                      children: [
+                                        // Common Name
+                                        Text(
+                                          match.commonName,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        
+                                        // Scientific Name
+                                        Text(
+                                          match.scientificName,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                          
+                                        // Confidence Score
+                                        Text(
+                                          '${(match.confidenceScore * 100).toStringAsFixed(1)}% Likely',
+                                          style: TextStyle(
+                                            color: confidenceColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
                         }
                       }
                     );
