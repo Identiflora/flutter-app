@@ -163,10 +163,25 @@ class _LoginFormState extends State<LoginForm> {
       }
     }
     catch (err) {
-      debugPrint("$err");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Login failed: $err"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
     }
 
     if(context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Successfully logged in"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
       Navigator.popUntil(context, ModalRoute.withName("/"));
     }
   }
@@ -193,7 +208,7 @@ class _LoginFormState extends State<LoginForm> {
           ),
         ),
         ElevatedButton(onPressed: loginPressed, child: const Text("Login")),
-        ElevatedButton.icon(onPressed: () => _handleGoogleSignIn(context), icon: const Icon(Icons.login), label: const Text("Google Login"))
+        ElevatedButton.icon(onPressed: () => _handleGoogleSignIn(context), icon: Image.asset('assets/brand/Google_G_logo_500x500.png', width: 25, height: 25,), label: const Text("Sign in with Google"))
       ],
     );
   }
@@ -342,7 +357,21 @@ class ExternalSignUpForm extends StatelessWidget {
               ),
               const SizedBox(height: 16),
           
-              ElevatedButton(onPressed: () => Navigator.pop(context, usernameControl.text.trim()), child: const Text("Confirm")),
+              ElevatedButton(
+                onPressed: () {
+                  if(usernameControl.text.trim().isNotEmpty) {
+                    Navigator.pop(context, usernameControl.text.trim());
+                  }
+                  else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Please make sure username has at least 1 character then try again."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }, 
+                child: const Text("Confirm")),
             ],
           ),
         ),
