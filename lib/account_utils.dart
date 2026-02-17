@@ -158,8 +158,12 @@ class _LoginFormState extends State<LoginForm> {
       final GoogleSignInAuthentication auth = user.authentication;
       final String? googleToken = auth.idToken;
       if(googleToken != null && context.mounted) {
-        final AuthToken token = await submitUserGoogleLogin(token: googleToken, context: context);
-        await saveAuthToken(token.accessToken);
+        // final AuthToken token = await submitUserGoogleLogin(token: googleToken, context: context);
+        // await saveAuthToken(token.accessToken);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => GoogleLoginLoadingScreen(googleToken: googleToken)),
+        );
       }
     }
     catch (err) {
@@ -172,17 +176,6 @@ class _LoginFormState extends State<LoginForm> {
         );
       }
       return;
-    }
-
-    if(context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Successfully logged in"),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      Navigator.popUntil(context, ModalRoute.withName("/"));
     }
   }
 
@@ -380,9 +373,129 @@ class ExternalSignUpForm extends StatelessWidget {
   }
 }
 
+class GoogleLoginLoadingScreen extends StatelessWidget {
+  final String googleToken;
 
+  const GoogleLoginLoadingScreen({
+    super.key, required this.googleToken
+  });
 
+  Future<void> loginAndStore(String googleToken, BuildContext context) async {
+    final AuthToken token = await submitUserGoogleLogin(token: googleToken, context: context);
+    await saveAuthToken(token.accessToken);
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Loading...'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 5.0,
+        shadowColor: Theme.of(context).colorScheme.shadow, 
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: FutureBuilder<void>(
+          future: loginAndStore(googleToken, context), 
+          builder: (context, snapshot) {
+            if(snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text("Please wait while we log you in...", 
+                        textAlign: TextAlign.center, 
+                        style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                    )
+                  ]
+                ),
+              );
+            }
+            else if(snapshot.connectionState == ConnectionState.done) {
+              // Run navigation after next frame
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if(context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Successfully logged in"),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
 
+                  Navigator.popUntil(context, ModalRoute.withName("/"));
+                }
+              });
 
-
- 
+              // Return a found message for current frame
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text("Login complete! One moment...", 
+                        textAlign: TextAlign.center, 
+                        style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+                    )
+                  ]
+                ),
+              );
+            }
+            else {
+              if (snapshot.hasError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Login failed: ${snapshot.error}"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+              
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text("Sorry! We can't seem to log you in. Please check your internet connection then try again.",
+                      textAlign: TextAlign.center, 
+                      style: TextStyle(fontSize: 20)
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.popUntil(context, ModalRoute.withName("/"));
+                    }, 
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      textStyle: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    child: const Text("Return to Homepage")
+                  )
+                ],
+              );
+            }
+          },
+        )
+      ),
+    );
+  }
+}
