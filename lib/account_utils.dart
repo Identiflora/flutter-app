@@ -151,18 +151,23 @@ class _LoginFormState extends State<LoginForm> {
     }
   } //END LOGINPRESSED FUNCT
 
-  Future<void> _handleGoogleSignIn() async {
+  Future<void> _handleGoogleSignIn(BuildContext context) async {
     try {
       GoogleSignIn.instance.initialize(clientId: Environment.googleClientID, serverClientId: Environment.googleServerID);
       final GoogleSignInAccount user = await GoogleSignIn.instance.authenticate();
       final GoogleSignInAuthentication auth = user.authentication;
-      final String? token = auth.idToken;
-      if(token != null) {
-        submitUserGoogleLogin(token: token);
+      final String? googleToken = auth.idToken;
+      if(googleToken != null && context.mounted) {
+        final AuthToken token = await submitUserGoogleLogin(token: googleToken, context: context);
+        await saveAuthToken(token.accessToken);
       }
     }
     catch (err) {
       debugPrint("$err");
+    }
+
+    if(context.mounted) {
+      Navigator.popUntil(context, ModalRoute.withName("/"));
     }
   }
 
@@ -188,7 +193,7 @@ class _LoginFormState extends State<LoginForm> {
           ),
         ),
         ElevatedButton(onPressed: loginPressed, child: const Text("Login")),
-        ElevatedButton.icon(onPressed: _handleGoogleSignIn, icon: const Icon(Icons.login), label: const Text("Google Login"))
+        ElevatedButton.icon(onPressed: () => _handleGoogleSignIn(context), icon: const Icon(Icons.login), label: const Text("Google Login"))
       ],
     );
   }
@@ -245,6 +250,8 @@ class _SignUpFormState extends State<SignUpForm> {
             backgroundColor: Colors.green,
           ),
         );
+
+        Navigator.popUntil(context, ModalRoute.withName("/"));
       }
     } catch (err) {
       if (mounted) {
@@ -294,6 +301,55 @@ class _SignUpFormState extends State<SignUpForm> {
     );
   }
 }//END SIGNUPFORMSTATE CLASS
+
+// Sign up form for new external user
+class ExternalSignUpForm extends StatelessWidget {
+  final usernameControl = TextEditingController();
+
+  ExternalSignUpForm({super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('How do we identify you?',),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 5.0,
+        shadowColor: Theme.of(context).colorScheme.shadow, 
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Please enter a username so others know how to identify you!", 
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: TextField(
+                  controller: usernameControl,
+                  decoration: const InputDecoration(labelText: 'Username'),
+                ),
+              ),
+              const SizedBox(height: 16),
+          
+              ElevatedButton(onPressed: () => Navigator.pop(context, usernameControl.text.trim()), child: const Text("Confirm")),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 
 

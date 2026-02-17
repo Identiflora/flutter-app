@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:identiflora/account_utils.dart';
 import 'package:identiflora/cache_utils.dart';
 import 'auth_objects.dart';
 import 'environment.dart';
@@ -439,11 +441,12 @@ Future<bool> submitUserGlobalPoints({
 
 Future<AuthToken> submitUserGoogleLogin({
   required String token,
+  required BuildContext context,
   String? username
 }) async {
   String apiBaseUrl = Environment.apiUrl;
   
-  final uri = Uri.parse(apiBaseUrl).resolve('/google-login/auth');
+  final uri = Uri.parse(apiBaseUrl).resolve('/google/auth');
 
   // Start http client
   final httpClient = http.Client();
@@ -452,7 +455,71 @@ Future<AuthToken> submitUserGoogleLogin({
     final response = await httpClient.post(
       uri,
       headers: {'Content-Type': 'application/json', HttpHeaders.authorizationHeader: 'Bearer $token'},
-      body: jsonEncode({'username': username})
+    );
+
+    // 200-299 indicates success
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if(jsonMap.containsKey('email')) {
+        late final String username;
+
+        if(context.mounted) {
+          username = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ExternalSignUpForm()),
+          );
+        }
+        else {
+          username = "";
+        }
+
+        return await submitUserGoogleRegistration(email: jsonMap['email'], username: username);
+      }
+
+      return AuthToken.fromJson(jsonMap);
+    }
+
+    // Explicitly handle 401 Unauthorized
+    if (response.statusCode == 401) {
+      throw AuthException(
+        'Invalid credentials: ${response.body}',
+        statusCode: 401,
+      );
+    }
+
+    // Handle other non-200 errors
+    throw AuthException(
+      'Server error: ${response.body}',
+      statusCode: response.statusCode,
+    );
+  } catch (e) {
+    // Catch generic errors (like no internet) and rethrow as AuthException
+    // or let them bubble up if they are already handled.
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    // close out http client
+    httpClient.close();
+  }
+}
+
+Future<AuthToken> submitUserGoogleRegistration({
+  required String email,
+  required String username
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+  
+  final uri = Uri.parse(apiBaseUrl).resolve('/google/register');
+
+  // Start http client
+  final httpClient = http.Client();
+
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'user_email': email, "username": username}),
     );
 
     // 200-299 indicates success
