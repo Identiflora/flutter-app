@@ -20,6 +20,7 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
   late String imgURL;
   int? userChoice; // do need this though
   late final String correctChoice;
+  late ScrollController _scrollController;
 
   void selectOption(int index) {
     setState(() {
@@ -29,10 +30,16 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
 
   @override
   void initState() {
+    _scrollController = ScrollController();
     correctChoice = widget.predictions.first['label'];
-    debugPrint(correctChoice);
     widget.predictions.shuffle();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   // choice selections screen, based off just a dynamic side margin (FractionallySizedBox) but probably
@@ -56,65 +63,98 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
             shadowColor: Theme.of(context).colorScheme.shadow, 
             centerTitle: true,
           ),
-          body: Padding(
-            padding: const EdgeInsets.only(top: 12.0),
-            child: Center(
-              child: FractionallySizedBox(
-                widthFactor: 0.75, 
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch, 
-                  children: [
-                    // probably dont need a loop for this I just copied what the tutorial
-                    // did to construct a list but probably not needed since we will know
-                    // the length in advance
-                    // However, this could allow to randomize the order of options easily by having
-                    // entry start at a random value between 0-4 to print options, just having it
-                    // loop back around after 4
-                    const Text("Guess what plant this is from the options below!", 
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        height: 1.2,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const Spacer(flex: 3),
-                    for (var entry in widget.predictions.asMap().entries)
-                      Padding(
-                        padding: entry.key == widget.predictions.asMap().length ? const EdgeInsets.only() : const EdgeInsets.only(bottom: 8.0),
-                        child: TextButton(
-                          onPressed: () => selectOption(entry.key),
-                          style: TextButton.styleFrom(
-                            foregroundColor: userChoice == entry.key ? primaryColor : onSurfaceColor,
-                            backgroundColor: userChoice == entry.key ? primaryColor.withValues(alpha: 0.1) : Colors.transparent,
-                            side: BorderSide(
-                              color: userChoice == entry.key ? primaryColor : outlineColor, 
-                              width: 2,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: const EdgeInsets.all(16.0),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            entry.value['label'],
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12.0),
+              child: Scrollbar(
+                controller: _scrollController,
+                child: Center(
+                  child: FractionallySizedBox(
+                    widthFactor: 0.8, 
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch, 
+                        children: [
+                          // probably dont need a loop for this I just copied what the tutorial
+                          // did to construct a list but probably not needed since we will know
+                          // the length in advance
+                          // However, this could allow to randomize the order of options easily by having
+                          // entry start at a random value between 0-4 to print options, just having it
+                          // loop back around after 4
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: const Text("Guess what plant this is from the options below!", 
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                height: 1.2,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ),
-                        ),
-                      ),
-                    const Spacer(flex: 2),
-                    ElevatedButton(
-                            onPressed: userChoice != null
+                          const SizedBox(height: 3),
+                          for (var entry in widget.predictions.asMap().entries)
+                            Padding(
+                              padding: entry.key == widget.predictions.asMap().length ? const EdgeInsets.only() : const EdgeInsets.only(bottom: 8.0),
+                              child: TextButton(
+                                onPressed: () => selectOption(entry.key),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: userChoice == entry.key ? primaryColor : onSurfaceColor,
+                                  backgroundColor: userChoice == entry.key ? primaryColor.withValues(alpha: 0.1) : Colors.transparent,
+                                  side: BorderSide(
+                                    color: userChoice == entry.key ? primaryColor : outlineColor, 
+                                    width: 2,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.all(16.0),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  entry.value['label'],
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 2),
+                          ElevatedButton(
+                                  onPressed: userChoice != null
+                                    ? () {
+                                        Navigator.push(context,
+                                          MaterialPageRoute(
+                                            builder: (context) => UserChoiceLoadingScreen(
+                                              userChoiceIndex: userChoice!, 
+                                              correctIndex: correctIndex,
+                                              allPredictions: widget.predictions,
+                                            )
+                                          ),
+                                        );
+                                      }
+                                    : null,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                      'Confirm Selection', 
+                                      style: TextStyle(fontSize: 18),
+                                  ),
+                              ),
+                          const SizedBox(height: 4),
+                         ElevatedButton(
+                            onPressed: userChoice == null
                               ? () {
                                   Navigator.push(context,
                                     MaterialPageRoute(
                                       builder: (context) => UserChoiceLoadingScreen(
-                                        userChoiceIndex: userChoice!, 
+                                        userChoiceIndex: -1, 
                                         correctIndex: correctIndex,
                                         allPredictions: widget.predictions,
                                       )
@@ -129,37 +169,14 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
                               ),
                             ),
                             child: const Text(
-                                'Confirm Selection', 
+                                'Skip Selection', 
                                 style: TextStyle(fontSize: 18),
-                            ),
-                        ),
-                    const Spacer(),
-                    ElevatedButton(
-                      onPressed: userChoice == null
-                        ? () {
-                            Navigator.push(context,
-                              MaterialPageRoute(
-                                builder: (context) => UserChoiceLoadingScreen(
-                                  userChoiceIndex: -1, 
-                                  correctIndex: correctIndex,
-                                  allPredictions: widget.predictions,
-                                )
-                              ),
-                            );
-                          }
-                        : null,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
+                            ),),
+                          const SizedBox(height:10),
+                        ]
                       ),
-                      child: const Text(
-                          'Skip Selection', 
-                          style: TextStyle(fontSize: 18),
-                      ),),
-                    const Spacer(flex:10),
-                  ]
+                    ),
+                  ),
                 ),
               ),
             ),
