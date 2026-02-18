@@ -75,12 +75,24 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           children: <Widget>[
             isLoginView ? const LoginForm() : const SignUpForm(),
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: TextButton(
+                onPressed: toggleView,
+                child: Text(
+                  isLoginView
+                      ? 'Need an account? Sign Up'
+                      : 'Already have an account? Login',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
             TextButton(
-              onPressed: toggleView,
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => PasswordResetForm())),
               child: Text(
                 isLoginView
-                    ? 'Need an account? Sign Up'
-                    : 'Already have an account? Login',
+                    ? 'Forgot Password?'
+                    : '',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -493,6 +505,78 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
             }
           },
         )
+      ),
+    );
+  }
+}
+
+// Form for password reset
+class PasswordResetForm extends StatelessWidget {
+  final emailControl = TextEditingController();
+
+  PasswordResetForm({super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Please provide us with additional information.',),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 5.0,
+        shadowColor: Theme.of(context).colorScheme.shadow, 
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Please enter the email associated with your account.", 
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: TextField(
+                  controller: emailControl,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+              ),
+              const SizedBox(height: 16),
+          
+              ElevatedButton(
+                onPressed: () {
+                  if(emailControl.text.trim().length >= 5) {
+                    // SEND API REQUEST HERE
+                    debugPrint("User password reset email: ${emailControl.text.trim()}");
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Password reset request sent. It might take a moment. Please check your email for more instructions."),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 15),
+                      ),
+                    );
+                    Navigator.pop(context);
+                  }
+                  else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Please make sure your email has at least 5 characters then try again."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }, 
+                child: const Text("Confirm")),
+            ],
+          ),
+        ),
       ),
     );
   }
