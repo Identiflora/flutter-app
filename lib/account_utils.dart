@@ -158,8 +158,6 @@ class _LoginFormState extends State<LoginForm> {
       final GoogleSignInAuthentication auth = user.authentication;
       final String? googleToken = auth.idToken;
       if(googleToken != null && context.mounted) {
-        // final AuthToken token = await submitUserGoogleLogin(token: googleToken, context: context);
-        // await saveAuthToken(token.accessToken);
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => GoogleLoginLoadingScreen(googleToken: googleToken)),
