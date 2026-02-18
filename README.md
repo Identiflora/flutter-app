@@ -56,7 +56,7 @@ Note that this is a pretty extensive process and if you do not have about 30 min
 10. Select "Android" and fill out client name. This should include the word "Debug" or "Release" depending which client ID you want to make first. You will have to make two of these.
 11. Put "com.example.identiflora" in package name.
 12. Now you need to get the SHA-1 fingerprint from your keystores. Personally, I don't like the command Google Cloud provides so I suggest doing the following instead.
-    * Verify you are in the "android" subdirectory of the "flutter-app" clone.
+    * Verify you are in the "android" subdirectory of the "flutter-app" local repo clone.
     * Use this command: ```./gradlew signingReport```
     * Scroll to the top and look for Variant/Config of "release" or "debug" versions.
     * Copy the SHA1 line into Google Cloud for the correct variant.
