@@ -28,7 +28,7 @@ Note that this is a pretty extensive process and if you do not have about 30 min
 5. Type "y", press enter, and recopy password into prompt.
 6. Go to directory referenced by "Storing" output terminal print. 
     * Windows Ex: ```C:\Users\\{current_user}\```
-7. Copy this keystore into the "app" folder located within the "android" repo folder.
+7. Copy this keystore into the "app" folder located within the "android" local repo folder.
 8. Make a file directly in **"android" not "android/app"** directory called "key.properties". 
     * Fill out this file using this example:
       ```
