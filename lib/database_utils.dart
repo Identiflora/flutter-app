@@ -551,3 +551,100 @@ Future<AuthToken> submitUserGoogleRegistration({
     httpClient.close();
   }
 }
+
+Future<bool> submitUserPasswordReset({
+  required String email,
+  required int otpLength
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+  
+  final uri = Uri.parse(apiBaseUrl).resolve('/pwd-reset/otp-request');
+
+  // Start http client
+  final httpClient = http.Client();
+
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({"user_email": email, "otp_length": otpLength}),
+    );
+
+    // 200-299 indicates success
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      return jsonMap['success'] as bool;
+    }
+
+    // Explicitly handle 401 Unauthorized
+    if (response.statusCode == 401) {
+      throw AuthException(
+        'Invalid credentials: ${response.body}',
+        statusCode: 401,
+      );
+    }
+
+    // Handle other non-200 errors
+    throw AuthException(
+      'Server error: ${response.body}',
+      statusCode: response.statusCode,
+    );
+  } catch (e) {
+    // Catch generic errors (like no internet) and rethrow as AuthException
+    // or let them bubble up if they are already handled.
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    // close out http client
+    httpClient.close();
+  }
+}
+
+
+Future<int> submitUserOTPVerify({
+  required String unhashedPassword,
+  required String email
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+  
+  final uri = Uri.parse(apiBaseUrl).resolve('/pwd-reset/otp-check');
+
+  // Start http client
+  final httpClient = http.Client();
+
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({"otp": unhashedPassword, "user_email": email}),
+    );
+
+    // 200-299 indicates success
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      return jsonMap['result'] as int;
+    }
+
+    // Explicitly handle 401 Unauthorized
+    if (response.statusCode == 401) {
+      throw AuthException(
+        'Invalid credentials: ${response.body}',
+        statusCode: 401,
+      );
+    }
+
+    // Handle other non-200 errors
+    throw AuthException(
+      'Server error: ${response.body}',
+      statusCode: response.statusCode,
+    );
+  } catch (e) {
+    // Catch generic errors (like no internet) and rethrow as AuthException
+    // or let them bubble up if they are already handled.
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    // close out http client
+    httpClient.close();
+  }
+}

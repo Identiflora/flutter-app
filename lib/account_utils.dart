@@ -8,6 +8,7 @@ import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/environment.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
+import 'dart:math';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -551,18 +552,20 @@ class PasswordResetForm extends StatelessWidget {
               const SizedBox(height: 16),
           
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if(emailControl.text.trim().length >= 5) {
-                    // SEND API REQUEST HERE
-                    debugPrint("User password reset email: ${emailControl.text.trim()}");
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Password reset request sent. It might take a moment. Please check your email for more instructions."),
-                        backgroundColor: Colors.green,
-                        duration: Duration(seconds: 15),
-                      ),
-                    );
-                    Navigator.pop(context);
+                    bool success = await submitUserPasswordReset(email: emailControl.text.trim(), otpLength: Random().nextInt(8) + 8);
+
+                    if(success && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Password reset request sent. It might take a moment. Please check your email for more instructions."),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 15),
+                        ),
+                      );
+                      Navigator.pop(context);
+                    }
                   }
                   else {
                     ScaffoldMessenger.of(context).showSnackBar(
