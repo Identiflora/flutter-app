@@ -461,7 +461,7 @@ Future<AuthToken> submitUserGoogleLogin({
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
 
-      if(jsonMap.containsKey('email')) {
+      if(jsonMap.containsKey('register') && jsonMap['register'] as bool) {
         late final String username;
 
         if(context.mounted) {
@@ -474,7 +474,7 @@ Future<AuthToken> submitUserGoogleLogin({
           username = "";
         }
 
-        return await submitUserGoogleRegistration(email: jsonMap['email'], username: username);
+        return await submitUserGoogleRegistration(token: jsonMap['access_token'], username: username);
       }
 
       return AuthToken.fromJson(jsonMap);
@@ -505,7 +505,7 @@ Future<AuthToken> submitUserGoogleLogin({
 }
 
 Future<AuthToken> submitUserGoogleRegistration({
-  required String email,
+  required String token,
   required String username
 }) async {
   String apiBaseUrl = Environment.apiUrl;
@@ -518,8 +518,8 @@ Future<AuthToken> submitUserGoogleRegistration({
   try {
     final response = await httpClient.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'user_email': email, "username": username}),
+      headers: {'Content-Type': 'application/json', HttpHeaders.authorizationHeader: 'Bearer $token'},
+      body: jsonEncode({"username": username}),
     );
 
     // 200-299 indicates success
