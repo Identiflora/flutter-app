@@ -117,7 +117,7 @@ class _LoginFormState extends State<LoginForm> {
 
   void loginPressed() async {
     final email = emailControl.text.trim();
-    final password = passwordControl.text.trim();
+    String password = passwordControl.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -130,12 +130,34 @@ class _LoginFormState extends State<LoginForm> {
       return;
     } //END FUNCT
 
+    final int otpResult = await submitUserOTPVerify(unhashedPassword: password, email: email);
+    debugPrint("$otpResult");
+    bool hasOTP = false;
+
+    // Result = 1 means OTP is valid and user needs new password, result = 0 means OTP is expired, but exists, result = -1 means there is not OTP
+    if (otpResult == 1 && mounted) {
+      // Get new password instead of OTP
+      password = await Navigator.push(context, MaterialPageRoute(builder: (context) => NewPasswordForm()));
+      hasOTP = true;
+    }
+    else if (otpResult == 0 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("This one time password has expired! Please press 'Forgot password?' again for a new one time password."),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 15),
+        ),
+      );
+      return;
+    }
+
     //ADDED FOR PASS HASHING - USE CREATED FUNCT ABOVE
     final hashedPassword = hashPassword(password);
     try {
       final AuthToken token = await submitUserLogin(
         email: email,
         passwordHash: hashedPassword,
+        hasOTP: hasOTP
       );
       debugPrint("Received token for $email: ${token.accessToken}");
       //SAVE AUTHTOKEN TO DEVICE
@@ -577,6 +599,77 @@ class PasswordResetForm extends StatelessWidget {
                   }
                 }, 
                 child: const Text("Confirm")),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Form for password reset
+class NewPasswordForm extends StatelessWidget {
+  final passwordControl = TextEditingController();
+
+  NewPasswordForm({super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Reset Password',),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 5.0,
+        shadowColor: Theme.of(context).colorScheme.shadow, 
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Please enter a new password to be associated with your account.", 
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: TextField(
+                  controller: passwordControl,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                ),
+              ),
+              const SizedBox(height: 16),
+          
+              ElevatedButton(
+                onPressed: () {
+                  if(passwordControl.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Please complete all fields."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                  else {
+                    Navigator.pop(context, passwordControl.text.trim());
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Success! Your password has been reset."),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                }, 
+                child: const Text("Confirm"))
             ],
           ),
         ),

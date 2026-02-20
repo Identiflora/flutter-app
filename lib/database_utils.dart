@@ -170,6 +170,7 @@ Future<AuthToken> submitUserRegistration({
 Future<AuthToken> submitUserLogin({
   required String email,
   required String passwordHash,
+  required bool hasOTP
 }) async {
   String apiBaseUrl = Environment.apiUrl;
   
@@ -182,7 +183,7 @@ Future<AuthToken> submitUserLogin({
     final response = await httpClient.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'user_email': email, 'password_hash': passwordHash}),
+      body: jsonEncode({'user_email': email, 'password_hash': passwordHash, 'has_otp': hasOTP}),
     );
 
     // 200-299 indicates success
@@ -622,6 +623,7 @@ Future<int> submitUserOTPVerify({
     // 200-299 indicates success
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      debugPrint(response.body);
       return jsonMap['result'] as int;
     }
 
