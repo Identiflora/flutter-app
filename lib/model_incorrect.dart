@@ -5,7 +5,7 @@ import 'package:identiflora/main.dart';
 // object for plant information for the grid cards
 class PlantMatch {
   final String commonName;
-  final String scientificName; 
+  final String scientificName;
   final double confidenceScore;
 
   PlantMatch({
@@ -18,31 +18,27 @@ class PlantMatch {
 class TopMatchesWidget extends StatefulWidget {
   final List<Map<String, dynamic>> predictions;
 
-  const TopMatchesWidget({
-    super.key,
-    required this.predictions, 
-  });
+  const TopMatchesWidget({super.key, required this.predictions});
 
   @override
   State<TopMatchesWidget> createState() => _TopMatchesWidgetState();
 }
 
 class _TopMatchesWidgetState extends State<TopMatchesWidget> {
-
   @override
   Widget build(BuildContext context) {
     const TextStyle mainTextStyle = TextStyle(
       fontSize: 22,
       color: Colors.black,
-      fontWeight: FontWeight.bold
+      fontWeight: FontWeight.bold,
     );
 
     final List<PlantMatch> matches = widget.predictions.map((pred) {
       return PlantMatch(
         // no implementation for commonName yet, needs either a second label text document
         // with common name or get it get from database
-        commonName: 'Common Name TBD', 
-        scientificName: pred['label'], 
+        commonName: 'Common Name TBD',
+        scientificName: pred['label'],
         confidenceScore: pred['score'],
         // maybe plant image could included here as well, still not sure how that will
         // work with getting it from the database
@@ -51,10 +47,10 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sorry about that!',),
+        title: const Text('Sorry about that!'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow, 
+        shadowColor: Theme.of(context).colorScheme.shadow,
         centerTitle: true,
       ),
       body: SafeArea(
@@ -95,12 +91,18 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                       confidenceColor = Colors.red;
                     }
                     return FutureBuilder(
-                      future: getPlantSpeciesUrl(scientificName: match.scientificName),
+                      future: getPlantSpeciesUrl(
+                        scientificName: match.scientificName,
+                      ),
                       builder: (context, snapshot) {
-                        if(snapshot.connectionState == ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
-                        }
-                        else if(snapshot.hasData && snapshot.data != null) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(
+                            child: CircularProgressIndicator(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          );
+                        } else if (snapshot.hasData && snapshot.data != null) {
                           return Card(
                             elevation: 2,
                             shape: RoundedRectangleBorder(
@@ -110,10 +112,13 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                               onTap: () {
                                 // opens full preview of image with submission confirmation
                                 Navigator.push(
-                                  context, 
+                                  context,
                                   MaterialPageRoute<void>(
-                                    builder: (context) => DisplayBigPlantScreen(match: match, imgPath: snapshot.data!),
-                                  )
+                                    builder: (context) => DisplayBigPlantScreen(
+                                      match: match,
+                                      imgPath: snapshot.data!,
+                                    ),
+                                  ),
                                 );
                               },
                               borderRadius: BorderRadius.circular(12.0),
@@ -122,16 +127,28 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                 children: [
                                   Expanded(
                                     child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0),
+                                      padding: const EdgeInsets.fromLTRB(
+                                        8.0,
+                                        8.0,
+                                        8.0,
+                                        0,
+                                      ),
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(12.0),
+                                        borderRadius: BorderRadius.circular(
+                                          12.0,
+                                        ),
                                         // Plant image, might need to be reformatted if we are pulling from database
                                         child: Image.network(snapshot.data!),
                                       ),
                                     ),
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.fromLTRB(10.0, 8.0, 10.0, 8.0),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      10.0,
+                                      8.0,
+                                      10.0,
+                                      8.0,
+                                    ),
                                     child: Column(
                                       children: [
                                         // Common Name
@@ -146,7 +163,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 4),
-                                        
+
                                         // Scientific Name
                                         Text(
                                           match.scientificName,
@@ -160,7 +177,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 4),
-                          
+
                                         // Confidence Score
                                         Text(
                                           '${(match.confidenceScore * 100).toStringAsFixed(1)}% Likely',
@@ -177,8 +194,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                               ),
                             ),
                           );
-                        }
-                        else {
+                        } else {
                           return Card(
                             elevation: 2,
                             shape: RoundedRectangleBorder(
@@ -188,10 +204,13 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                               onTap: () {
                                 // opens full preview of image with submission confirmation
                                 Navigator.push(
-                                  context, 
+                                  context,
                                   MaterialPageRoute<void>(
-                                    builder: (context) => DisplayBigPlantScreen(match: match, imgPath: snapshot.data!),
-                                  )
+                                    builder: (context) => DisplayBigPlantScreen(
+                                      match: match,
+                                      imgPath: snapshot.data!,
+                                    ),
+                                  ),
                                 );
                               },
                               borderRadius: BorderRadius.circular(12.0),
@@ -200,14 +219,27 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                 children: [
                                   Expanded(
                                     child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0),
+                                      padding: const EdgeInsets.fromLTRB(
+                                        8.0,
+                                        8.0,
+                                        8.0,
+                                        0,
+                                      ),
                                       child: ClipRRect(
-                                        child: const Placeholder(color: Colors.grey, strokeWidth: 1.0,)
+                                        child: const Placeholder(
+                                          color: Colors.grey,
+                                          strokeWidth: 1.0,
+                                        ),
                                       ),
                                     ),
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.fromLTRB(10.0, 8.0, 10.0, 8.0),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      10.0,
+                                      8.0,
+                                      10.0,
+                                      8.0,
+                                    ),
                                     child: Column(
                                       children: [
                                         // Common Name
@@ -222,7 +254,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 4),
-                                        
+
                                         // Scientific Name
                                         Text(
                                           match.scientificName,
@@ -236,7 +268,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 4),
-                          
+
                                         // Confidence Score
                                         Text(
                                           '${(match.confidenceScore * 100).toStringAsFixed(1)}% Likely',
@@ -254,7 +286,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                             ),
                           );
                         }
-                      }
+                      },
                     );
                   },
                 ),
@@ -274,20 +306,30 @@ class DisplayBigPlantScreen extends StatelessWidget {
   final PlantMatch match;
   final String imgPath;
 
-  const DisplayBigPlantScreen({super.key, required this.match, required this.imgPath});
+  const DisplayBigPlantScreen({
+    super.key,
+    required this.match,
+    required this.imgPath,
+  });
 
   /// Get the appropriate text button for navigation
   ElevatedButton getButton(BuildContext context, bool identifyPage) {
-    if(identifyPage) {
+    if (identifyPage) {
       return ElevatedButton(
         onPressed: () {
           // Navigate to next page
           Navigator.pop(context);
-        }, 
+        },
         child: FittedBox(
           fit: BoxFit.scaleDown,
-          child: const Text("No", style: TextStyle(fontSize: 20, color: Color.fromARGB(255, 180, 39, 39)))
-        )
+          child: const Text(
+            "No",
+            style: TextStyle(
+              fontSize: 20,
+              color: Color.fromARGB(255, 180, 39, 39),
+            ),
+          ),
+        ),
       );
     }
 
@@ -295,20 +337,43 @@ class DisplayBigPlantScreen extends StatelessWidget {
       onPressed: () async {
         // where database would be sent information on the model being incorrect
 
+        // make call to database to get the ids of the plants
+
+        // int correctSpeciesId = await getPlantSpeciesID(scientificName: match.scientificName,);
+        // // submit the incorrect identification to the database
+        // if (!(await submitIncorrectIdentification(
+        //   identificationId: identificationId,
+        //   correctSpeciesId: correctSpeciesId,
+        //   incorrectSpeciesId: incorrectSpeciesId,
+        // ))) {
+        //   ScaffoldMessenger.of(context).showSnackBar(
+        //     const SnackBar(
+        //       content: Text("Please complete all fields"),
+        //       backgroundColor: Colors.red,
+        //     ),
+        //   );
+        // }
+
+        //above cannot be completed until history is implemented. 
+
         Navigator.push(
-          context, 
-          MaterialPageRoute<void>(
-            builder: (context) => AppSetup(),
-          )
+          context,
+          MaterialPageRoute<void>(builder: (context) => AppSetup()),
         );
-      }, 
+      },
       child: FittedBox(
         fit: BoxFit.scaleDown,
-        child: Text("Yes", style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary))
-      )
+        child: Text(
+          "Yes",
+          style: TextStyle(
+            fontSize: 20,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final String name = match.commonName;
@@ -323,21 +388,29 @@ class DisplayBigPlantScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Text("Is this the plant that should have been identified?", style: TextStyle(fontSize: 22, color: Colors.black), textAlign: TextAlign.center,),
-                Text("$name\n$sciName\n${confidence.toStringAsFixed(1)}% Likely", style: TextStyle(fontSize: 22, color: Colors.black), textAlign: TextAlign.center,),
+                Text(
+                  "Is this the plant that should have been identified?",
+                  style: TextStyle(fontSize: 22, color: Colors.black),
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  "$name\n$sciName\n${confidence.toStringAsFixed(1)}% Likely",
+                  style: TextStyle(fontSize: 22, color: Colors.black),
+                  textAlign: TextAlign.center,
+                ),
                 Image.network(imgPath),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     getButton(context, true),
-                    getButton(context, false)
+                    getButton(context, false),
                   ],
-                )
-              ]
+                ),
+              ],
             ),
           ),
-        )
-      )
+        ),
+      ),
     );
   }
 }

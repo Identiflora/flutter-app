@@ -35,7 +35,10 @@ Future<bool> submitIncorrectIdentification({
     // Create and send the POST request with JSON body.
     final request = await client.postUrl(uri);
     request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-    request.headers.set(HttpHeaders.authorizationHeader, 'Bearer ${await getAuthToken()}');
+    request.headers.set(
+      HttpHeaders.authorizationHeader,
+      'Bearer ${await getAuthToken()}',
+    );
     request.add(utf8.encode(payload));
 
     // Await the response and read the body for error context.
@@ -59,9 +62,7 @@ Future<bool> submitIncorrectIdentification({
 
 /// Fetch the image URL for a plant species using its scientific name.
 /// Returns the resolved URL as a string or throws an [HttpException] on API errors.
-Future<String> getPlantSpeciesUrl({
-  required String scientificName,
-}) async {
+Future<String> getPlantSpeciesUrl({required String scientificName}) async {
   String apiBaseUrl = Environment.apiUrl;
 
   final trimmedName = scientificName.trim();
@@ -89,6 +90,40 @@ Future<String> getPlantSpeciesUrl({
       }
       return responseBody;
     } else {
+      throw HttpException(
+        'API error ${response.statusCode}: $responseBody',
+        uri: uri,
+      );
+    }
+  } finally {
+    client.close(force: true);
+  }
+}
+
+//get the species id from scientific name
+Future<int> getPlantSpeciesID({required String scientificName}) async {
+  String apiBaseUrl = Environment.apiUrl;
+
+  final trimmedName = scientificName.trim();
+  if (trimmedName.isEmpty) {
+    throw ArgumentError('scientificName must not be empty.');
+  }
+
+  final uri = Uri.parse(apiBaseUrl).resolve('/species-id/$trimmedName');
+
+  final client = HttpClient();
+  try {
+    final request = await client.getUrl(uri);
+    final response = await request.close();
+    final responseBody = await utf8.decodeStream(response);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      // FastAPI may return a raw string or JSON-string; handle both.
+      final jsonResponse = jsonDecode(responseBody);
+      final speciesId = jsonResponse['species_id'] as int;
+      return speciesId;
+    } 
+    else {
       throw HttpException(
         'API error ${response.statusCode}: $responseBody',
         uri: uri,
@@ -173,7 +208,7 @@ Future<AuthToken> submitUserLogin({
   required String passwordHash,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
-  
+
   final uri = Uri.parse(apiBaseUrl).resolve('/user/login');
 
   // Start http client
@@ -267,9 +302,7 @@ Future<AuthToken> submitUserLogin({
 ///   onPressed: () => fetchUsername(
 ///     userID: IDVar
 ///   );
-Future<String> fetchUsername({
-  required int userID,
-}) async {
+Future<String> fetchUsername({required int userID}) async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/username/$userID');
@@ -309,9 +342,7 @@ Future<String> fetchUsername({
 ///   onPressed: () => fetchUserGlobalPts(
 ///     userID: IDVar
 ///   );
-Future<int> fetchUserGlobalPts({
-  required int userID,
-}) async {
+Future<int> fetchUserGlobalPts({required int userID}) async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/user-pts/$userID');
@@ -389,12 +420,10 @@ Future<int> fetchUserCount() async {
 ///   onPressed: () => submitIncorrectIdentification(
 ///     addPoints: points
 ///   );
-Future<bool> submitUserGlobalPoints({
-  required int addPoints
-}) async {
+Future<bool> submitUserGlobalPoints({required int addPoints}) async {
   final authToken = await getAuthToken();
 
-  if(addPoints <= 0 || authToken == null) {
+  if (addPoints <= 0 || authToken == null) {
     return false;
   }
 
@@ -405,7 +434,7 @@ Future<bool> submitUserGlobalPoints({
   // Prepare JSON payload expected by the API.
   final payload = jsonEncode({
     'user_token': authToken,
-    'add_points': addPoints
+    'add_points': addPoints,
   });
 
   final client = HttpClient();
@@ -443,10 +472,10 @@ Future<bool> submitUserGlobalPoints({
 Future<AuthToken> submitUserGoogleLogin({
   required String token,
   required BuildContext context,
-  String? username
+  String? username,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
-  
+
   final uri = Uri.parse(apiBaseUrl).resolve('/google/auth');
 
   // Start http client
@@ -455,27 +484,32 @@ Future<AuthToken> submitUserGoogleLogin({
   try {
     final response = await httpClient.post(
       uri,
-      headers: {'Content-Type': 'application/json', HttpHeaders.authorizationHeader: 'Bearer $token'},
+      headers: {
+        'Content-Type': 'application/json',
+        HttpHeaders.authorizationHeader: 'Bearer $token',
+      },
     );
 
     // 200-299 indicates success
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
 
-      if(jsonMap.containsKey('register') && jsonMap['register'] as bool) {
+      if (jsonMap.containsKey('register') && jsonMap['register'] as bool) {
         late final String username;
 
-        if(context.mounted) {
+        if (context.mounted) {
           username = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => ExternalSignUpForm()),
           );
-        }
-        else {
+        } else {
           username = "";
         }
 
-        return await submitUserGoogleRegistration(token: jsonMap['access_token'], username: username);
+        return await submitUserGoogleRegistration(
+          token: jsonMap['access_token'],
+          username: username,
+        );
       }
 
       return AuthToken.fromJson(jsonMap);
@@ -507,10 +541,10 @@ Future<AuthToken> submitUserGoogleLogin({
 
 Future<AuthToken> submitUserGoogleRegistration({
   required String token,
-  required String username
+  required String username,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
-  
+
   final uri = Uri.parse(apiBaseUrl).resolve('/google/register');
 
   // Start http client
@@ -519,7 +553,10 @@ Future<AuthToken> submitUserGoogleRegistration({
   try {
     final response = await httpClient.post(
       uri,
-      headers: {'Content-Type': 'application/json', HttpHeaders.authorizationHeader: 'Bearer $token'},
+      headers: {
+        'Content-Type': 'application/json',
+        HttpHeaders.authorizationHeader: 'Bearer $token',
+      },
       body: jsonEncode({"username": username}),
     );
 
