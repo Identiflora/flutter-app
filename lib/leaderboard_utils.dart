@@ -104,7 +104,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     body: Padding(
       padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 5.0),
       child: FutureBuilder<List<LeaderboardUser>> (
-        future: addAllUsers(leaderboardType), // REMINDER FOR LATER: Add leaderboardType parameter here so that adding users can be dynamic
+        future: addUsers(leaderboardType, 100),
         builder: (context, snapshot){
           String? lowercaseLeaderboardType = leaderboardType?.toLowerCase();
       
@@ -115,7 +115,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             final leaderboard = snapshot.data;
       
             if (leaderboard!.isEmpty){
-              return Center(child: Text("No $lowercaseLeaderboardType accounts found in database"));
+              return Center(child: Text("No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.", textAlign: TextAlign.center));
             }
       
             return ListView.separated(
@@ -132,8 +132,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               },
             );
           }
+          else if(snapshot.hasError){
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text("Error while loading leaaderboard: ${snapshot.error}"),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            });
+            return Center(child: Text("No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.", textAlign: TextAlign.center));
+          }
           else {
-            return Center(child: Text("No $lowercaseLeaderboardType accounts found in database"));
+            return Center(child: Text("No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.", textAlign: TextAlign.center));
           }
         }
       ),
@@ -144,7 +155,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 }
 
 } //END LEADERBOARDSCREEN STATE CLASS
-
 
 class LeaderboardUser {
   final String userName;
@@ -160,35 +170,19 @@ class LeaderboardUser {
 
 } //END LEADERBOARDUSER CLASS
 
-Future<List<LeaderboardUser>> addAllUsers(String? leaderboardType) async {
-  List<LeaderboardUser> users = [];
-  LeaderboardUser tempUser;
-  String userName = "";
-  int userID = 1, userCount, dbUserCount, userScore, maxUsers = 100;
+Future<List<LeaderboardUser>> addUsers(String? leaderboardType, int maxUsers) async {
+  final List<LeaderboardUser> users;
 
   // LOAD ALL USERS WITH SCORES
-  dbUserCount = userCount = userScore = 0;
   if(leaderboardType == "Global") {
-    dbUserCount = await fetchUserCount();
-    do {
-      userName = await fetchUsername(userID: userID);
-      // IF USER WAS FETCHED, ADD TO LIST AND INTEGRATE COUNT BY 1
-      if (userName != ""){
-        userScore = await fetchUserGlobalPts(userID: userID);
-        tempUser = LeaderboardUser(userName: userName, userId: userID, userScore: userScore);
-        users.insert(userCount, tempUser); // ADDS USERS TO LIST
-        userCount++;
-      }
-      userID++;
-    } while (userCount < dbUserCount);
+    users = await submitGlobalLeaderboardRequest(leaderboardSize: maxUsers);
   }
-  
-  users.sort((a, b) => -a.userScore.compareTo(b.userScore)); // SORT USERS BY SCORE
-  users = users.take(maxUsers).toList(); // TAKE ONLY TOP NUMBER OF MAX USERS FOR DISPLAY
+  else {
+    users = List.empty();
+  }
 
   return users;
 }
-
 
 // CLASS THAT CREATES USERS RANDOM INDEX, AND ADDS THEM TO LEADERBOARD LIST
 class LeaderBoardControl{
