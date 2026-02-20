@@ -280,15 +280,9 @@ Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
   final httpClient = http.Client();
 
   try {
-    final String? token = await getAuthToken();
-
-    if(token == null) {
-      return List.empty();
-    }
-
     final response = await httpClient.post(
       uri,
-      headers: {'Content-Type': 'application/json', HttpHeaders.authorizationHeader: 'Bearer $token'},
+      headers: {'Content-Type': 'application/json'},
       body: jsonEncode({"leaderboard_size": leaderboardSize}),
     );
 
