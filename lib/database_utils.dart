@@ -35,6 +35,7 @@ Future<bool> submitIncorrectIdentification({
     // Create and send the POST request with JSON body.
     final request = await client.postUrl(uri);
     request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+    request.headers.set(HttpHeaders.authorizationHeader, 'Bearer ${await getAuthToken()}');
     request.add(utf8.encode(payload));
 
     // Await the response and read the body for error context.
