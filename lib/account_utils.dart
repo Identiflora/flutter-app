@@ -8,6 +8,7 @@ import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/environment.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
+import 'dart:math';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -75,12 +76,24 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           children: <Widget>[
             isLoginView ? const LoginForm() : const SignUpForm(),
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: TextButton(
+                onPressed: toggleView,
+                child: Text(
+                  isLoginView
+                      ? 'Need an account? Sign Up'
+                      : 'Already have an account? Login',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
             TextButton(
-              onPressed: toggleView,
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => PasswordResetForm())),
               child: Text(
                 isLoginView
-                    ? 'Need an account? Sign Up'
-                    : 'Already have an account? Login',
+                    ? 'Forgot Password?'
+                    : '',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -104,7 +117,7 @@ class _LoginFormState extends State<LoginForm> {
 
   void loginPressed() async {
     final email = emailControl.text.trim();
-    final password = passwordControl.text.trim();
+    String password = passwordControl.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,12 +130,34 @@ class _LoginFormState extends State<LoginForm> {
       return;
     } //END FUNCT
 
+    final int otpResult = await submitUserOTPVerify(unhashedPassword: password, email: email);
+    debugPrint("$otpResult");
+    bool hasOTP = false;
+
+    // Result = 1 means OTP is valid and user needs new password, result = 0 means OTP is expired, but exists, result = -1 means there is not OTP
+    if (otpResult == 1 && mounted) {
+      // Get new password instead of OTP
+      password = await Navigator.push(context, MaterialPageRoute(builder: (context) => NewPasswordForm()));
+      hasOTP = true;
+    }
+    else if (otpResult == 0 && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("This one time password has expired! Please press 'Forgot password?' again for a new one time password."),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 15),
+        ),
+      );
+      return;
+    }
+
     //ADDED FOR PASS HASHING - USE CREATED FUNCT ABOVE
     final hashedPassword = hashPassword(password);
     try {
       final AuthToken token = await submitUserLogin(
         email: email,
         passwordHash: hashedPassword,
+        hasOTP: hasOTP
       );
       debugPrint("Received token for $email: ${token.accessToken}");
       //SAVE AUTHTOKEN TO DEVICE
@@ -493,6 +528,151 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
             }
           },
         )
+      ),
+    );
+  }
+}
+
+// Form for password reset
+class PasswordResetForm extends StatelessWidget {
+  final emailControl = TextEditingController();
+
+  PasswordResetForm({super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Please provide us with additional information.',),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 5.0,
+        shadowColor: Theme.of(context).colorScheme.shadow, 
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Please enter the email associated with your account.", 
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: TextField(
+                  controller: emailControl,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+              ),
+              const SizedBox(height: 16),
+          
+              ElevatedButton(
+                onPressed: () async {
+                  if(emailControl.text.trim().length >= 5) {
+                    bool success = await submitUserPasswordReset(email: emailControl.text.trim(), otpLength: Random().nextInt(8) + 8);
+
+                    if(success && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Password reset request sent. It might take a moment. Please check your email for more instructions."),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 15),
+                        ),
+                      );
+                      Navigator.pop(context);
+                    }
+                  }
+                  else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Please make sure your email has at least 5 characters then try again."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }, 
+                child: const Text("Confirm")),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// Form for password reset
+class NewPasswordForm extends StatelessWidget {
+  final passwordControl = TextEditingController();
+
+  NewPasswordForm({super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Reset Password',),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        elevation: 5.0,
+        shadowColor: Theme.of(context).colorScheme.shadow, 
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Please enter a new password to be associated with your account.", 
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: TextField(
+                  controller: passwordControl,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                ),
+              ),
+              const SizedBox(height: 16),
+          
+              ElevatedButton(
+                onPressed: () {
+                  if(passwordControl.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Please complete all fields."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                  else {
+                    Navigator.pop(context, passwordControl.text.trim());
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Success! Your password has been reset."),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                }, 
+                child: const Text("Confirm"))
+            ],
+          ),
+        ),
       ),
     );
   }
