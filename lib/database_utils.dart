@@ -578,12 +578,15 @@ Future<bool> submitUserPasswordReset({
       return jsonMap['success'] as bool;
     }
 
-    // Explicitly handle 401 Unauthorized
+    // Explicitly handle 401 Unauthorized and 403 Action Denied
     if (response.statusCode == 401) {
       throw AuthException(
-        'Invalid credentials: ${response.body}',
+        'Invalid credentials (user does not exist): ${response.body}',
         statusCode: 401,
       );
+    }
+    else if (response.statusCode == 403) {
+      return false;
     }
 
     // Handle other non-200 errors

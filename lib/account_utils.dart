@@ -576,17 +576,41 @@ class PasswordResetForm extends StatelessWidget {
               ElevatedButton(
                 onPressed: () async {
                   if(emailControl.text.trim().length >= 5) {
-                    bool success = await submitUserPasswordReset(email: emailControl.text.trim(), otpLength: Random().nextInt(8) + 8);
+                    try {
+                      bool success = await submitUserPasswordReset(email: emailControl.text.trim(), otpLength: Random().nextInt(8) + 8);
 
-                    if(success && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Password reset request sent. It might take a moment. Please check your email for more instructions."),
-                          backgroundColor: Colors.green,
-                          duration: Duration(seconds: 15),
-                        ),
-                      );
-                      Navigator.pop(context);
+                      if(success && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Password reset request sent. It might take a moment. Please check your email for more instructions."),
+                            backgroundColor: Colors.green,
+                            duration: Duration(seconds: 15),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      }
+                      else if (context.mounted){
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password."),
+                            backgroundColor: Colors.red,
+                            duration: Duration(seconds: 15),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      }
+                    }
+                    catch (err) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Password reset failed: $err"),
+                            backgroundColor: Colors.red,
+                            duration: Duration(seconds: 15),
+                          ),
+                        );
+                        Navigator.pop(context);
+                      }
                     }
                   }
                   else {
