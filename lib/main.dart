@@ -35,7 +35,7 @@ class AppSetup extends StatelessWidget {
           LoginWidget(),
           GalleryWidget(),
           LeaderboardWidget(),
-          SettingsWidget()
+          // SettingsWidget()
         ])
       )
     );
