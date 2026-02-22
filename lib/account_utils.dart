@@ -8,7 +8,7 @@ import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/environment.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
-import 'view_account_utils.dart';
+import 'view_account/view_account_utils.dart';
 import 'dart:math';
 
 class LoginWidget extends StatefulWidget {
