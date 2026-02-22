@@ -13,6 +13,12 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   int playerLevel = 1; //placeholder
   int playerPoints = 5; //placeholder obviously
   double normalizedPlayerPoints = 0.0;
+  List<String> badgeImages = [
+    'assets/brand/Identiflora_logo.png',
+    'assets/brand/Identiflora_logo.png',
+    'assets/brand/Identiflora_logo.png',
+    'assets/brand/Identiflora_logo.png',
+  ]; //this is the list thats passed to the gridview to display the badges
 
   String username =
       "John Smith"; // need to implement retrieving username in initState
@@ -52,37 +58,21 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            ProgressAvatar(normalizedPlayerPoints: normalizedPlayerPoints),
             Stack(
               alignment: Alignment.center,
               children: [
+                Text(username, style: TextStyle(fontSize: 30.0)),
                 Align(
-                  alignment: Alignment.centerLeft,
-                  //need to replace img's with variables later
-                  child: BadgesDisplay(
-                    topImg: 'assets/brand/Identiflora_logo.png',
-                    middleImg: 'assets/brand/Identiflora_logo.png',
-                    bottomImg: 'assets/brand/Identiflora_logo.png',
-                  ),
-                ),
-                ProgressAvatar(normalizedPlayerPoints: normalizedPlayerPoints),
-              ],
-            ),
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
+                  alignment: Alignment.centerRight,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 0,
-                      horizontal: 40.0,
-                    ),
+                    padding: const EdgeInsets.only(right: 85.0, left: 8.0),
                     child: IconButton(
                       onPressed: () {
-                        BadgesModalBottomSheet.show(context);
+                        //takes you to edit username
                       },
                       icon: Icon(
-                        Icons.add,
+                        Icons.edit,
                         color: Theme.of(
                           context,
                         ).colorScheme.primary.withAlpha(170),
@@ -90,31 +80,9 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                     ),
                   ),
                 ),
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Text(username, style: TextStyle(fontSize: 30.0)),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 85.0, left: 8.0),
-                        child: IconButton(
-                          onPressed: () {
-                            //takes you to edit username
-                          },
-                          icon: Icon(
-                            Icons.edit,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withAlpha(170),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
+
             //line separator begin
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -127,6 +95,7 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                 ),
               ),
             ), //line separator end
+
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -157,6 +126,7 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                 ),
               ],
             ),
+            Expanded(child: BadgesDisplay(badgeImages: badgeImages)),
           ],
         ),
       ),
@@ -165,50 +135,29 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
 }
 
 class BadgesDisplay extends StatelessWidget {
-  final String topImg, middleImg, bottomImg;
+  final List<String> badgeImages;
 
-  ///Creates a [BadgesDisplay]
-  ///
-  ///Column with three [CircleAvatar] widgets inside
-  /// * [topImg] is the image for the top badge
-  /// * [middleImg] is the image for the middle badge
-  /// * [bottomImg] is the image for the bottom badge
-  const BadgesDisplay({
-    super.key,
-    required this.topImg,
-    required this.middleImg,
-    required this.bottomImg,
-  });
+  /// Creates a [BadgesDisplay] that generates a grid of badge images.
+  const BadgesDisplay({super.key, required this.badgeImages});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.all(4.0),
-          child: CircleAvatar(
-            foregroundImage: AssetImage(topImg),
-            backgroundColor: Color.fromARGB(255, 168, 152, 2),
-            radius: 25.0,
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 40.0),
-          child: CircleAvatar(
-            foregroundImage: AssetImage(middleImg),
-            backgroundColor: Color.fromARGB(255, 168, 23, 12),
-            radius: 25.0,
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.all(4.0),
-          child: CircleAvatar(
-            foregroundImage: AssetImage(bottomImg),
-            backgroundColor: Color.fromARGB(255, 16, 113, 192),
-            radius: 25.0,
-          ),
-        ),
-      ],
+    return GridView.builder(
+      padding: const EdgeInsets.all(16.0),
+      physics: const BouncingScrollPhysics(),
+      itemCount: badgeImages.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4, // Number of badges per row
+        crossAxisSpacing: 15.0, // Horizontal space between badges
+        mainAxisSpacing: 15.0, // Vertical space between rows
+      ),
+      itemBuilder: (context, index) {
+        return CircleAvatar(
+          radius: 25.0,
+          backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(100),
+          foregroundImage: AssetImage(badgeImages[index]),
+        );
+      },
     );
   }
 }
