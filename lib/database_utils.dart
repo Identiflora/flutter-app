@@ -31,36 +31,30 @@ Future<bool> submitIncorrectIdentification({
     'incorrect_species_id': incorrectSpeciesId,
   });
 
-  final client = HttpClient();
+  final httpClient = http.Client();
   try {
     // Create and send the POST request with JSON body.
-    final request = await client.postUrl(uri);
-    request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-    request.headers.set(
-      
-      HttpHeaders.authorizationHeader,
-     
-      'Bearer ${await getAuthToken()}',
-    ,
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await getAuthToken()}',
+      },
+      body: payload,
     );
-    request.add(utf8.encode(payload));
-
-    // Await the response and read the body for error context.
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return true;
     } else {
       // Surface the response for debugging purposes.
       throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
+        'API error ${response.statusCode}: ${response.body}',
         uri: uri,
       );
     }
   } finally {
-    // Ensure the HTTP client is closed even if an error occurs.
-    client.close(force: true);
+    // Ensure the HTTP httpClient is closed.
+    httpClient.close();
   }
 }
 
@@ -76,31 +70,29 @@ Future<String> getPlantSpeciesUrl({required String scientificName}) async {
 
   final uri = Uri.parse(apiBaseUrl).resolve('/plant-species-url/$trimmedName');
 
-  final client = HttpClient();
+  final httpClient = http.Client();
   try {
-    final request = await client.getUrl(uri);
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
+    final response = await httpClient.get(uri);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       // FastAPI may return a raw string or JSON-string; handle both.
       try {
-        final decoded = jsonDecode(responseBody);
+        final decoded = jsonDecode(response.body);
         if (decoded is String) {
           return decoded;
         }
       } catch (_) {
         // Fall through to returning the raw body.
       }
-      return responseBody;
+      return response.body;
     } else {
       throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
+        'API error ${response.statusCode}: ${response.body}',
         uri: uri,
       );
     }
   } finally {
-    client.close(force: true);
+    httpClient.close();
   }
 }
 
@@ -115,26 +107,23 @@ Future<int> getPlantSpeciesID({required String scientificName}) async {
 
   final uri = Uri.parse(apiBaseUrl).resolve('/species-id/$trimmedName');
 
-  final client = HttpClient();
+  final httpClient = http.Client();
   try {
-    final request = await client.getUrl(uri);
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
+    final response = await httpClient.get(uri);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       // FastAPI may return a raw string or JSON-string; handle both.
-      final jsonResponse = jsonDecode(responseBody);
+      final jsonResponse = jsonDecode(response.body);
       final speciesId = jsonResponse['species_id'] as int;
       return speciesId;
-    } 
-    else {
+    } else {
       throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
+        'API error ${response.statusCode}: ${response.body}',
         uri: uri,
       );
     }
   } finally {
-    client.close(force: true);
+    httpClient.close();
   }
 }
 
@@ -195,7 +184,7 @@ Future<AuthToken> submitUserRegistration({
     if (e is AuthException) rethrow;
     throw AuthException('Network error occurred: $e');
   } finally {
-    // close out http client
+    // close out http httpClient
     httpClient.close();
   }
 }
@@ -216,7 +205,7 @@ Future<AuthToken> submitUserLogin({
 
   final uri = Uri.parse(apiBaseUrl).resolve('/user/login');
 
-  // Start http client
+  // Start http httpClient
   final httpClient = http.Client();
 
   try {
@@ -255,7 +244,7 @@ Future<AuthToken> submitUserLogin({
     if (e is AuthException) rethrow;
     throw AuthException('Network error occurred: $e');
   } finally {
-    // close out http client
+    // close out http httpClient
     httpClient.close();
   }
 }
@@ -273,10 +262,10 @@ Future<AuthToken> submitUserLogin({
 //     'password_hash': passwordHash,
 //   });
 
-//   final client = HttpClient();
+//   final httpClient = HttpClient();
 //   try {
 //     // Create and send the POST request with JSON body.
-//     final request = await client.postUrl(uri);
+//     final request = await httpClient.postUrl(uri);
 //     request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
 //     request.add(utf8.encode(payload));
 
@@ -301,8 +290,8 @@ Future<AuthToken> submitUserLogin({
 //       );
 //     }
 //   } finally {
-//     // Ensure the HTTP client is closed even if an error occurs.
-//     client.close(force: true);
+//     // Ensure the HTTP httpClient is closed even if an error occurs.
+//     httpClient.close(force: true);
 //   }
 // }
 
@@ -318,13 +307,16 @@ Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/global-leaderboard');
 
-  // Start http client
+  // Start http httpClient
   final httpClient = http.Client();
 
   try {
     final response = await httpClient.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await getAuthToken()}',
+      },
       body: jsonEncode({"leaderboard_size": leaderboardSize}),
     );
 
@@ -368,7 +360,7 @@ Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
     if (e is AuthException) rethrow;
     throw AuthException('Network error occurred: $e');
   } finally {
-    // close out http client
+    // close out http httpClient
     httpClient.close();
   }
 }
@@ -381,17 +373,12 @@ Future<int> fetchUserCount() async {
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/user-count');
 
-  final client = HttpClient();
+  final httpClient = http.Client();
   try {
-    // Create and send the POST request with JSON body.
-    final request = await client.postUrl(uri);
-
-    // Await the response and read the body for error context.
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
+    final response = await httpClient.get(uri, headers: {'Authorization': 'Bearer ${await getAuthToken()}'});
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      final jsonResponse = jsonDecode(responseBody);
+      final jsonResponse = jsonDecode(response.body);
       final userCount = jsonResponse['user_count'] as int;
       return userCount;
     }
@@ -401,13 +388,13 @@ Future<int> fetchUserCount() async {
     } else {
       // Surface other responses for debugging purposes.
       throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
+        'API error ${response.statusCode}: ${response.body}',
         uri: uri,
       );
     }
   } finally {
-    // Ensure the HTTP client is closed even if an error occurs.
-    client.close(force: true);
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
   }
 }
 
@@ -433,19 +420,19 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
     'add_points': addPoints,
   });
 
-  final client = HttpClient();
+  final httpClient = http.Client();
   try {
-    // Create and send the POST request with JSON body.
-    final request = await client.postUrl(uri);
-    request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-    request.add(utf8.encode(payload));
-
-    // Await the response and read the body for error context.
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await getAuthToken()}',
+      },
+      body: payload,
+    );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      final jsonResponse = jsonDecode(responseBody);
+      final jsonResponse = jsonDecode(response.body);
       final success = jsonResponse['success'] as bool;
       return success;
     }
@@ -455,13 +442,13 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
     } else {
       // Surface other responses for debugging purposes.
       throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
+        'API error ${response.statusCode}: ${response.body}',
         uri: uri,
       );
     }
   } finally {
-    // Ensure the HTTP client is closed even if an error occurs.
-    client.close(force: true);
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
   }
 }
 
@@ -474,7 +461,7 @@ Future<AuthToken> submitUserGoogleLogin({
 
   final uri = Uri.parse(apiBaseUrl).resolve('/google/auth');
 
-  // Start http client
+  // Start http httpClient
   final httpClient = http.Client();
 
   try {
@@ -530,7 +517,7 @@ Future<AuthToken> submitUserGoogleLogin({
     if (e is AuthException) rethrow;
     throw AuthException('Network error occurred: $e');
   } finally {
-    // close out http client
+    // close out http httpClient
     httpClient.close();
   }
 }
@@ -543,7 +530,7 @@ Future<AuthToken> submitUserGoogleRegistration({
 
   final uri = Uri.parse(apiBaseUrl).resolve('/google/register');
 
-  // Start http client
+  // Start http httpClient
   final httpClient = http.Client();
 
   try {
@@ -581,7 +568,7 @@ Future<AuthToken> submitUserGoogleRegistration({
     if (e is AuthException) rethrow;
     throw AuthException('Network error occurred: $e');
   } finally {
-    // close out http client
+    // close out http httpClient
     httpClient.close();
   }
 }
@@ -594,7 +581,7 @@ Future<bool> submitUserPasswordReset({
 
   final uri = Uri.parse(apiBaseUrl).resolve('/pwd-reset/otp-request');
 
-  // Start http client
+  // Start http httpClient
   final httpClient = http.Client();
 
   try {
@@ -631,7 +618,7 @@ Future<bool> submitUserPasswordReset({
     if (e is AuthException) rethrow;
     throw AuthException('Network error occurred: $e');
   } finally {
-    // close out http client
+    // close out http httpClient
     httpClient.close();
   }
 }
@@ -644,7 +631,7 @@ Future<int> submitUserOTPVerify({
 
   final uri = Uri.parse(apiBaseUrl).resolve('/pwd-reset/otp-check');
 
-  // Start http client
+  // Start http httpClient
   final httpClient = http.Client();
 
   try {
@@ -680,7 +667,7 @@ Future<int> submitUserOTPVerify({
     if (e is AuthException) rethrow;
     throw AuthException('Network error occurred: $e');
   } finally {
-    // close out http client
+    // close out http httpClient
     httpClient.close();
   }
 }
@@ -691,18 +678,12 @@ Future<bool> authenticateToken() async {
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/authenticate-token');
 
-  final client = HttpClient();
+  final httpClient = http.Client();
   try {
-    // Create and send the POST request with JSON body.
-    final request = await client.postUrl(uri);
-    request.headers.set(
-      HttpHeaders.authorizationHeader,
-      'Bearer ${await getAuthToken()}', 
+    final response = await httpClient.post(
+      uri,
+      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
     );
-
-    // Await the response and read the body for error context.
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return true;
@@ -713,13 +694,12 @@ Future<bool> authenticateToken() async {
     } else {
       // Surface the response for debugging purposes.
       throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
+        'API error ${response.statusCode}: ${response.body}',
         uri: uri,
       );
     }
   } finally {
-    // Ensure the HTTP client is closed even if an error occurs.
-    client.close(force: true);
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
   }
 }
-
