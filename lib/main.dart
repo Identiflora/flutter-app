@@ -11,6 +11,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'camera_utils.dart';
 import 'account_utils.dart';
 import 'environment.dart';
+import 'settings.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: Environment.fileName);
@@ -37,6 +38,7 @@ class AppSetup extends StatelessWidget {
             LoginWidget(),
             GalleryWidget(),
             LeaderboardWidget(),
+          // SettingsWidget()
           ],
         ),
       ),
