@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'level_bottom_sheet.dart';
 import 'badges_bottom_sheet.dart';
+import 'package:identiflora/settings.dart';
 
 class ViewAccountScreen extends StatefulWidget {
   const ViewAccountScreen({super.key});
@@ -49,7 +50,10 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
             icon: const Icon(Icons.settings),
             iconSize: 45.0,
             onPressed: () {
-              //take you to marks settings page
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
             },
           ),
         ],
