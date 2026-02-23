@@ -8,6 +8,7 @@ import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/environment.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
+import 'view_account/view_account_utils.dart';
 import 'dart:math';
 
 class LoginWidget extends StatefulWidget {
@@ -33,11 +34,28 @@ class _Login extends State<LoginWidget> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
+            onTap: () async {
+              if (!(await authenticateToken())) {
+                //if token is not valid, go to login screen
+                if (context.mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
+                  );
+                }
+              } else {
+                //if token is valid, go to view account screen
+                if (context.mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ViewAccountScreen(),
+                    ),
+                  );
+                }
+              }
             },
             child: Image.asset(
               'assets/homepage/account_icon.png',
@@ -89,11 +107,12 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             TextButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => PasswordResetForm())),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PasswordResetForm()),
+              ),
               child: Text(
-                isLoginView
-                    ? 'Forgot Password?'
-                    : '',
+                isLoginView ? 'Forgot Password?' : '',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -130,20 +149,27 @@ class _LoginFormState extends State<LoginForm> {
       return;
     } //END FUNCT
 
-    final int otpResult = await submitUserOTPVerify(unhashedPassword: password, email: email);
+    final int otpResult = await submitUserOTPVerify(
+      unhashedPassword: password,
+      email: email,
+    );
     debugPrint("$otpResult");
     bool hasOTP = false;
 
     // Result = 1 means OTP is valid and user needs new password, result = 0 means OTP is expired, but exists, result = -1 means there is not OTP
     if (otpResult == 1 && mounted) {
       // Get new password instead of OTP
-      password = await Navigator.push(context, MaterialPageRoute(builder: (context) => NewPasswordForm()));
+      password = await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => NewPasswordForm()),
+      );
       hasOTP = true;
-    }
-    else if (otpResult == 0 && mounted) {
+    } else if (otpResult == 0 && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("This one time password has expired! Please press 'Forgot password?' again for a new one time password."),
+          content: Text(
+            "This one time password has expired! Please press 'Forgot password?' again for a new one time password.",
+          ),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 15),
         ),
@@ -157,7 +183,7 @@ class _LoginFormState extends State<LoginForm> {
       final AuthToken token = await submitUserLogin(
         email: email,
         passwordHash: hashedPassword,
-        hasOTP: hasOTP
+        hasOTP: hasOTP,
       );
       debugPrint("Received token for $email: ${token.accessToken}");
       //SAVE AUTHTOKEN TO DEVICE
@@ -188,18 +214,24 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> _handleGoogleSignIn(BuildContext context) async {
     try {
-      GoogleSignIn.instance.initialize(clientId: Environment.googleClientID, serverClientId: Environment.googleServerID);
-      final GoogleSignInAccount user = await GoogleSignIn.instance.authenticate();
+      GoogleSignIn.instance.initialize(
+        clientId: Environment.googleClientID,
+        serverClientId: Environment.googleServerID,
+      );
+      final GoogleSignInAccount user = await GoogleSignIn.instance
+          .authenticate();
       final GoogleSignInAuthentication auth = user.authentication;
       final String? googleToken = auth.idToken;
-      if(googleToken != null && context.mounted) {
+      if (googleToken != null && context.mounted) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => GoogleLoginLoadingScreen(googleToken: googleToken)),
+          MaterialPageRoute(
+            builder: (context) =>
+                GoogleLoginLoadingScreen(googleToken: googleToken),
+          ),
         );
       }
-    }
-    catch (err) {
+    } catch (err) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -234,7 +266,15 @@ class _LoginFormState extends State<LoginForm> {
           ),
         ),
         ElevatedButton(onPressed: loginPressed, child: const Text("Login")),
-        ElevatedButton.icon(onPressed: () => _handleGoogleSignIn(context), icon: Image.asset('assets/brand/Google_G_logo_500x500.png', width: 25, height: 25,), label: const Text("Sign in with Google"))
+        ElevatedButton.icon(
+          onPressed: () => _handleGoogleSignIn(context),
+          icon: Image.asset(
+            'assets/brand/Google_G_logo_500x500.png',
+            width: 25,
+            height: 25,
+          ),
+          label: const Text("Sign in with Google"),
+        ),
       ],
     );
   }
@@ -341,22 +381,22 @@ class _SignUpFormState extends State<SignUpForm> {
       ],
     );
   }
-}//END SIGNUPFORMSTATE CLASS
+} //END SIGNUPFORMSTATE CLASS
 
 // Sign up form for new external user
 class ExternalSignUpForm extends StatelessWidget {
   final usernameControl = TextEditingController();
 
   ExternalSignUpForm({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('How do we identify you?',),
+        title: const Text('How do we identify you?'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow, 
+        shadowColor: Theme.of(context).colorScheme.shadow,
         centerTitle: true,
       ),
       body: SafeArea(
@@ -365,7 +405,8 @@ class ExternalSignUpForm extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("Please enter a username so others know how to identify you!", 
+              const Text(
+                "Please enter a username so others know how to identify you!",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -382,22 +423,24 @@ class ExternalSignUpForm extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-          
+
               ElevatedButton(
                 onPressed: () {
-                  if(usernameControl.text.trim().isNotEmpty) {
+                  if (usernameControl.text.trim().isNotEmpty) {
                     Navigator.pop(context, usernameControl.text.trim());
-                  }
-                  else {
+                  } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text("Please make sure username has at least 1 character then try again."),
+                        content: Text(
+                          "Please make sure username has at least 1 character then try again.",
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );
                   }
-                }, 
-                child: const Text("Confirm")),
+                },
+                child: const Text("Confirm"),
+              ),
             ],
           ),
         ),
@@ -409,15 +452,16 @@ class ExternalSignUpForm extends StatelessWidget {
 class GoogleLoginLoadingScreen extends StatelessWidget {
   final String googleToken;
 
-  const GoogleLoginLoadingScreen({
-    super.key, required this.googleToken
-  });
+  const GoogleLoginLoadingScreen({super.key, required this.googleToken});
 
   Future<void> loginAndStore(String googleToken, BuildContext context) async {
-    final AuthToken token = await submitUserGoogleLogin(token: googleToken, context: context);
+    final AuthToken token = await submitUserGoogleLogin(
+      token: googleToken,
+      context: context,
+    );
     await saveAuthToken(token.accessToken);
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -425,37 +469,42 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
         title: const Text('Loading...'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow, 
+        shadowColor: Theme.of(context).colorScheme.shadow,
         centerTitle: true,
       ),
       body: SafeArea(
         child: FutureBuilder<void>(
-          future: loginAndStore(googleToken, context), 
+          future: loginAndStore(googleToken, context),
           builder: (context, snapshot) {
-            if(snapshot.connectionState == ConnectionState.waiting) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text("Please wait while we log you in...", 
-                        textAlign: TextAlign.center, 
-                        style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                      child: Text(
+                        "Please wait while we log you in...",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 16.0),
-                      child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
-                    )
-                  ]
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
               );
-            }
-            else if(snapshot.connectionState == ConnectionState.done) {
+            } else if (snapshot.connectionState == ConnectionState.done) {
               // Run navigation after next frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if(context.mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text("Successfully logged in"),
@@ -474,20 +523,25 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text("Login complete! One moment...", 
-                        textAlign: TextAlign.center, 
-                        style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary)
+                      child: Text(
+                        "Login complete! One moment...",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 16.0),
-                      child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
-                    )
-                  ]
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
               );
-            }
-            else {
+            } else {
               if (snapshot.hasError) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -496,21 +550,22 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
                   ),
                 );
               }
-              
+
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Text("Sorry! We can't seem to log you in. Please check your internet connection then try again.",
-                      textAlign: TextAlign.center, 
-                      style: TextStyle(fontSize: 20)
+                    child: Text(
+                      "Sorry! We can't seem to log you in. Please check your internet connection then try again.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 20),
                     ),
                   ),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.popUntil(context, ModalRoute.withName("/"));
-                    }, 
+                    },
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Theme.of(context).colorScheme.primary,
                       shape: RoundedRectangleBorder(
@@ -521,13 +576,13 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: const Text("Return to Homepage")
-                  )
+                    child: const Text("Return to Homepage"),
+                  ),
                 ],
               );
             }
           },
-        )
+        ),
       ),
     );
   }
@@ -538,15 +593,15 @@ class PasswordResetForm extends StatelessWidget {
   final emailControl = TextEditingController();
 
   PasswordResetForm({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Please provide us with additional information.',),
+        title: const Text('Please provide us with additional information.'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow, 
+        shadowColor: Theme.of(context).colorScheme.shadow,
         centerTitle: true,
       ),
       body: SafeArea(
@@ -555,7 +610,8 @@ class PasswordResetForm extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("Please enter the email associated with your account.", 
+              const Text(
+                "Please enter the email associated with your account.",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -572,35 +628,40 @@ class PasswordResetForm extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-          
+
               ElevatedButton(
                 onPressed: () async {
-                  if(emailControl.text.trim().length >= 5) {
+                  if (emailControl.text.trim().length >= 5) {
                     try {
-                      bool success = await submitUserPasswordReset(email: emailControl.text.trim(), otpLength: Random().nextInt(8) + 8);
+                      bool success = await submitUserPasswordReset(
+                        email: emailControl.text.trim(),
+                        otpLength: Random().nextInt(8) + 8,
+                      );
 
-                      if(success && context.mounted) {
+                      if (success && context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text("Password reset request sent. It might take a moment. Please check your email for more instructions."),
+                            content: Text(
+                              "Password reset request sent. It might take a moment. Please check your email for more instructions.",
+                            ),
                             backgroundColor: Colors.green,
                             duration: Duration(seconds: 15),
                           ),
                         );
                         Navigator.pop(context);
-                      }
-                      else if (context.mounted){
+                      } else if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text("Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password."),
+                            content: Text(
+                              "Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password.",
+                            ),
                             backgroundColor: Colors.red,
                             duration: Duration(seconds: 15),
                           ),
                         );
                         Navigator.pop(context);
                       }
-                    }
-                    catch (err) {
+                    } catch (err) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -612,17 +673,19 @@ class PasswordResetForm extends StatelessWidget {
                         Navigator.pop(context);
                       }
                     }
-                  }
-                  else {
+                  } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text("Please make sure your email has at least 5 characters then try again."),
+                        content: Text(
+                          "Please make sure your email has at least 5 characters then try again.",
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );
                   }
-                }, 
-                child: const Text("Confirm")),
+                },
+                child: const Text("Confirm"),
+              ),
             ],
           ),
         ),
@@ -636,15 +699,15 @@ class NewPasswordForm extends StatelessWidget {
   final passwordControl = TextEditingController();
 
   NewPasswordForm({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reset Password',),
+        title: const Text('Reset Password'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow, 
+        shadowColor: Theme.of(context).colorScheme.shadow,
         centerTitle: true,
       ),
       body: SafeArea(
@@ -653,7 +716,8 @@ class NewPasswordForm extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text("Please enter a new password to be associated with your account.", 
+              const Text(
+                "Please enter a new password to be associated with your account.",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -671,18 +735,17 @@ class NewPasswordForm extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-          
+
               ElevatedButton(
                 onPressed: () {
-                  if(passwordControl.text.trim().isEmpty) {
+                  if (passwordControl.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text("Please complete all fields."),
                         backgroundColor: Colors.red,
                       ),
                     );
-                  }
-                  else {
+                  } else {
                     Navigator.pop(context, passwordControl.text.trim());
 
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -692,8 +755,9 @@ class NewPasswordForm extends StatelessWidget {
                       ),
                     );
                   }
-                }, 
-                child: const Text("Confirm"))
+                },
+                child: const Text("Confirm"),
+              ),
             ],
           ),
         ),

@@ -11,6 +11,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'camera_utils.dart';
 import 'account_utils.dart';
 import 'environment.dart';
+import 'settings.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: Environment.fileName);
@@ -27,15 +28,20 @@ class AppSetup extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Identiflora",
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.green)),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+      ),
       home: Scaffold(
-        body: Stack(children: [
-          getCameraWidget(),
-          LoginWidget(),
-          GalleryWidget(),
-          LeaderboardWidget(),
-        ])
-      )
+        body: Stack(
+          children: [
+            getCameraWidget(),
+            LoginWidget(),
+            GalleryWidget(),
+            LeaderboardWidget(),
+          // SettingsWidget()
+          ],
+        ),
+      ),
     );
   }
 }
@@ -58,16 +64,22 @@ class ModelLoadingScreen extends StatelessWidget {
               child: Text(
                 "Please wait...\nIdentifying your plant!",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)
-              )
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 32.0),
-              child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
-            )
-          ]
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ],
         ),
-      )
+      ),
     );
   }
 }

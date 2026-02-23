@@ -37,8 +37,11 @@ Future<bool> submitIncorrectIdentification({
     final request = await client.postUrl(uri);
     request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
     request.headers.set(
+      
       HttpHeaders.authorizationHeader,
+     
       'Bearer ${await getAuthToken()}',
+    ,
     );
     request.add(utf8.encode(payload));
 
@@ -207,7 +210,7 @@ Future<AuthToken> submitUserRegistration({
 Future<AuthToken> submitUserLogin({
   required String email,
   required String passwordHash,
-  required bool hasOTP
+  required bool hasOTP,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
 
@@ -220,7 +223,11 @@ Future<AuthToken> submitUserLogin({
     final response = await httpClient.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'user_email': email, 'password_hash': passwordHash, 'has_otp': hasOTP}),
+      body: jsonEncode({
+        'user_email': email,
+        'password_hash': passwordHash,
+        'has_otp': hasOTP,
+      }),
     );
 
     // 200-299 indicates success
@@ -305,7 +312,7 @@ Future<AuthToken> submitUserLogin({
 ///     size: 50
 ///   );
 Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
-  required leaderboardSize
+  required leaderboardSize,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
@@ -331,11 +338,14 @@ Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
       // Create user list from json response
       jsonMap.forEach((key, value) {
         id = int.tryParse(key);
-        if(id == null) return;
-        users.insert(count, LeaderboardUser(userName: value[0], userScore: value[1], userId: id!));
+        if (id == null) return;
+        users.insert(
+          count,
+          LeaderboardUser(userName: value[0], userScore: value[1], userId: id!),
+        );
         count++;
       });
-      
+
       return users;
     }
 
@@ -578,10 +588,10 @@ Future<AuthToken> submitUserGoogleRegistration({
 
 Future<bool> submitUserPasswordReset({
   required String email,
-  required int otpLength
+  required int otpLength,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
-  
+
   final uri = Uri.parse(apiBaseUrl).resolve('/pwd-reset/otp-request');
 
   // Start http client
@@ -606,8 +616,7 @@ Future<bool> submitUserPasswordReset({
         'Invalid credentials (user does not exist): ${response.body}',
         statusCode: 401,
       );
-    }
-    else if (response.statusCode == 403) {
+    } else if (response.statusCode == 403) {
       return false;
     }
 
@@ -627,13 +636,12 @@ Future<bool> submitUserPasswordReset({
   }
 }
 
-
 Future<int> submitUserOTPVerify({
   required String unhashedPassword,
-  required String email
+  required String email,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
-  
+
   final uri = Uri.parse(apiBaseUrl).resolve('/pwd-reset/otp-check');
 
   // Start http client
@@ -676,3 +684,42 @@ Future<int> submitUserOTPVerify({
     httpClient.close();
   }
 }
+
+// returns true if users token is valid, false otherwise
+Future<bool> authenticateToken() async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/authenticate-token');
+
+  final client = HttpClient();
+  try {
+    // Create and send the POST request with JSON body.
+    final request = await client.postUrl(uri);
+    request.headers.set(
+      HttpHeaders.authorizationHeader,
+      'Bearer ${await getAuthToken()}', 
+    );
+
+    // Await the response and read the body for error context.
+    final response = await request.close();
+    final responseBody = await utf8.decodeStream(response);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return true;
+    }
+    // 401 means token is invalid or expired, return false so user can be brought to login screen
+    else if (response.statusCode == 401) {
+      return false;
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: $responseBody',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP client is closed even if an error occurs.
+    client.close(force: true);
+  }
+}
+
