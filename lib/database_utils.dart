@@ -436,3 +436,82 @@ Future<bool> submitUserGlobalPoints({
     client.close(force: true);
   }
 }
+Future<bool> submitEmailChange({required String newEmail}) async {
+  final authToken = await getAuthToken();
+
+  if (authToken == null) {
+    throw AuthException('User not authenticated');
+  }
+
+  String apiBaseUrl = Environment.apiUrl;
+  //
+  // /user/update-email is just a placeholder until we implement this into the API
+  //
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/update-email');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+      body: jsonEncode({'new_email': newEmail}),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return true;
+    } else {
+      throw AuthException(
+        'Failed to update email: ${response.body}',
+        statusCode: response.statusCode,
+      );
+    }
+  } catch (e) {
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    httpClient.close();
+  }
+}
+
+Future<bool> submitPasswordChange({required String newPasswordHash}) async {
+  final authToken = await getAuthToken();
+
+  if (authToken == null) {
+    throw AuthException('User not authenticated');
+  }
+
+  String apiBaseUrl = Environment.apiUrl;
+  //
+  // /user/update-password is just a placeholder until we implement this into the API
+  //
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/update-password');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+      body: jsonEncode({'new_password_hash': newPasswordHash}),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return true;
+    } else {
+      throw AuthException(
+        'Failed to update password: ${response.body}',
+        statusCode: response.statusCode,
+      );
+    }
+  } catch (e) {
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    httpClient.close();
+  }
+}

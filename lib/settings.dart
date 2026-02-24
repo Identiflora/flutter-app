@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:settings_ui/settings_ui.dart';
+import 'database_utils.dart';
+import 'account_utils.dart';
 
 class SettingsWidget extends StatefulWidget {
   const SettingsWidget({super.key});
@@ -174,16 +176,28 @@ class _ChangeEmailState extends State<ChangeEmail> {
       );
       return;
     }
-    // Submit new email logic
-    //
-    //
-
-    ScaffoldMessenger.of(context).showSnackBar(
+    try {
+      await submitEmailChange(newEmail: newEmail);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Successfully changed email!"),
             backgroundColor: Colors.green,
           ),
         );
+        Navigator.pop(context);
+      }
+    } catch (err) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to change email: $err"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -230,6 +244,7 @@ class _ChangePasswordState extends State<ChangePassword>{
   void confirmPassword() async {
     final newPassword = newPasswordControl.text.trim();
     final newPasswordConfirm = newPasswordConfirmControl.text.trim();
+    
     if (newPassword.isEmpty || newPasswordConfirm.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -246,17 +261,31 @@ class _ChangePasswordState extends State<ChangePassword>{
           backgroundColor: Colors.red,
         ),
       );
+      return;
     }
-    //
-    // submit new password logic
-    //
+    final hashedPassword = hashPassword(newPassword);
+    try {
+      await submitPasswordChange(newPasswordHash: hashedPassword);
 
-    ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Successfully changed password!"),
             backgroundColor: Colors.green,
           ),
         );
+        Navigator.pop(context);
+      }
+    } catch (err) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to change password: $err"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
