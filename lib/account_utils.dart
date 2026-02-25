@@ -35,20 +35,33 @@ class _Login extends State<LoginWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GestureDetector(
             onTap: () async {
-              if (!(await authenticateToken())) {
-                //if token is not valid, go to login screen
+              bool tokenSuccess = false;
+              try {
+                tokenSuccess = await authenticateToken();
+                if (!(tokenSuccess)) {
+                  //if token is not valid, go to login screen
+                  if (context.mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                    );
+                  }
+                } else {
+                  //if token is valid, go to view account screen
+                  if (context.mounted) {
+                    Navigator.pushNamed(context, '/view_account_screen');
+                  }
+                }
+              } on RateLimitException catch (e) {
                 if (context.mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.message),
+                      backgroundColor: Colors.red,
                     ),
                   );
-                }
-              } else {
-                //if token is valid, go to view account screen
-                if (context.mounted) {
-                  Navigator.pushNamed(context, '/view_account_screen');
                 }
               }
             },

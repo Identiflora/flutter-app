@@ -375,7 +375,10 @@ Future<int> fetchUserCount() async {
 
   final httpClient = http.Client();
   try {
-    final response = await httpClient.get(uri, headers: {'Authorization': 'Bearer ${await getAuthToken()}'});
+    final response = await httpClient.get(
+      uri,
+      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+    );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final jsonResponse = jsonDecode(response.body);
@@ -691,12 +694,9 @@ Future<bool> authenticateToken() async {
     // 401 means token is invalid or expired, return false so user can be brought to login screen
     else if (response.statusCode == 401) {
       return false;
-    } 
-    
-    else if (response.statusCode == 429) {
-
-    }
-    else {
+    } else if (response.statusCode == 429) {
+      throw RateLimitException();
+    } else {
       // Surface the response for debugging purposes.
       throw HttpException(
         'API error ${response.statusCode}: ${response.body}',
