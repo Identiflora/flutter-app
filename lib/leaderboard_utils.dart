@@ -73,7 +73,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         ];
       case "Friends":
         return <PopupMenuEntry<String>>[
-          const PopupMenuItem(value: "Friends", child: Text("Friends")),
+          const PopupMenuItem(value: "Global", child: Text("Global")),
           const PopupMenuItem(value: "Regional", child: Text("Regional")),
         ];
       default:
