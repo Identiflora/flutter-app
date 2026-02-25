@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:identiflora/database_utils.dart';
 import 'level_bottom_sheet.dart';
 import 'badges_bottom_sheet.dart';
 import 'package:identiflora/settings.dart';
@@ -31,8 +32,9 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   }
 
   @override
-  void initState() {
+  void initState() async{
     super.initState();
+    playerPoints = await getUserPoints();
     normalizedPlayerPoints = normalize(
       playerPoints.toDouble(),
       0,
