@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:identiflora/database_utils.dart';
 import 'level_bottom_sheet.dart';
 import 'badges_bottom_sheet.dart';
 import 'package:identiflora/settings.dart';
@@ -12,7 +13,7 @@ class ViewAccountScreen extends StatefulWidget {
 
 class _ViewAccountScreenState extends State<ViewAccountScreen> {
   int playerLevel = 1; //placeholder
-  int playerPoints = 5; //placeholder obviously
+  int playerPoints = 0;
   double normalizedPlayerPoints = 0.0;
   List<String> badgeImages = [
     'assets/brand/Identiflora_logo.png',
@@ -33,11 +34,20 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   @override
   void initState() {
     super.initState();
+    _getPlayerPoints().then((response) {
+      setState(() {
+        playerPoints = response;
+      });
+    });
     normalizedPlayerPoints = normalize(
       playerPoints.toDouble(),
       0,
       10,
     ); //need to change the 10.0 to whatever max points will be
+  }
+
+  Future<int> _getPlayerPoints() async {
+    return await getUserPoints();
   }
 
   @override
