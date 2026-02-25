@@ -56,9 +56,6 @@ class _Results extends State<ResultsWidget> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Results'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow, 
         centerTitle: true,
       ),
       body: SafeArea(
@@ -107,13 +104,23 @@ class _Results extends State<ResultsWidget> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Plant image placeholder, need to call API in future for image
               SizedBox(
                 height: 300,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: widget.imgURL == "" ? Placeholder() : Image.network(widget.imgURL)
+                child: Container(
+                  decoration: widget.imgURL == "" ? null : BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
+                    boxShadow: [
+                      BoxShadow(
+                        blurStyle: BlurStyle.outer,
+                        blurRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
+                    child: widget.imgURL == "" ? Placeholder() : Image.network(widget.imgURL, fit: BoxFit.cover,)
+                  ),
                 ),
               ),
 
