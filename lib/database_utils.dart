@@ -726,6 +726,8 @@ Future<int> getUserPoints() async {
       final jsonResponse = jsonDecode(response.body);
       final userPoints = jsonResponse as int;
       return userPoints;
+    } else if (response.statusCode == 404) {
+      return 0; //return 0 points if not found
     } else {
       // Surface the response for debugging purposes.
       throw HttpException(
