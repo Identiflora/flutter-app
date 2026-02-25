@@ -52,26 +52,6 @@ class _Leaderboard extends State<LeaderboardWidget> {
   }
 }
 
-List<PopupMenuEntry<String>> getPopupOptions(String? leaderboardType) {
-  switch (leaderboardType) {
-    case "Global":
-      return <PopupMenuEntry<String>>[
-        const PopupMenuItem(value: "Friends", child: Text("Friends")),
-        const PopupMenuItem(value: "Regional", child: Text("Regional")),
-      ];
-    case "Friends":
-      return <PopupMenuEntry<String>>[
-        const PopupMenuItem(value: "Friends", child: Text("Friends")),
-        const PopupMenuItem(value: "Regional", child: Text("Regional")),
-      ];
-    default:
-      return <PopupMenuEntry<String>>[
-        const PopupMenuItem(value: "Global", child: Text("Global")),
-        const PopupMenuItem(value: "Friends", child: Text("Friends")),
-      ];
-  }
-}
-
 /* CODE FOR LEADERBOARD SCREEN/ROUTE*/
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -83,14 +63,49 @@ class LeaderboardScreen extends StatefulWidget {
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
   String? leaderboardType = "Global";
 
+  /// Gets popup options based on current leaderboard type to insure a dynamic popup view when switching types.
+  List<PopupMenuEntry<String>> getPopupOptions(String? leaderboardType) {
+    switch (leaderboardType) {
+      case "Global":
+        return <PopupMenuEntry<String>>[
+          const PopupMenuItem(value: "Friends", child: Text("Friends")),
+          const PopupMenuItem(value: "Regional", child: Text("Regional")),
+        ];
+      case "Friends":
+        return <PopupMenuEntry<String>>[
+          const PopupMenuItem(value: "Global", child: Text("Global")),
+          const PopupMenuItem(value: "Regional", child: Text("Regional")),
+        ];
+      default:
+        return <PopupMenuEntry<String>>[
+          const PopupMenuItem(value: "Global", child: Text("Global")),
+          const PopupMenuItem(value: "Friends", child: Text("Friends")),
+        ];
+    }
+  }
+
+  /// Add all users of the current leaderboard type to allow for dynamic database submissions
+  Future<List<LeaderboardUser>> addUsers(
+    String? leaderboardType,
+    int maxUsers,
+  ) async {
+    final List<LeaderboardUser> users;
+
+    // LOAD ALL USERS WITH SCORES
+    if (leaderboardType == "Global") {
+      users = await submitGlobalLeaderboardRequest(leaderboardSize: maxUsers);
+    } else {
+      users = List.empty();
+    }
+
+    return users;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("$leaderboardType Leaderboard"),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow,
         actions: [
           PopupMenuButton<String>(
             itemBuilder: (BuildContext context) =>
@@ -114,63 +129,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         ],
       ), //END APPBAR
 
-      body: Padding(
-        padding: const EdgeInsets.only(left: 5.0, right: 5.0, top: 5.0),
-        child: FutureBuilder<List<LeaderboardUser>>(
-          future: addUsers(leaderboardType, 100),
-          builder: (context, snapshot) {
-            String? lowercaseLeaderboardType = leaderboardType?.toLowerCase();
-
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: CircularProgressIndicator(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              );
-            } else if (snapshot.hasData && snapshot.data != null) {
-              final leaderboard = snapshot.data;
-
-              if (leaderboard!.isEmpty) {
-                return Center(
-                  child: Text(
-                    "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
-                    textAlign: TextAlign.center,
-                  ),
-                );
-              }
-
-              return ListView.separated(
-                itemCount: leaderboard.length,
-                separatorBuilder: (BuildContext context, int index) =>
-                    const Divider(),
-                itemBuilder: (context, index) {
-                  final user = leaderboard[index];
-
-                  return ListTile(
-                    leading: Text("#${index + 1}"),
-                    title: Text(user.userName),
-                    trailing: Text("${user.userScore} pts"),
-                  );
-                },
-              );
-            } else if (snapshot.hasError) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      "Error while loading leaaderboard: ${snapshot.error}",
-                    ),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              });
-              return Center(
-                child: Text(
-                  "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
-                  textAlign: TextAlign.center,
-                ),
-              );
-            } else {
+      body: FutureBuilder<List<LeaderboardUser>>(
+        future: addUsers(leaderboardType, 100),
+        builder: (context, snapshot) {
+          String? lowercaseLeaderboardType = leaderboardType?.toLowerCase();
+      
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            );
+          } else if (snapshot.hasData && snapshot.data != null) {
+            final leaderboard = snapshot.data;
+      
+            if (leaderboard!.isEmpty) {
               return Center(
                 child: Text(
                   "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
@@ -178,8 +151,153 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ),
               );
             }
-          },
-        ),
+      
+            return SafeArea(
+              child: Scrollbar(
+                child: ListView.builder(
+                  itemCount: leaderboard.length + 1,
+                  itemBuilder: (context, index) {
+                    // Return header if index is 0
+                    if(index == 0) {
+                      return Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text("Rank", style: TextStyle(fontSize: 24.0)),
+                                    const SizedBox(width: 16.0),
+                                    Text("User", style: TextStyle(fontSize: 24.0)),
+                                    const SizedBox(width: 16.0),
+                                    Text("Points", style: TextStyle(fontSize: 24.0)),
+                                  ],
+                                ),
+                                const SizedBox(height: 8.0),
+                                Divider(
+                                  height: 0.5,
+                                  thickness: 0.5,
+                                  color: Theme.of(context).colorScheme.inverseSurface,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    
+                    final user = leaderboard[index - 1];
+                
+                    Color? rankColor = Theme.of(context).colorScheme.surface;
+                                
+                    switch(index) {
+                      case 1:
+                        rankColor = Color.fromARGB(255, 255, 217, 0);
+                        break;
+                      case 2:
+                        rankColor = Color.fromARGB(255, 192, 192, 192);
+                        break;
+                      case 3:
+                        rankColor = Color.fromARGB(255, 205, 127, 50);
+                        break;
+                      default:
+                        rankColor = Theme.of(context).colorScheme.surface;
+                        break;
+                    }
+                
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 12.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
+                          boxShadow: [
+                            BoxShadow(
+                              blurStyle: BlurStyle.outer,
+                              blurRadius: 3, // Blur intensity
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(6.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      index <= 3 ?
+                                        Icon(Icons.emoji_events, color: rankColor, size: 40, shadows: [Shadow(blurRadius: 1.0)]) 
+                                        : Icon(null, size: 40,),
+                                      index < 10 ? const SizedBox(width: 16.0) : const SizedBox(width: 6.0),
+                                      Text("#$index", style: TextStyle(fontSize: 16.0))
+                                    ],
+                                  ),
+                                  const SizedBox(width: 16.0),
+                                  Row(
+                                    children: [
+                                      // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
+                                      CircleAvatar(
+                                        foregroundImage: const AssetImage('assets/brand/Identiflora_logo.png'), 
+                                        backgroundColor: Theme.of(context).colorScheme.surface, 
+                                        radius: 20,
+                                      ),
+                                      const SizedBox(width: 16.0),
+                                      user.userName.length <= 20 ? Text(user.userName, style: TextStyle(fontSize: 16.0)) : Text("${user.userName.substring(0, 17)}...", style: TextStyle(fontSize: 16.0)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: index <= 3 ? rankColor.withAlpha(125) : Theme.of(context).colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.all(Radius.elliptical(15, 15))
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text("${user.userScore} pts.", style: TextStyle(fontSize: 14.0), textAlign: TextAlign.right),
+                                )
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          } else if (snapshot.hasError) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    "Error while loading leaaderboard: ${snapshot.error}",
+                  ),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            });
+            return Center(
+              child: Text(
+                "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
+                textAlign: TextAlign.center,
+              ),
+            );
+          } else {
+            return Center(
+              child: Text(
+                "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+        },
       ),
     );
 
@@ -199,22 +317,6 @@ class LeaderboardUser {
     this.userId = 0,
   });
 } //END LEADERBOARDUSER CLASS
-
-Future<List<LeaderboardUser>> addUsers(
-  String? leaderboardType,
-  int maxUsers,
-) async {
-  final List<LeaderboardUser> users;
-
-  // LOAD ALL USERS WITH SCORES
-  if (leaderboardType == "Global") {
-    users = await submitGlobalLeaderboardRequest(leaderboardSize: maxUsers);
-  } else {
-    users = List.empty();
-  }
-
-  return users;
-}
 
 // CLASS THAT CREATES USERS RANDOM INDEX, AND ADDS THEM TO LEADERBOARD LIST
 class LeaderBoardControl {

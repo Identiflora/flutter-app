@@ -36,3 +36,13 @@ class AuthException implements Exception {
   @override
   String toString() => 'AuthException: $message (Status: $statusCode)';
 }
+
+class RateLimitException implements Exception {
+  final String message;
+  final int? statusCode;
+
+  RateLimitException([this.message = "Rate limit exceeded", this.statusCode = 429]);
+
+  @override
+  String toString() => 'RateLimitException: $message (Status: $statusCode)';
+}
