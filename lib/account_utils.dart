@@ -48,12 +48,7 @@ class _Login extends State<LoginWidget> {
               } else {
                 //if token is valid, go to view account screen
                 if (context.mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ViewAccountScreen(),
-                    ),
-                  );
+                  Navigator.pushNamed(context, '/view_account_screen');
                 }
               }
             },

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:identiflora/gallery_utils.dart';
 import 'package:identiflora/leaderboard_utils.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:identiflora/view_account/view_account_utils.dart';
 import 'camera_utils.dart';
 import 'account_utils.dart';
 import 'environment.dart';
@@ -31,16 +32,27 @@ class AppSetup extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
       ),
-      home: Scaffold(
-        body: Stack(
-          children: [
-            getCameraWidget(),
-            LoginWidget(),
-            GalleryWidget(),
-            LeaderboardWidget(),
-          // SettingsWidget()
-          ],
-        ),
+      //add routes so you can use "Navigator.popUntil(context, ModalRoute.withName('/routeName'))" to return to a page
+      initialRoute: '/',
+      routes: {'/view_account_screen': (context) => ViewAccountScreen()},
+      home: const HomeScreen(),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          getCameraWidget(),
+          LoginWidget(),
+          GalleryWidget(),
+          LeaderboardWidget(),
+        ],
       ),
     );
   }
