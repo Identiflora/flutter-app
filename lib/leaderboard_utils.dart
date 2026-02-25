@@ -216,7 +216,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                           boxShadow: [
                             BoxShadow(
                               blurStyle: BlurStyle.outer,
-                              blurRadius: 3, // Blur intensity
+                              blurRadius: 3,
                             ),
                           ],
                         ),
