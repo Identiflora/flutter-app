@@ -179,14 +179,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("$leaderboardType Leaderboard"),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(0.75),
-          child: Divider(
-            height: 0.5,
-            thickness: 0.5,
-            color: Theme.of(context).colorScheme.inverseSurface,
-          ),
-        ),
         actions: [
           PopupMenuButton<String>(
             itemBuilder: (BuildContext context) =>
@@ -242,7 +234,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     if(index == 0) {
                       return Column(
                         children: [
-                          const SizedBox(height: 8.0),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
                             child: Column(
@@ -294,7 +285,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       child: Container(
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.all(Radius.elliptical(10, 10)),
+                          borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
                           boxShadow: [
                             BoxShadow(
                               blurStyle: BlurStyle.outer,
@@ -323,6 +314,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                   const SizedBox(width: 16.0),
                                   Row(
                                     children: [
+                                      // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
                                       CircleAvatar(
                                         foregroundImage: const AssetImage('assets/brand/Identiflora_logo.png'), 
                                         backgroundColor: Theme.of(context).colorScheme.surface, 
