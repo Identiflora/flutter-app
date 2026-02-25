@@ -691,7 +691,12 @@ Future<bool> authenticateToken() async {
     // 401 means token is invalid or expired, return false so user can be brought to login screen
     else if (response.statusCode == 401) {
       return false;
-    } else {
+    } 
+    
+    else if (response.statusCode == 429) {
+
+    }
+    else {
       // Surface the response for debugging purposes.
       throw HttpException(
         'API error ${response.statusCode}: ${response.body}',
