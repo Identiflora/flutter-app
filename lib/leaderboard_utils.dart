@@ -101,79 +101,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return users;
   }
 
-  /// Determines appropriate styling for list element dependant on index and user
-  Widget getLeaderboardListElement(int index, LeaderboardUser user) {
-    // Check if this index is the header
-    if(index > 0) {
-      Color? rankColor = Theme.of(context).colorScheme.surface;
-                          
-      switch(index) {
-        case 1:
-          rankColor = Color.fromARGB(255, 255, 217, 0);
-          break;
-        case 2:
-          rankColor = Color.fromARGB(255, 192, 192, 192);
-          break;
-        case 3:
-          rankColor = Color.fromARGB(255, 205, 127, 50);
-          break;
-        default:
-          rankColor = Theme.of(context).colorScheme.surface;
-          break;
-      }
-
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 12.0),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.elliptical(20, 20)),
-            boxShadow: [
-              BoxShadow(
-                blurStyle: BlurStyle.outer,
-                blurRadius: 3, // Blur intensity
-              ),
-            ],
-          ),
-          child: ListTile(
-            leading: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                index <= 3 ?
-                  Icon(Icons.emoji_events, color: rankColor, size: 40, shadows: [Shadow(blurRadius: 1.0)]) 
-                  : Icon(null, size: 40,),
-                index < 10 ? const SizedBox(width: 16.0) : const SizedBox(width: 6.0),
-                Text("#$index", style: TextStyle(fontSize: 16.0)), 
-                const SizedBox(width: 0)
-              ],
-            ),
-            title: Row(
-              children: [
-                CircleAvatar(foregroundImage: const AssetImage('assets/brand/Identiflora_logo.png'), radius: 20,),
-                SizedBox(width: 16.0),
-                Text(user.userName, style: TextStyle(fontSize: 16.0)),
-              ],
-            ),
-            trailing: Text("${user.userScore} pts", style: TextStyle(fontSize: 14.0)),
-          ),
-        ),
-      );
-    }
-    else {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            const Text("Rank", style: TextStyle(fontSize: 16.0)),
-            const Text("Name", style: TextStyle(fontSize: 16.0)),
-            const Text("Points", style: TextStyle(fontSize: 14.0)),
-          ],
-        )
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -235,7 +162,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       return Column(
                         children: [
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
                             child: Column(
                               children: [
                                 Row(
@@ -281,10 +208,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     }
                 
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 12.0),
+                      padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 12.0),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
                           boxShadow: [
                             BoxShadow(
@@ -326,7 +253,16 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                   ),
                                 ],
                               ),
-                              Text("${user.userScore} pts.", style: TextStyle(fontSize: 14.0), textAlign: TextAlign.right),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: index <= 3 ? rankColor.withAlpha(125) : Theme.of(context).colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.all(Radius.elliptical(15, 15))
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text("${user.userScore} pts.", style: TextStyle(fontSize: 14.0), textAlign: TextAlign.right),
+                                )
+                              ),
                             ],
                           ),
                         ),
