@@ -724,7 +724,7 @@ Future<int> getUserPoints() async {
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final jsonResponse = jsonDecode(response.body);
-      final userPoints = jsonResponse['global_points'] as int;
+      final userPoints = jsonResponse as int;
       return userPoints;
     } else {
       // Surface the response for debugging purposes.
