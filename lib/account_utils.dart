@@ -418,7 +418,6 @@ class ExternalSignUpForm extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-
               ElevatedButton(
                 onPressed: () {
                   if (usernameControl.text.trim().isNotEmpty) {
@@ -449,12 +448,28 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
 
   const GoogleLoginLoadingScreen({super.key, required this.googleToken});
 
-  Future<void> loginAndStore(String googleToken, BuildContext context) async {
-    final AuthToken token = await submitUserGoogleLogin(
-      token: googleToken,
-      context: context,
-    );
-    await saveAuthToken(token.accessToken);
+  Future<bool> loginAndStore(String googleToken, BuildContext context) async {
+    try {
+      final AuthToken token = await submitUserGoogleLogin(
+        token: googleToken,
+        context: context,
+      );
+
+      await saveAuthToken(token.accessToken);
+
+      return true;
+    } catch (error) {
+      if(context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Login failed: $error"),
+            backgroundColor: Colors.red
+          ),
+        );
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -468,7 +483,7 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: SafeArea(
-        child: FutureBuilder<void>(
+        child: FutureBuilder<bool>(
           future: loginAndStore(googleToken, context),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -496,7 +511,7 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
                   ],
                 ),
               );
-            } else if (snapshot.connectionState == ConnectionState.done) {
+            } else if (snapshot.hasData && snapshot.data == true) {
               // Run navigation after next frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (context.mounted) {

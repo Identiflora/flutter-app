@@ -452,6 +452,13 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
   }
 }
 
+/// Sends a new Google login request to the API.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => submitUserGoogleLogin(
+///     token: googleToken,
+///     context: buttonBuildContext,
+///     username: username
+///   );
 Future<AuthToken> submitUserGoogleLogin({
   required String token,
   required BuildContext context,
@@ -522,6 +529,9 @@ Future<AuthToken> submitUserGoogleLogin({
   }
 }
 
+
+/// Registers new users found via Google login.<br>
+/// This submission is automatically called from Google login and should not be used otherwise.
 Future<AuthToken> submitUserGoogleRegistration({
   required String token,
   required String username,
@@ -573,6 +583,12 @@ Future<AuthToken> submitUserGoogleRegistration({
   }
 }
 
+/// Sends a user password request to the API.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => submitUserPasswordReset(
+///     email: user_email,
+///     otpLength: randomInt
+///   );
 Future<bool> submitUserPasswordReset({
   required String email,
   required int otpLength,
@@ -623,6 +639,8 @@ Future<bool> submitUserPasswordReset({
   }
 }
 
+/// Sends a user one time password (OTP) verification to the API.<br>
+/// This should be called automatically upon user login to verify if they are using an OTP
 Future<int> submitUserOTPVerify({
   required String unhashedPassword,
   required String email,
