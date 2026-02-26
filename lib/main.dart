@@ -12,7 +12,6 @@ import 'package:identiflora/view_account/view_account_utils.dart';
 import 'camera_utils.dart';
 import 'account_utils.dart';
 import 'environment.dart';
-import 'settings.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: Environment.fileName);
