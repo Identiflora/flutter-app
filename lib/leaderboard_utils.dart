@@ -3,18 +3,6 @@ import 'dart:math';
 
 import 'package:identiflora/database_utils.dart';
 
-/* 
-PUT THIS INFO INTO ISSUE:
--------------------------------------------------------------------
-LEADERBOARD WIDGET IS SOLELY FOR THE BUTTON ON THE "HOME" SCREEN
-https://docs.flutter.dev/get-started/fundamentals/widgets
-
-LEADERBOARDSCREEN IS RESP FOR THE THE SCREEN USER CLICKS INTO
-https://docs.flutter.dev/ui/navigation
-
-https://api.flutter.dev/flutter/dart-math/Random-class.html
-*/
-
 //CODE FOR HOMEPAGE BUTTON
 class LeaderboardWidget extends StatefulWidget {
   const LeaderboardWidget({super.key});
@@ -151,6 +139,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 ),
               );
             }
+
+            double screenWidth = MediaQuery.of(context).size.width;
       
             return SafeArea(
               child: Scrollbar(
@@ -168,11 +158,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text("Rank", style: TextStyle(fontSize: 24.0)),
+                                    Text("Rank", style: TextStyle(fontSize: 20.0)),
                                     const SizedBox(width: 16.0),
-                                    Text("User", style: TextStyle(fontSize: 24.0)),
+                                    Text("User", style: TextStyle(fontSize: 20.0)),
                                     const SizedBox(width: 16.0),
-                                    Text("Points", style: TextStyle(fontSize: 24.0)),
+                                    Text("Points", style: TextStyle(fontSize: 20.0)),
                                   ],
                                 ),
                                 const SizedBox(height: 8.0),
@@ -229,38 +219,63 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      index <= 3 ?
-                                        Icon(Icons.emoji_events, color: rankColor, size: 40, shadows: [Shadow(blurRadius: 1.0)]) 
-                                        : Icon(null, size: 40,),
-                                      index < 10 ? const SizedBox(width: 16.0) : const SizedBox(width: 6.0),
-                                      Text("#$index", style: TextStyle(fontSize: 16.0))
-                                    ],
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth: screenWidth * 0.2
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        index <= 3 ?
+                                          Icon(Icons.emoji_events, color: rankColor, size: 30, shadows: [Shadow(blurRadius: 1.0)]) 
+                                          : Icon(null, size: 30,),
+                                        index < 10 ? const SizedBox(width: 16.0) : const SizedBox(width: 6.0),
+                                        Text(
+                                          "#$index", 
+                                          style: TextStyle(fontSize: 14.0),
+                                        )
+                                      ],
+                                    ),
                                   ),
-                                  const SizedBox(width: 16.0),
-                                  Row(
-                                    children: [
-                                      // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
-                                      CircleAvatar(
-                                        foregroundImage: const AssetImage('assets/brand/Identiflora_logo.png'), 
-                                        backgroundColor: Theme.of(context).colorScheme.surface, 
-                                        radius: 20,
-                                      ),
-                                      const SizedBox(width: 16.0),
-                                      user.userName.length <= 20 ? Text(user.userName, style: TextStyle(fontSize: 16.0)) : Text("${user.userName.substring(0, 17)}...", style: TextStyle(fontSize: 16.0)),
-                                    ],
+                                  const SizedBox(width: 12.0),
+                                  SizedBox(
+                                    width: screenWidth * 0.45,
+                                    child: Row(
+                                      children: [
+                                        // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
+                                        CircleAvatar(
+                                          foregroundImage: const AssetImage('assets/brand/Identiflora_logo.png'), 
+                                          backgroundColor: Theme.of(context).colorScheme.surface, 
+                                          radius: 20,
+                                        ),
+                                        const SizedBox(width: 14.0),
+                                        Flexible(
+                                          child: Text(
+                                            user.userName,
+                                            style: TextStyle(fontSize: 14.0),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
                               Container(
+                                constraints: BoxConstraints(
+                                  maxWidth: screenWidth * 0.3
+                                ),
                                 decoration: BoxDecoration(
                                   color: index <= 3 ? rankColor.withAlpha(125) : Theme.of(context).colorScheme.primaryContainer,
                                   borderRadius: BorderRadius.all(Radius.elliptical(15, 15))
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Text("${user.userScore} pts.", style: TextStyle(fontSize: 14.0), textAlign: TextAlign.right),
+                                  child: Text(
+                                    "${user.userScore} pts.", 
+                                    style: TextStyle(fontSize: 12.0), 
+                                    textAlign: TextAlign.right,
+                                  ),
                                 )
                               ),
                             ],
