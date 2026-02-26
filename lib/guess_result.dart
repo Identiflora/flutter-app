@@ -214,9 +214,6 @@ class UserPointsLoadingScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Loading...'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow, 
         centerTitle: true,
       ),
       body: SafeArea(

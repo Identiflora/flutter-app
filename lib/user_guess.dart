@@ -58,9 +58,6 @@ class _UserChoiceScreen extends State<UserChoiceScreen>{
     return Scaffold(
           appBar: AppBar(
             title: const Text('What do you think?'),
-            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-            elevation: 5.0,
-            shadowColor: Theme.of(context).colorScheme.shadow, 
             centerTitle: true,
           ),
           body: SafeArea(
@@ -202,9 +199,6 @@ class UserChoiceLoadingScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Loading...'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow, 
         centerTitle: true,
       ),
       body: SafeArea(
