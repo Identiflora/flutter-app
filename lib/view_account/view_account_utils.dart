@@ -22,7 +22,7 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   ]; //this is the list thats passed to the gridview to display the badges
 
   String username =
-      "John Smith"; // need to implement retrieving username in initState
+      "Not found"; // need to implement retrieving username in initState
 
   int numFriends = 15; //need to calculate number of friends in initState
 
@@ -33,20 +33,31 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   @override
   void initState() {
     super.initState();
+
     _getPlayerPoints().then((response) {
       setState(() {
         playerPoints = response;
+        normalizedPlayerPoints = normalize(
+          playerPoints.toDouble(),
+          0,
+          10, //need to change the 10.0 to whatever max points will be, probably different for each level
+        );
       });
     });
-    normalizedPlayerPoints = normalize(
-      playerPoints.toDouble(),
-      0,
-      10,
-    ); //need to change the 10.0 to whatever max points will be
+
+    _getPlayerUsername().then((response) {
+      setState(() {
+        username = response;
+      });
+    });
   }
 
   Future<int> _getPlayerPoints() async {
     return await getUserPoints();
+  }
+
+  Future<String> _getPlayerUsername() async {
+    return await getUsername();
   }
 
   @override
@@ -72,27 +83,21 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ProgressAvatar(normalizedPlayerPoints: normalizedPlayerPoints),
-            Stack(
-              alignment: Alignment.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const SizedBox(width: 56.0),
                 Text(username, style: TextStyle(fontSize: 30.0)),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 85.0, left: 8.0),
-                    child: IconButton(
-                      onPressed: () {
-                        //takes you to edit username
-                      },
-                      icon: Icon(
-                        Icons.edit,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withAlpha(170),
-                      ),
-                    ),
+                IconButton(
+                  onPressed: () {
+                    //takes you to edit username
+                  },
+                  icon: Icon(
+                    Icons.edit,
+                    color: Theme.of(context).colorScheme.primary.withAlpha(170),
                   ),
                 ),
+                SizedBox(width: 8.0),
               ],
             ),
 
