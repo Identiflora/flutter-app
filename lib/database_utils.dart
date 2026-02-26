@@ -763,3 +763,36 @@ Future<int> getUserPoints() async {
     httpClient.close();
   }
 }
+
+//get the current users username
+Future<String> getUsername() async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/username');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      final username = jsonResponse as String;
+      return username;
+    } else if (response.statusCode == 404) {
+      return "Not found"; 
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
+  }
+}
+
