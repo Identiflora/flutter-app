@@ -683,9 +683,14 @@ Future<bool> authenticateToken() async {
 
   final httpClient = http.Client();
   try {
+    String? token = await getAuthToken();
+    debugPrint("AuthToken: $token");
+    if (token == null) {
+      return false;
+    }
     final response = await httpClient.post(
       uri,
-      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
