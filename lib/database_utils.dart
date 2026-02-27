@@ -796,3 +796,71 @@ Future<String> getUsername() async {
   }
 }
 
+Future<List<dynamic>> fetchFriendsRaw() async {
+  final apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/friends');
+
+  final client = HttpClient();
+  try {
+    final request = await client.getUrl(uri);
+    request.headers.set(
+    HttpHeaders.authorizationHeader,
+    'Bearer ${await getAuthToken()}',
+); //end 
+
+final response = await request.close();
+final body = await utf8.decodeStream(response);
+
+if (response.statusCode >= 200 && response.statusCode < 300) {
+  final decoded = jsonDecode(body);
+
+  // supports either: [ ... ] OR { "friends": [ ... ] }
+  if (decoded is List) return decoded;
+  if (decoded is Map && decoded['friends'] is List) return decoded['friends'] as List;
+
+    throw FormatException('Unexpected /friends response: $decoded');
+  } else {
+    throw HttpException('API error ${response.statusCode}: $body', uri: uri);
+  }
+  } finally {
+    client.close(force: true);
+  }
+}
+
+// create new friend row in db
+Future<void> addFriendRaw({required String friendUsername}) async {
+final apiBaseUrl = Environment.apiUrl;
+final uri = Uri.parse(apiBaseUrl).resolve('/friends/add');
+
+final payload = jsonEncode({
+// Most likely field name; if FastAPI complains, we’ll rename to whatever it expects.
+'friend_username': friendUsername,
+});
+
+final client = HttpClient();
+  try {
+  final request = await client.postUrl(uri);
+  request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+  request.headers.set(
+  HttpHeaders.authorizationHeader,
+  'Bearer ${await getAuthToken()}',
+  );
+  request.add(utf8.encode(payload));
+
+  final response = await request.close();
+  final body = await utf8.decodeStream(response);
+
+  if (response.statusCode >= 200 && response.statusCode < 300) {
+
+  } else {
+    throw HttpException('API error ${response.statusCode}: $body', uri: uri);
+  }
+  } finally {
+    client.close(force: true);
+  }
+}
+Future<List<Map<String, dynamic>>> fetchFriends() async {
+  final raw = await fetchFriendsRaw();
+  return raw.map((e) => (e as Map).cast<String, dynamic>()).toList();
+}
+
