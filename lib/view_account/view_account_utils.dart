@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/user_data/point_utils.dart';
 import 'level_bottom_sheet.dart';
 import 'package:identiflora/settings.dart';
 
@@ -11,7 +12,8 @@ class ViewAccountScreen extends StatefulWidget {
 }
 
 class _ViewAccountScreenState extends State<ViewAccountScreen> {
-  int playerLevel = 1; //placeholder
+  MapEntry<int, List<int>> levelData = MapEntry(0, [1, 0, 0, -1]);
+  int playerLevel = 0;
   int playerPoints = 0;
   double normalizedPlayerPoints = 0.0;
   List<String> badgeImages = [
@@ -37,11 +39,14 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
     _getPlayerPoints().then((response) {
       setState(() {
         playerPoints = response;
+        levelData = calculateAccountLevel(playerPoints);
         normalizedPlayerPoints = normalize(
-          playerPoints.toDouble(),
+          levelData.value[1].toDouble(),
           0,
-          10, //need to change the 10.0 to whatever max points will be, probably different for each level
+          levelData.value[0].toDouble(),
         );
+        debugPrint("${levelData.value[0]}, ${levelData.value[1].toDouble()}");
+        playerLevel = levelData.key;
       });
     });
 
@@ -100,7 +105,10 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                 SizedBox(width: 8.0),
               ],
             ),
-
+            playerLevel == levelData.value[3] ? const Text("Max level reached!") :
+            levelData.value[0] - levelData.value[1] == 1 ? 
+              Text("1 more point until level ${playerLevel + 1}!") 
+              : Text("${levelData.value[0] - levelData.value[1]} more points until level ${playerLevel + 1}!"),
             //line separator begin
             Padding(
               padding: const EdgeInsets.all(16.0),

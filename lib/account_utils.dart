@@ -401,9 +401,6 @@ class ExternalSignUpForm extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('How do we identify you?'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow,
         centerTitle: true,
       ),
       body: SafeArea(
@@ -489,9 +486,6 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Loading...'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow,
         centerTitle: true,
       ),
       body: SafeArea(
@@ -621,9 +615,6 @@ class PasswordResetForm extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Please provide us with additional information.'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow,
         centerTitle: true,
       ),
       body: SafeArea(
@@ -727,9 +718,6 @@ class NewPasswordForm extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reset Password'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        elevation: 5.0,
-        shadowColor: Theme.of(context).colorScheme.shadow,
         centerTitle: true,
       ),
       body: SafeArea(
