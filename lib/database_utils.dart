@@ -444,9 +444,6 @@ Future<bool> submitEmailChange({required String newEmail}) async {
   }
 
   String apiBaseUrl = Environment.apiUrl;
-  //
-  // /user/update-email is just a placeholder until we implement this into the API
-  //
   final uri = Uri.parse(apiBaseUrl).resolve('/user/update-email');
 
   final httpClient = http.Client();
@@ -484,9 +481,6 @@ Future<bool> submitPasswordChange({required String newPasswordHash}) async {
   }
 
   String apiBaseUrl = Environment.apiUrl;
-  //
-  // /user/update-password is just a placeholder until we implement this into the API
-  //
   final uri = Uri.parse(apiBaseUrl).resolve('/user/update-password');
 
   final httpClient = http.Client();
