@@ -301,7 +301,7 @@ Future<AuthToken> submitUserLogin({
 ///     size: 50
 ///   );
 Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
-  required leaderboardSize,
+  required int leaderboardSize,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
