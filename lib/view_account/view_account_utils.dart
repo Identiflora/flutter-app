@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/user_data/badge_utils.dart';
 import 'package:identiflora/user_data/point_utils.dart';
 import 'level_bottom_sheet.dart';
 import 'package:identiflora/settings.dart';
@@ -16,11 +17,11 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   int playerLevel = 0;
   int playerPoints = 0;
   double normalizedPlayerPoints = 0.0;
-  List<String> badgeImages = [
-    'assets/badge/seed_badge.png',
-    'assets/badge/sprout_badge.png',
-    'assets/badge/sapling_badge.png',
-    'assets/badge/tree_badge.png',
+  List<LevelBadge> badges = [
+    LevelBadge(imagePath: 'assets/badge/seed_badge.png', unlockAtLevel: 5),
+    LevelBadge(imagePath: 'assets/badge/sprout_badge.png', unlockAtLevel: 10),
+    LevelBadge(imagePath: 'assets/badge/sapling_badge.png', unlockAtLevel: 15),
+    LevelBadge(imagePath: 'assets/badge/tree_badge.png', unlockAtLevel: 20),
   ]; //this is the list thats passed to the gridview to display the badges
 
   String username =
@@ -45,7 +46,6 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
           0,
           levelData.value[0].toDouble(),
         );
-        debugPrint("${levelData.value[0]}, ${levelData.value[1].toDouble()}");
         playerLevel = levelData.key;
       });
     });
@@ -152,7 +152,7 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                 ),
               ],
             ),
-            Expanded(child: BadgesDisplay(badgeImages: badgeImages)),
+            Expanded(child: BadgesDisplay(badges: badges, playerLevel: playerLevel)),
           ],
         ),
       ),
@@ -160,28 +160,55 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   }
 }
 
-class BadgesDisplay extends StatelessWidget {
-  final List<String> badgeImages;
-
+class BadgesDisplay extends StatefulWidget {
+  final List<LevelBadge> badges;
+  final int playerLevel;
+  
   /// Creates a [BadgesDisplay] that generates a grid of badge images.
-  const BadgesDisplay({super.key, required this.badgeImages});
+  const BadgesDisplay({super.key, required this.badges, required this.playerLevel});
+
+  @override
+  State<BadgesDisplay> createState() => _BadgesDisplayState();
+}
+
+class _BadgesDisplayState extends State<BadgesDisplay> {
+  int selectIndex = -1;
 
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
       padding: const EdgeInsets.all(16.0),
       physics: const BouncingScrollPhysics(),
-      itemCount: badgeImages.length,
+      itemCount: widget.badges.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4, // Number of badges per row
         crossAxisSpacing: 15.0, // Horizontal space between badges
         mainAxisSpacing: 15.0, // Vertical space between rows
       ),
       itemBuilder: (context, index) {
-        return CircleAvatar(
-          radius: 25.0,
-          backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(100),
-          foregroundImage: AssetImage(badgeImages[index]),
+        AccountBadge badge = widget.badges[index];
+
+        return GestureDetector(
+          onTap: () {
+            if(badge.isUnlocked(widget.playerLevel)) {
+              // Run API based selection logic here
+              
+              setState(() {
+                selectIndex = index;
+              });
+            }
+            else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    badge.getUnlockMessage(),
+                  ),
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                ),
+              );
+            }
+          },
+          child: getBadgeDisplay(context, badge, badge.isUnlocked(widget.playerLevel), selectIndex == index)
         );
       },
     );
