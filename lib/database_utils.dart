@@ -1,7 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:identiflora/account_utils.dart';
 import 'package:identiflora/cache_utils.dart';
+import 'package:identiflora/leaderboard_utils.dart';
 import 'auth_objects.dart';
 import 'environment.dart';
 
@@ -28,37 +31,36 @@ Future<bool> submitIncorrectIdentification({
     'incorrect_species_id': incorrectSpeciesId,
   });
 
-  final client = HttpClient();
+  final httpClient = http.Client();
   try {
     // Create and send the POST request with JSON body.
-    final request = await client.postUrl(uri);
-    request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-    request.add(utf8.encode(payload));
-
-    // Await the response and read the body for error context.
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await getAuthToken()}',
+      },
+      body: payload,
+    );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return true;
     } else {
       // Surface the response for debugging purposes.
       throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
+        'API error ${response.statusCode}: ${response.body}',
         uri: uri,
       );
     }
   } finally {
-    // Ensure the HTTP client is closed even if an error occurs.
-    client.close(force: true);
+    // Ensure the HTTP httpClient is closed.
+    httpClient.close();
   }
 }
 
 /// Fetch the image URL for a plant species using its scientific name.
 /// Returns the resolved URL as a string or throws an [HttpException] on API errors.
-Future<String> getPlantSpeciesUrl({
-  required String scientificName,
-}) async {
+Future<String> getPlantSpeciesUrl({required String scientificName}) async {
   String apiBaseUrl = Environment.apiUrl;
 
   final trimmedName = scientificName.trim();
@@ -68,31 +70,60 @@ Future<String> getPlantSpeciesUrl({
 
   final uri = Uri.parse(apiBaseUrl).resolve('/plant-species-url/$trimmedName');
 
-  final client = HttpClient();
+  final httpClient = http.Client();
   try {
-    final request = await client.getUrl(uri);
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
+    final response = await httpClient.get(uri);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       // FastAPI may return a raw string or JSON-string; handle both.
       try {
-        final decoded = jsonDecode(responseBody);
+        final decoded = jsonDecode(response.body);
         if (decoded is String) {
           return decoded;
         }
       } catch (_) {
         // Fall through to returning the raw body.
       }
-      return responseBody;
+      return response.body;
     } else {
       throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
+        'API error ${response.statusCode}: ${response.body}',
         uri: uri,
       );
     }
   } finally {
-    client.close(force: true);
+    httpClient.close();
+  }
+}
+
+//get the species id from scientific name
+Future<int> getPlantSpeciesID({required String scientificName}) async {
+  String apiBaseUrl = Environment.apiUrl;
+
+  final trimmedName = scientificName.trim();
+  if (trimmedName.isEmpty) {
+    throw ArgumentError('scientificName must not be empty.');
+  }
+
+  final uri = Uri.parse(apiBaseUrl).resolve('/species-id/$trimmedName');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.get(uri);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      // FastAPI may return a raw string or JSON-string; handle both.
+      final jsonResponse = jsonDecode(response.body);
+      final speciesId = jsonResponse['species_id'] as int;
+      return speciesId;
+    } else {
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    httpClient.close();
   }
 }
 
@@ -153,7 +184,7 @@ Future<AuthToken> submitUserRegistration({
     if (e is AuthException) rethrow;
     throw AuthException('Network error occurred: $e');
   } finally {
-    // close out http client
+    // close out http httpClient
     httpClient.close();
   }
 }
@@ -168,19 +199,24 @@ Future<AuthToken> submitUserRegistration({
 Future<AuthToken> submitUserLogin({
   required String email,
   required String passwordHash,
+  required bool hasOTP,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
-  
+
   final uri = Uri.parse(apiBaseUrl).resolve('/user/login');
 
-  // Start http client
+  // Start http httpClient
   final httpClient = http.Client();
 
   try {
     final response = await httpClient.post(
       uri,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'user_email': email, 'password_hash': passwordHash}),
+      body: jsonEncode({
+        'user_email': email,
+        'password_hash': passwordHash,
+        'has_otp': hasOTP,
+      }),
     );
 
     // 200-299 indicates success
@@ -208,7 +244,7 @@ Future<AuthToken> submitUserLogin({
     if (e is AuthException) rethrow;
     throw AuthException('Network error occurred: $e');
   } finally {
-    // close out http client
+    // close out http httpClient
     httpClient.close();
   }
 }
@@ -226,10 +262,10 @@ Future<AuthToken> submitUserLogin({
 //     'password_hash': passwordHash,
 //   });
 
-//   final client = HttpClient();
+//   final httpClient = HttpClient();
 //   try {
 //     // Create and send the POST request with JSON body.
-//     final request = await client.postUrl(uri);
+//     final request = await httpClient.postUrl(uri);
 //     request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
 //     request.add(utf8.encode(payload));
 
@@ -254,92 +290,78 @@ Future<AuthToken> submitUserLogin({
 //       );
 //     }
 //   } finally {
-//     // Ensure the HTTP client is closed even if an error occurs.
-//     client.close(force: true);
+//     // Ensure the HTTP httpClient is closed even if an error occurs.
+//     httpClient.close(force: true);
 //   }
 // }
 
-/// Send a username fetch request to the API.
+/// Send a leaderboard request to the API.
 /// Can be used directly in a Flutter button:
-///   onPressed: () => fetchUsername(
-///     userID: IDVar
+///   onPressed: () => submitGlobalLeaderboardRequest(
+///     size: 50
 ///   );
-Future<String> fetchUsername({
-  required int userID,
+Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
+  required int leaderboardSize,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
-  final uri = Uri.parse(apiBaseUrl).resolve('/username/$userID');
+  final uri = Uri.parse(apiBaseUrl).resolve('/global-leaderboard');
 
-  final client = HttpClient();
+  // Start http httpClient
+  final httpClient = http.Client();
+
   try {
-    // Create and send the GET request with JSON body.
-    final request = await client.getUrl(uri);
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await getAuthToken()}',
+      },
+      body: jsonEncode({"leaderboard_size": leaderboardSize}),
+    );
 
-    // Await the response and read the body for error context.
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
-
+    // 200-299 indicates success
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      final jsonResponse = jsonDecode(responseBody);
-      final username = jsonResponse['username'] as String;
-      return username;
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      List<LeaderboardUser> users = [];
+      int count = 0;
+      int? id;
+
+      // Create user list from json response
+      jsonMap.forEach((key, value) {
+        id = int.tryParse(key);
+        if (id == null) return;
+        users.insert(
+          count,
+          LeaderboardUser(userName: value[0], userScore: value[1], userId: id!),
+        );
+        count++;
+      });
+
+      return users;
     }
-    // Return blank string if invalid username
-    else if (response.statusCode == 404) {
-      return "";
-    } else {
-      // Surface other responses for debugging purposes.
-      throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
-        uri: uri,
+
+    // Explicitly handle 401 Unauthorized
+    if (response.statusCode == 401) {
+      throw AuthException(
+        'Invalid credentials: ${response.body}',
+        statusCode: 401,
       );
     }
+
+    // Handle other non-200 errors
+    throw AuthException(
+      'Server error: ${response.body}',
+      statusCode: response.statusCode,
+    );
+  } catch (e) {
+    // Catch generic errors (like no internet) and rethrow as AuthException
+    // or let them bubble up if they are already handled.
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
   } finally {
-    // Ensure the HTTP client is closed even if an error occurs.
-    client.close(force: true);
-  }
-}
-
-/// Send a user point fetch request to the API.
-/// Can be used directly in a Flutter button:
-///   onPressed: () => fetchUserGlobalPts(
-///     userID: IDVar
-///   );
-Future<int> fetchUserGlobalPts({
-  required int userID,
-}) async {
-  String apiBaseUrl = Environment.apiUrl;
-  // Build the request URL for the FastAPI endpoint.
-  final uri = Uri.parse(apiBaseUrl).resolve('/user-pts/$userID');
-
-  final client = HttpClient();
-  try {
-    // Create and send the GET request with JSON body.
-    final request = await client.getUrl(uri);
-
-    // Await the response and read the body for error context.
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      final jsonResponse = jsonDecode(responseBody);
-      final userPts = jsonResponse['pts'] as int;
-      return userPts;
-    }
-    // Return blank string if invalid username
-    else if (response.statusCode == 404) {
-      return -1;
-    } else {
-      // Surface other responses for debugging purposes.
-      throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
-        uri: uri,
-      );
-    }
-  } finally {
-    // Ensure the HTTP client is closed even if an error occurs.
-    client.close(force: true);
+    // close out http httpClient
+    httpClient.close();
   }
 }
 
@@ -351,17 +373,15 @@ Future<int> fetchUserCount() async {
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/user-count');
 
-  final client = HttpClient();
+  final httpClient = http.Client();
   try {
-    // Create and send the POST request with JSON body.
-    final request = await client.postUrl(uri);
-
-    // Await the response and read the body for error context.
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
+    final response = await httpClient.get(
+      uri,
+      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+    );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      final jsonResponse = jsonDecode(responseBody);
+      final jsonResponse = jsonDecode(response.body);
       final userCount = jsonResponse['user_count'] as int;
       return userCount;
     }
@@ -371,13 +391,13 @@ Future<int> fetchUserCount() async {
     } else {
       // Surface other responses for debugging purposes.
       throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
+        'API error ${response.statusCode}: ${response.body}',
         uri: uri,
       );
     }
   } finally {
-    // Ensure the HTTP client is closed even if an error occurs.
-    client.close(force: true);
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
   }
 }
 
@@ -386,12 +406,10 @@ Future<int> fetchUserCount() async {
 ///   onPressed: () => submitIncorrectIdentification(
 ///     addPoints: points
 ///   );
-Future<bool> submitUserGlobalPoints({
-  required int addPoints
-}) async {
+Future<bool> submitUserGlobalPoints({required int addPoints}) async {
   final authToken = await getAuthToken();
 
-  if(addPoints <= 0 || authToken == null) {
+  if (addPoints <= 0 || authToken == null) {
     return false;
   }
 
@@ -402,22 +420,22 @@ Future<bool> submitUserGlobalPoints({
   // Prepare JSON payload expected by the API.
   final payload = jsonEncode({
     'user_token': authToken,
-    'add_points': addPoints
+    'add_points': addPoints,
   });
 
-  final client = HttpClient();
+  final httpClient = http.Client();
   try {
-    // Create and send the POST request with JSON body.
-    final request = await client.postUrl(uri);
-    request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-    request.add(utf8.encode(payload));
-
-    // Await the response and read the body for error context.
-    final response = await request.close();
-    final responseBody = await utf8.decodeStream(response);
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await getAuthToken()}',
+      },
+      body: payload,
+    );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      final jsonResponse = jsonDecode(responseBody);
+      final jsonResponse = jsonDecode(response.body);
       final success = jsonResponse['success'] as bool;
       return success;
     }
@@ -427,13 +445,290 @@ Future<bool> submitUserGlobalPoints({
     } else {
       // Surface other responses for debugging purposes.
       throw HttpException(
-        'API error ${response.statusCode}: $responseBody',
+        'API error ${response.statusCode}: ${response.body}',
         uri: uri,
       );
     }
   } finally {
-    // Ensure the HTTP client is closed even if an error occurs.
-    client.close(force: true);
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
+  }
+}
+
+/// Sends a new Google login request to the API.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => submitUserGoogleLogin(
+///     token: googleToken,
+///     context: buttonBuildContext,
+///     username: username
+///   );
+Future<AuthToken> submitUserGoogleLogin({
+  required String token,
+  required BuildContext context,
+  String? username,
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+
+  final uri = Uri.parse(apiBaseUrl).resolve('/google/auth');
+
+  // Start http httpClient
+  final httpClient = http.Client();
+
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        HttpHeaders.authorizationHeader: 'Bearer $token',
+      },
+    );
+
+    // 200-299 indicates success
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (jsonMap.containsKey('register') && jsonMap['register'] as bool) {
+        late final String username;
+
+        if (context.mounted) {
+          username = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ExternalSignUpForm()),
+          );
+        } else {
+          username = "";
+        }
+
+        return await submitUserGoogleRegistration(
+          token: jsonMap['access_token'],
+          username: username,
+        );
+      }
+
+      return AuthToken.fromJson(jsonMap);
+    }
+
+    // Explicitly handle 401 Unauthorized
+    if (response.statusCode == 401) {
+      throw AuthException(
+        'Invalid credentials: ${response.body}',
+        statusCode: 401,
+      );
+    }
+
+    // Handle other non-200 errors
+    throw AuthException(
+      'Server error: ${response.body}',
+      statusCode: response.statusCode,
+    );
+  } catch (e) {
+    // Catch generic errors (like no internet) and rethrow as AuthException
+    // or let them bubble up if they are already handled.
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    // close out http httpClient
+    httpClient.close();
+  }
+}
+
+
+/// Registers new users found via Google login.<br>
+/// This submission is automatically called from Google login and should not be used otherwise.
+Future<AuthToken> submitUserGoogleRegistration({
+  required String token,
+  required String username,
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+
+  final uri = Uri.parse(apiBaseUrl).resolve('/google/register');
+
+  // Start http httpClient
+  final httpClient = http.Client();
+
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        HttpHeaders.authorizationHeader: 'Bearer $token',
+      },
+      body: jsonEncode({"username": username}),
+    );
+
+    // 200-299 indicates success
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      return AuthToken.fromJson(jsonMap);
+    }
+
+    // Explicitly handle 401 Unauthorized
+    if (response.statusCode == 401) {
+      throw AuthException(
+        'Invalid credentials: ${response.body}',
+        statusCode: 401,
+      );
+    }
+
+    // Handle other non-200 errors
+    throw AuthException(
+      'Server error: ${response.body}',
+      statusCode: response.statusCode,
+    );
+  } catch (e) {
+    // Catch generic errors (like no internet) and rethrow as AuthException
+    // or let them bubble up if they are already handled.
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    // close out http httpClient
+    httpClient.close();
+  }
+}
+
+/// Sends a user password request to the API.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => submitUserPasswordReset(
+///     email: user_email,
+///     otpLength: randomInt
+///   );
+Future<bool> submitUserPasswordReset({
+  required String email,
+  required int otpLength,
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+
+  final uri = Uri.parse(apiBaseUrl).resolve('/pwd-reset/otp-request');
+
+  // Start http httpClient
+  final httpClient = http.Client();
+
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({"user_email": email, "otp_length": otpLength}),
+    );
+
+    // 200-299 indicates success
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      return jsonMap['success'] as bool;
+    }
+
+    // Explicitly handle 401 Unauthorized and 403 Action Denied
+    if (response.statusCode == 401) {
+      throw AuthException(
+        'Invalid credentials (user does not exist): ${response.body}',
+        statusCode: 401,
+      );
+    } else if (response.statusCode == 403) {
+      return false;
+    }
+
+    // Handle other non-200 errors
+    throw AuthException(
+      'Server error: ${response.body}',
+      statusCode: response.statusCode,
+    );
+  } catch (e) {
+    // Catch generic errors (like no internet) and rethrow as AuthException
+    // or let them bubble up if they are already handled.
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    // close out http httpClient
+    httpClient.close();
+  }
+}
+
+/// Sends a user one time password (OTP) verification to the API.<br>
+/// This should be called automatically upon user login to verify if they are using an OTP
+Future<int> submitUserOTPVerify({
+  required String unhashedPassword,
+  required String email,
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+
+  final uri = Uri.parse(apiBaseUrl).resolve('/pwd-reset/otp-check');
+
+  // Start http httpClient
+  final httpClient = http.Client();
+
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({"otp": unhashedPassword, "user_email": email}),
+    );
+
+    // 200-299 indicates success
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      debugPrint(response.body);
+      return jsonMap['result'] as int;
+    }
+
+    // Explicitly handle 401 Unauthorized
+    if (response.statusCode == 401) {
+      throw AuthException(
+        'Invalid credentials: ${response.body}',
+        statusCode: 401,
+      );
+    }
+
+    // Handle other non-200 errors
+    throw AuthException(
+      'Server error: ${response.body}',
+      statusCode: response.statusCode,
+    );
+  } catch (e) {
+    // Catch generic errors (like no internet) and rethrow as AuthException
+    // or let them bubble up if they are already handled.
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    // close out http httpClient
+    httpClient.close();
+  }
+}
+
+// returns true if users token is valid, false otherwise
+Future<bool> authenticateToken() async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/authenticate-token');
+
+  final httpClient = http.Client();
+  try {
+    String? token = await getAuthToken();
+    debugPrint("AuthToken: $token");
+    if (token == null) {
+      return false;
+    }
+    final response = await httpClient.post(
+      uri,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return true;
+    }
+    // 401 means token is invalid or expired, return false so user can be brought to login screen
+    else if (response.statusCode == 401) {
+      return false;
+    } else if (response.statusCode == 429) {
+      throw RateLimitException();
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
   }
 }
 Future<bool> submitEmailChange({required String newEmail}) async {
@@ -445,6 +740,12 @@ Future<bool> submitEmailChange({required String newEmail}) async {
 
   String apiBaseUrl = Environment.apiUrl;
   final uri = Uri.parse(apiBaseUrl).resolve('/user/update-email');
+
+//get the current users points
+Future<int> getUserPoints() async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/user-points');
 
   final httpClient = http.Client();
   try {
@@ -469,6 +770,24 @@ Future<bool> submitEmailChange({required String newEmail}) async {
     if (e is AuthException) rethrow;
     throw AuthException('Network error occurred: $e');
   } finally {
+      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      final userPoints = jsonResponse as int;
+      return userPoints;
+    } else if (response.statusCode == 404) {
+      return 0; //return 0 points if not found
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
     httpClient.close();
   }
 }
@@ -482,6 +801,11 @@ Future<bool> submitPasswordChange({required String newPasswordHash}) async {
 
   String apiBaseUrl = Environment.apiUrl;
   final uri = Uri.parse(apiBaseUrl).resolve('/user/update-password');
+//get the current users username
+Future<String> getUsername() async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/username');
 
   final httpClient = http.Client();
   try {
@@ -509,3 +833,25 @@ Future<bool> submitPasswordChange({required String newPasswordHash}) async {
     httpClient.close();
   }
 }
+      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      final username = jsonResponse as String;
+      return username;
+    } else if (response.statusCode == 404) {
+      return "Not found"; 
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
+  }
+}
+

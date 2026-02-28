@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'database_utils.dart';
 import 'account_utils.dart';
+import 'cache_utils.dart';
 
 class SettingsWidget extends StatefulWidget {
   const SettingsWidget({super.key});
@@ -29,10 +30,10 @@ class _SettingsButton extends State<SettingsWidget> {
               'assets/homepage/settings_icon.png',
               width: 80,
               height: 80,
-            )
-          )
-        )
-      )
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -45,12 +46,11 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreen extends State<SettingsScreen> {
-
   bool notificationsEnabled = true;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold (
+    return Scaffold(
       appBar: AppBar(title: Text('Settings')),
       body: SettingsList(
         sections: [
@@ -58,14 +58,14 @@ class _SettingsScreen extends State<SettingsScreen> {
             title: const Text(
               'General Settings',
               style: TextStyle(color: Colors.green, fontSize: 20),
-              ),
+            ),
             tiles: <SettingsTile>[
               SettingsTile.navigation(
                 leading: const Icon(Icons.language),
                 title: const Text('Language'),
                 value: const Text('English'),
                 onPressed: (context) {
-                  // I don't know if we'll actually include language support but it looks 
+                  // I don't know if we'll actually include language support but it looks
                   // good for the settings page
                 },
               ),
@@ -81,15 +81,15 @@ class _SettingsScreen extends State<SettingsScreen> {
               ),
               SettingsTile.navigation(
                 leading: const Icon(Icons.format_paint),
-                title: const Text('Change Theme')
+                title: const Text('Change Theme'),
               ),
             ],
           ),
           SettingsSection(
             title: const Text(
               'Account',
-              style: TextStyle(color: Colors.green, fontSize: 20)
-              ),
+              style: TextStyle(color: Colors.green, fontSize: 20),
+            ),
             tiles: <SettingsTile>[
               SettingsTile.navigation(
                 leading: const Icon(Icons.email),
@@ -97,7 +97,9 @@ class _SettingsScreen extends State<SettingsScreen> {
                 onPressed: (context) {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ChangeEmail()),
+                    MaterialPageRoute(
+                      builder: (context) => const ChangeEmail(),
+                    ),
                   );
                 },
               ),
@@ -124,13 +126,29 @@ class _SettingsScreen extends State<SettingsScreen> {
                     builder: (context) => AlertDialog(
                       title: const Text('Are you sure you want to sign out?'),
                       actions: [
-                        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
                         TextButton(
                           onPressed: () {
                             // Sign out logic
-                            Navigator.pop(context);
-                          }, 
-                          child: const Text('Sign Out', style: TextStyle(color: Colors.red))
+                            deleteAuthToken();
+                            Navigator.popUntil(
+                              context,
+                              ModalRoute.withName('/'),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Successfully signed out"),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Sign Out',
+                            style: TextStyle(color: Colors.red),
+                          ),
                         ),
                       ],
                     ),
@@ -145,7 +163,7 @@ class _SettingsScreen extends State<SettingsScreen> {
   }
 }
 
-class ChangeEmail extends StatefulWidget{
+class ChangeEmail extends StatefulWidget {
   const ChangeEmail({super.key});
 
   @override
@@ -198,6 +216,14 @@ class _ChangeEmailState extends State<ChangeEmail> {
         );
       }
     }
+    // Submit new email logic
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Successfully changed password!"),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   @override
@@ -219,7 +245,7 @@ class _ChangeEmailState extends State<ChangeEmail> {
             const SizedBox(height: 16),
             SizedBox(
               child: ElevatedButton(
-                onPressed: confirmPressed, 
+                onPressed: confirmPressed,
                 child: const Text("Confirm"),
               ),
             ),
