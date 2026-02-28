@@ -731,6 +731,15 @@ Future<bool> authenticateToken() async {
     httpClient.close();
   }
 }
+Future<bool> submitEmailChange({required String newEmail}) async {
+  final authToken = await getAuthToken();
+
+  if (authToken == null) {
+    throw AuthException('User not authenticated');
+  }
+
+  String apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/update-email');
 
 //get the current users points
 Future<int> getUserPoints() async {
@@ -742,6 +751,25 @@ Future<int> getUserPoints() async {
   try {
     final response = await httpClient.post(
       uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+      body: jsonEncode({'new_email': newEmail}),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return true;
+    } else {
+      throw AuthException(
+        'Failed to update email: ${response.body}',
+        statusCode: response.statusCode,
+      );
+    }
+  } catch (e) {
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
       headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
     );
 
@@ -764,6 +792,15 @@ Future<int> getUserPoints() async {
   }
 }
 
+Future<bool> submitPasswordChange({required String newPasswordHash}) async {
+  final authToken = await getAuthToken();
+
+  if (authToken == null) {
+    throw AuthException('User not authenticated');
+  }
+
+  String apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/update-password');
 //get the current users username
 Future<String> getUsername() async {
   String apiBaseUrl = Environment.apiUrl;
@@ -774,6 +811,28 @@ Future<String> getUsername() async {
   try {
     final response = await httpClient.post(
       uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+      body: jsonEncode({'new_password_hash': newPasswordHash}),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return true;
+    } else {
+      throw AuthException(
+        'Failed to update password: ${response.body}',
+        statusCode: response.statusCode,
+      );
+    }
+  } catch (e) {
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    httpClient.close();
+  }
+}
       headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
     );
 

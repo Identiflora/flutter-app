@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:settings_ui/settings_ui.dart';
+import 'database_utils.dart';
+import 'account_utils.dart';
 import 'cache_utils.dart';
 
 class SettingsWidget extends StatefulWidget {
@@ -90,10 +92,6 @@ class _SettingsScreen extends State<SettingsScreen> {
             ),
             tiles: <SettingsTile>[
               SettingsTile.navigation(
-                leading: const Icon(Icons.person),
-                title: const Text('Profile'),
-              ),
-              SettingsTile.navigation(
                 leading: const Icon(Icons.email),
                 title: const Text('Change Email'),
                 onPressed: (context) {
@@ -108,6 +106,12 @@ class _SettingsScreen extends State<SettingsScreen> {
               SettingsTile.navigation(
                 leading: const Icon(Icons.password),
                 title: const Text('Change Password'),
+                onPressed: (context) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ChangePassword()),
+                  );
+                },
               ),
               SettingsTile.navigation(
                 leading: const Icon(Icons.remove_circle),
@@ -190,6 +194,28 @@ class _ChangeEmailState extends State<ChangeEmail> {
       );
       return;
     }
+    try {
+      await submitEmailChange(newEmail: newEmail);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Successfully changed email!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (err) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to change email: $err"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
     // Submit new email logic
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -229,3 +255,101 @@ class _ChangeEmailState extends State<ChangeEmail> {
     );
   }
 }
+
+class ChangePassword extends StatefulWidget{
+  const ChangePassword({super.key});
+
+  @override
+  State<ChangePassword> createState() => _ChangePasswordState();
+}
+
+class _ChangePasswordState extends State<ChangePassword>{
+  final newPasswordControl = TextEditingController();
+  final newPasswordConfirmControl = TextEditingController();
+
+  void confirmPassword() async {
+    final newPassword = newPasswordControl.text.trim();
+    final newPasswordConfirm = newPasswordConfirmControl.text.trim();
+    
+    if (newPassword.isEmpty || newPasswordConfirm.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please complete all fields"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    if (newPassword != newPasswordConfirm) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Entered passwords do not match"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    final hashedPassword = hashPassword(newPassword);
+    try {
+      await submitPasswordChange(newPasswordHash: hashedPassword);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Successfully changed password!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (err) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to change password: $err"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Change Password")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column (
+          children: [
+            TextField(
+              controller: newPasswordControl,
+              keyboardType: TextInputType.visiblePassword,
+              decoration: const InputDecoration(
+                labelText: "New Password",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: newPasswordConfirmControl,
+              keyboardType: TextInputType.visiblePassword,
+              decoration: const InputDecoration(
+                labelText: "Confirm New Password",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              child: ElevatedButton(
+                onPressed: confirmPassword, 
+                child: const Text("Confirm"),
+              ),
+            ),
+          ]
+        ),
+      )
+    );
+  }
+}
+
