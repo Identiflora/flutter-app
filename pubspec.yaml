@@ -37,6 +37,7 @@ flutter:
   assets: 
     - assets/brand/
     - assets/homepage/
+    - assets/badge/
     - assets/model/
     - .env.development
     - .env.production

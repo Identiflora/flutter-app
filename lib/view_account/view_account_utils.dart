@@ -17,10 +17,10 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   int playerPoints = 0;
   double normalizedPlayerPoints = 0.0;
   List<String> badgeImages = [
-    'assets/brand/Identiflora_logo.png',
-    'assets/brand/Identiflora_logo.png',
-    'assets/brand/Identiflora_logo.png',
-    'assets/brand/Identiflora_logo.png',
+    'assets/badge/seed_badge.png',
+    'assets/badge/sprout_badge.png',
+    'assets/badge/sapling_badge.png',
+    'assets/badge/tree_badge.png',
   ]; //this is the list thats passed to the gridview to display the badges
 
   String username =
