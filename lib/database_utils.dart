@@ -731,15 +731,6 @@ Future<bool> authenticateToken() async {
     httpClient.close();
   }
 }
-Future<bool> submitEmailChange({required String newEmail}) async {
-  final authToken = await getAuthToken();
-
-  if (authToken == null) {
-    throw AuthException('User not authenticated');
-  }
-
-  String apiBaseUrl = Environment.apiUrl;
-  final uri = Uri.parse(apiBaseUrl).resolve('/user/update-email');
 
 //get the current users points
 Future<int> getUserPoints() async {
@@ -751,25 +742,6 @@ Future<int> getUserPoints() async {
   try {
     final response = await httpClient.post(
       uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $authToken',
-      },
-      body: jsonEncode({'new_email': newEmail}),
-    );
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return true;
-    } else {
-      throw AuthException(
-        'Failed to update email: ${response.body}',
-        statusCode: response.statusCode,
-      );
-    }
-  } catch (e) {
-    if (e is AuthException) rethrow;
-    throw AuthException('Network error occurred: $e');
-  } finally {
       headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
     );
 
@@ -792,6 +764,78 @@ Future<int> getUserPoints() async {
   }
 }
 
+//get the current users username
+Future<String> getUsername() async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/username');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      final username = jsonResponse as String;
+      return username;
+    } else if (response.statusCode == 404) {
+      return "Not found"; 
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
+  }
+}
+
+
+/// Send a request to update the user's email
+Future<bool> submitEmailChange({required String newEmail}) async {
+  final authToken = await getAuthToken();
+
+  if (authToken == null) {
+    throw AuthException('User not authenticated');
+  }
+
+  String apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/update-email');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken', // Pass token for auth
+      },
+      body: jsonEncode({'new_email': newEmail}),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return true;
+    } else {
+      throw AuthException(
+        'Failed to update email: ${response.body}',
+        statusCode: response.statusCode,
+      );
+    }
+  } catch (e) {
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    httpClient.close();
+  }
+}
+
+/// Send a request to update the user's password
 Future<bool> submitPasswordChange({required String newPasswordHash}) async {
   final authToken = await getAuthToken();
 
@@ -801,11 +845,6 @@ Future<bool> submitPasswordChange({required String newPasswordHash}) async {
 
   String apiBaseUrl = Environment.apiUrl;
   final uri = Uri.parse(apiBaseUrl).resolve('/user/update-password');
-//get the current users username
-Future<String> getUsername() async {
-  String apiBaseUrl = Environment.apiUrl;
-  // Build the request URL for the FastAPI endpoint.
-  final uri = Uri.parse(apiBaseUrl).resolve('/username');
 
   final httpClient = http.Client();
   try {
@@ -830,27 +869,6 @@ Future<String> getUsername() async {
     if (e is AuthException) rethrow;
     throw AuthException('Network error occurred: $e');
   } finally {
-    httpClient.close();
-  }
-}
-      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
-    );
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      final jsonResponse = jsonDecode(response.body);
-      final username = jsonResponse as String;
-      return username;
-    } else if (response.statusCode == 404) {
-      return "Not found"; 
-    } else {
-      // Surface the response for debugging purposes.
-      throw HttpException(
-        'API error ${response.statusCode}: ${response.body}',
-        uri: uri,
-      );
-    }
-  } finally {
-    // Ensure the HTTP httpClient is closed even if an error occurs.
     httpClient.close();
   }
 }
