@@ -23,6 +23,7 @@ dependencies:
   http: ^1.0.0
   flutter_dotenv: ^6.0.0
   settings_ui: 2.0.2
+  geolocator: ^11.0.0
 
 dev_dependencies:
   flutter_test:
