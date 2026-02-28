@@ -237,26 +237,31 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 12.0),
-                                  SizedBox(
-                                    width: screenWidth * 0.45,
-                                    child: Row(
-                                      children: [
-                                        // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
-                                        CircleAvatar(
-                                          foregroundImage: const AssetImage('assets/brand/Identiflora_logo.png'), 
-                                          backgroundColor: Theme.of(context).colorScheme.surface, 
-                                          radius: 20,
-                                        ),
-                                        const SizedBox(width: 14.0),
-                                        Flexible(
-                                          child: Text(
-                                            user.userName,
-                                            style: TextStyle(fontSize: 14.0),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                  GestureDetector(
+                                    onTap: () {
+                                      debugPrint("Tapped user with ID: ${user.userId}"); // REMOVE AND ADD VIEW USER PROFILE HERE
+                                    },
+                                    child: SizedBox(
+                                      width: screenWidth * 0.45,
+                                      child: Row(
+                                        children: [
+                                          // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
+                                          CircleAvatar(
+                                            foregroundImage: const AssetImage('assets/brand/Identiflora_logo.png'), 
+                                            backgroundColor: Theme.of(context).colorScheme.surface, 
+                                            radius: 20,
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 14.0),
+                                          Flexible(
+                                            child: Text(
+                                              user.userName,
+                                              style: TextStyle(fontSize: 14.0),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
