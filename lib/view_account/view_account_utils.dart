@@ -152,6 +152,29 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                 ),
               ],
             ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                width: 350,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: const Text("Badges", style: TextStyle(fontSize: 20.0)),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Divider(
+                height: 0.5,                    
+                thickness: 0.5,
+                color: Theme.of(context).colorScheme.inverseSurface,
+              ),
+            ),
             Expanded(child: BadgesDisplay(badges: badges, playerLevel: playerLevel)),
           ],
         ),
@@ -172,7 +195,22 @@ class BadgesDisplay extends StatefulWidget {
 }
 
 class _BadgesDisplayState extends State<BadgesDisplay> {
-  int selectIndex = -1;
+  String selectedBadgeFilePath = '';
+
+  Future<String> _getPlayerSelectedBadge() async {
+    return await fetchUserBadge();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _getPlayerSelectedBadge().then((response) {
+      setState(() {
+        selectedBadgeFilePath = response;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -189,13 +227,37 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
         AccountBadge badge = widget.badges[index];
 
         return GestureDetector(
-          onTap: () {
+          onTap: () async {
             if(badge.isUnlocked(widget.playerLevel)) {
               // Run API based selection logic here
-              
-              setState(() {
-                selectIndex = index;
-              });
+              try {
+                await submitUserBadge(badgeFilePath: badge.imagePath);
+
+                setState(() {
+                  selectedBadgeFilePath = badge.imagePath;
+                });
+
+                if(context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "Badge selected!",
+                      ),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      duration: Duration(seconds: 2),
+                    ),
+                  ); 
+                }
+              } catch (error) {
+                if(context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Badge selection storing failed: $error"),
+                      backgroundColor: Colors.red
+                    ),
+                  );
+                }
+              }
             }
             else {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -208,7 +270,7 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
               );
             }
           },
-          child: getBadgeDisplay(context, badge, badge.isUnlocked(widget.playerLevel), selectIndex == index)
+          child: getBadgeDisplay(context, badge, badge.isUnlocked(widget.playerLevel), selectedBadgeFilePath == badge.imagePath)
         );
       },
     );

@@ -796,6 +796,96 @@ Future<String> getUsername() async {
   }
 }
 
+/// Sends a user set badge request to the API for storage of badge file path.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => submitUserBadge(
+///     badgeFilePath: selectedBadgeFilePath
+///   );
+Future<bool> submitUserBadge({
+  required String badgeFilePath
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/set-user-badge');
+
+  debugPrint(badgeFilePath);
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        HttpHeaders.authorizationHeader: 'Bearer ${await getAuthToken()}',
+      },
+      body: jsonEncode({"badge_file_path": badgeFilePath})
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      final success = jsonResponse as bool;
+      return success;
+    } else  if (response.statusCode == 404) {
+      throw AuthException(
+        'User does not exist: ${response.body}',
+        statusCode: 404,
+      );
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
+  }
+}
+
+/// Sends a user set badge request to the API for getting stored badge file path.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => async {
+///      badgeFilePath = await fetchUserBadge();
+///   } 
+Future<String> fetchUserBadge() async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/get-user-badge');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      if(jsonResponse != null) {
+        final badgeFilePath = jsonResponse as String;
+        return badgeFilePath;
+      }
+      else {
+        return 'assets/brand/Identiflora_logo.png';
+      }
+    } else  if (response.statusCode == 404) {
+      throw AuthException(
+        'User does not exist: ${response.body}',
+        statusCode: 404,
+      );
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
+  }
+}
 
 /// Send a request to update the user's email
 Future<bool> submitEmailChange({required String newEmail}) async {
