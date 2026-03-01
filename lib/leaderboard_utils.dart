@@ -3,6 +3,28 @@ import 'dart:math';
 
 import 'package:identiflora/database_utils.dart';
 
+class LeaderboardUser {
+  final String userName; 
+  String? displayedBadgeFilePath;
+  final int userId;
+  int userScore;
+
+  LeaderboardUser({
+    required this.userName,
+    this.userScore = 0,
+    this.displayedBadgeFilePath,
+    this.userId = 0,
+  });
+
+  set setDisplayedBadgeFilePath(String badgeFilePath) {
+    displayedBadgeFilePath = badgeFilePath;
+  }
+
+  String? get getUnlockAtLevel {
+    return displayedBadgeFilePath;
+  }
+}
+
 //CODE FOR HOMEPAGE BUTTON
 class LeaderboardWidget extends StatefulWidget {
   const LeaderboardWidget({super.key});
@@ -236,7 +258,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 12.0),
+                                  const SizedBox(width: 8.0),
                                   GestureDetector(
                                     onTap: () {
                                       debugPrint("Tapped user with ID: ${user.userId}"); // REMOVE AND ADD VIEW USER PROFILE HERE
@@ -246,12 +268,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                       child: Row(
                                         children: [
                                           // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
-                                          CircleAvatar(
-                                            foregroundImage: const AssetImage('assets/brand/Identiflora_logo.png'), 
-                                            backgroundColor: Theme.of(context).colorScheme.surface, 
-                                            radius: 20,
-                                          ),
-                                          const SizedBox(width: 14.0),
+                                          user.displayedBadgeFilePath != null ? 
+                                            CircleAvatar(
+                                              foregroundImage: AssetImage(user.displayedBadgeFilePath!),
+                                              backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(100),
+                                              radius: 20,
+                                            ) 
+                                            : CircleAvatar(
+                                              foregroundImage: AssetImage('assets/brand/Identiflora_logo.png'),
+                                              backgroundColor: Theme.of(context).colorScheme.surface,
+                                              radius: 20,
+                                            ) ,
+                                          const SizedBox(width: 8.0),
                                           Flexible(
                                             child: Text(
                                               user.userName,
@@ -324,19 +352,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     //END SCAFFOLD
   }
 } //END LEADERBOARDSCREEN STATE CLASS
-
-class LeaderboardUser {
-  final String userName;
-  final int userId;
-  int userScore;
-
-  //CONSTRUCTOR
-  LeaderboardUser({
-    required this.userName,
-    this.userScore = 0,
-    this.userId = 0,
-  });
-} //END LEADERBOARDUSER CLASS
 
 // CLASS THAT CREATES USERS RANDOM INDEX, AND ADDS THEM TO LEADERBOARD LIST
 class LeaderBoardControl {
