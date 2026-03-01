@@ -333,7 +333,7 @@ Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
         if (id == null) return;
         users.insert(
           count,
-          LeaderboardUser(userName: value[0], userScore: value[1], userId: id!),
+          LeaderboardUser(userName: value[0], userScore: value[1], displayedBadgeFilePath: value[2], userId: id!),
         );
         count++;
       });
