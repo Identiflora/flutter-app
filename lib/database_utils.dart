@@ -419,7 +419,6 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
 
   // Prepare JSON payload expected by the API.
   final payload = jsonEncode({
-    'user_token': authToken,
     'add_points': addPoints,
   });
 
@@ -429,14 +428,14 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
       uri,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${await getAuthToken()}',
+        'Authorization': 'Bearer $authToken',
       },
       body: payload,
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final jsonResponse = jsonDecode(response.body);
-      final success = jsonResponse['success'] as bool;
+      final success = jsonResponse as bool;
       return success;
     }
     // Return blank string if invalid username
