@@ -873,3 +873,71 @@ Future<bool> submitPasswordChange({required String newPasswordHash}) async {
   }
 }
 
+// Sends a plant submission with location to the API
+/// do we not already have a plant submission function?
+Future<bool> savePlantSubmission({
+  required String speciesName,
+  required double latitude,
+  required double longitude,
+  // still need image submission part
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+  //
+  // place holder API call
+  //
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/submissions');
+
+  final authToken = await getAuthToken();
+  if (authToken == null) return false;
+
+  final payload = jsonEncode({
+    'species_name': speciesName,
+    'latitude': latitude,
+    'longitude': longitude,
+    'timestamp': DateTime.now().toIso8601String(),
+  });
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+      body: payload,
+    );
+    return response.statusCode >= 200 && response.statusCode < 300;
+  } finally {
+    httpClient.close();
+  }
+}
+
+// Fetches the user's plant submission history
+Future<List<Map<String, dynamic>>> fetchSubmissionHistory() async {
+  String apiBaseUrl = Environment.apiUrl;
+  //
+  // place holder API call
+  //
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/history');
+
+  final authToken = await getAuthToken();
+  if (authToken == null) throw AuthException('User not authenticated');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.get(
+      uri,
+      headers: {'Authorization': 'Bearer $authToken'},
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final List<dynamic> jsonList = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(jsonList);
+    } else {
+      throw HttpException('Failed to load history: ${response.statusCode}');
+    }
+  } finally {
+    httpClient.close();
+  }
+}

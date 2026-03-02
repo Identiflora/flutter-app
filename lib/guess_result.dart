@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/user_data/point_utils.dart';
 import 'model_incorrect.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:identiflora/database_utils.dart';
 
 class ResultsWidget extends StatefulWidget {
   final int userChoiceIndex;
@@ -139,9 +141,44 @@ class _Results extends State<ResultsWidget> {
                     child: ElevatedButton(
                       onPressed: () async {
                         if (isCorrect) {
+                         double lat = 0.0, lng = 0.0;  
+                        // Check if location services are enabled on the device
+                        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+                        
+                        if (serviceEnabled) {
+                          // Check if the app has location permission
+                          LocationPermission permission = await Geolocator.checkPermission();
+                          if (permission == LocationPermission.denied) {
+                            permission = await Geolocator.requestPermission();
+                          }
+                          
+                          // Check if we have permission and the location service is running
+                          if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+                            try {
+                              Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+                              lat = position.latitude;
+                              lng = position.longitude;
+                            } catch (e) {
+                              debugPrint("Error getting location: $e");
+                            }
+                          }
+                        } else {
+                          // However we handle issues with location/the user denying acess
+                        }
+
+                        // Save submission to history (saves 0.0, 0.0 if location failed/denied)
+                        await savePlantSubmission(
+                          speciesName: modelTopName, 
+                          latitude: lat, 
+                          longitude: lng
+                        );
+
+                        // Continue to points screen
+                        if(context.mounted) {
                           Navigator.push(context, MaterialPageRoute(
                             builder: (context) => UserPointsLoadingScreen(newPoints: addPoints),
                           ));
+                        }
                         }
                         else {
                           Navigator.popUntil(context, ModalRoute.withName("/"));
