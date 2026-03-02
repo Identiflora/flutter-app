@@ -138,6 +138,7 @@ Future<AuthToken> submitUserRegistration({
   required String email,
   required String username,
   required String passwordHash,
+  required String region,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
@@ -147,6 +148,7 @@ Future<AuthToken> submitUserRegistration({
   final payload = jsonEncode({
     'user_email': email,
     'username': username,
+    'region': region,
     'password_hash': passwordHash,
   });
 
@@ -532,7 +534,6 @@ Future<AuthToken> submitUserGoogleLogin({
   }
 }
 
-
 /// Registers new users found via Google login.<br>
 /// This submission is automatically called from Google login and should not be used otherwise.
 Future<AuthToken> submitUserGoogleRegistration({
@@ -782,7 +783,7 @@ Future<String> getUsername() async {
       final username = jsonResponse as String;
       return username;
     } else if (response.statusCode == 404) {
-      return "Not found"; 
+      return "Not found";
     } else {
       // Surface the response for debugging purposes.
       throw HttpException(
@@ -795,4 +796,3 @@ Future<String> getUsername() async {
     httpClient.close();
   }
 }
-
