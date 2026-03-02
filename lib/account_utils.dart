@@ -301,12 +301,14 @@ class _SignUpFormState extends State<SignUpForm> {
   final usernameControl = TextEditingController();
   final passwordControl = TextEditingController();
   final confirmControl = TextEditingController();
+  String? userRegion;
 
   void signUp() async {
     final email = emailControl.text.trim();
     final username = usernameControl.text.trim();
     final password = passwordControl.text.trim();
     final confirm = confirmControl.text.trim();
+    final region = userRegion;
 
     //CHECK IF PASSWORDS MATCH
     if (password != confirm) {
@@ -318,7 +320,7 @@ class _SignUpFormState extends State<SignUpForm> {
       );
       return;
     } //END SIGNUP
-
+    debugPrint("Region: $region");
     //ONLY AFTER CONFIRMING PASSWORDS - HASH
     final hashedPassword = hashPassword(password);
     try {
@@ -326,6 +328,7 @@ class _SignUpFormState extends State<SignUpForm> {
         email: email,
         username: username,
         passwordHash: hashedPassword,
+        region: region as String,
       );
       debugPrint("Received token for $email: ${token.accessToken}");
       //SAVE AUTHTOKEN TO DEVICE
@@ -360,27 +363,73 @@ class _SignUpFormState extends State<SignUpForm> {
       children: [
         TextField(
           controller: emailControl,
-          decoration: const InputDecoration(labelText: 'Email'),
+          decoration: const InputDecoration(
+            labelText: 'Email',
+            border: OutlineInputBorder(),
+          ),
         ),
         const SizedBox(height: 16),
 
         TextField(
           controller: usernameControl,
-          decoration: const InputDecoration(labelText: 'Username'),
+          decoration: const InputDecoration(
+            labelText: 'Username',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // List of regions
+            final List<String> regions = [
+              'Northeast US',
+              'Midwest US',
+              'Southern US',
+              'Western US',
+            ];
+
+            // Sort the list alphabetically
+            regions.sort();
+
+            return DropdownMenu<String>(
+              width: constraints.maxWidth,
+              label: const Text('Region'),
+              inputDecorationTheme: const InputDecorationTheme(
+                border: OutlineInputBorder(),
+              ),
+              onSelected: (String? value) {
+                setState(() {
+                  userRegion = value;
+                });
+              },
+              dropdownMenuEntries: regions.map<DropdownMenuEntry<String>>((
+                String region,
+              ) {
+                return DropdownMenuEntry<String>(value: region, label: region);
+              }).toList(),
+            );
+          },
         ),
         const SizedBox(height: 16),
 
         TextField(
           controller: passwordControl,
           obscureText: true,
-          decoration: const InputDecoration(labelText: 'Password'),
+          decoration: const InputDecoration(
+            labelText: 'Password',
+            border: OutlineInputBorder(),
+          ),
         ),
         const SizedBox(height: 16),
 
         TextField(
           controller: confirmControl,
           obscureText: true,
-          decoration: const InputDecoration(labelText: 'Confirm Password'),
+          decoration: const InputDecoration(
+            labelText: 'Confirm Password',
+            border: OutlineInputBorder(),
+          ),
         ),
         const SizedBox(height: 16),
 
@@ -468,11 +517,11 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
 
       return true;
     } catch (error) {
-      if(context.mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Login failed: $error"),
-            backgroundColor: Colors.red
+            backgroundColor: Colors.red,
           ),
         );
       }
