@@ -5,6 +5,10 @@ import 'package:identiflora/user_data/point_utils.dart';
 import 'level_bottom_sheet.dart';
 import 'package:identiflora/settings.dart';
 
+double normalize(double value, double min, double max) {
+  return ((value - min) / (max - min)).clamp(0.0, 1.0);
+}
+
 class ViewAccountScreen extends StatefulWidget {
   const ViewAccountScreen({super.key});
 
@@ -28,10 +32,6 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
       "Not found"; // need to implement retrieving username in initState
 
   int numFriends = 15; //need to calculate number of friends in initState
-
-  double normalize(double value, double min, double max) {
-    return ((value - min) / (max - min)).clamp(0.0, 1.0);
-  }
 
   @override
   void initState() {
@@ -105,10 +105,13 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                 SizedBox(width: 8.0),
               ],
             ),
-            playerLevel == levelData.value[3] ? const Text("Max level reached!") :
-            levelData.value[0] - levelData.value[1] == 1 ? 
-              Text("1 more point until level ${playerLevel + 1}!") 
-              : Text("${levelData.value[0] - levelData.value[1]} more points until level ${playerLevel + 1}!"),
+            playerLevel == levelData.value[3]
+                ? const Text("Max level reached!")
+                : levelData.value[0] - levelData.value[1] == 1
+                ? Text("1 more point until level ${playerLevel + 1}!")
+                : Text(
+                    "${levelData.value[0] - levelData.value[1]} more points until level ${playerLevel + 1}!",
+                  ),
             //line separator begin
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -170,12 +173,14 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32.0),
               child: Divider(
-                height: 0.5,                    
+                height: 0.5,
                 thickness: 0.5,
                 color: Theme.of(context).colorScheme.inverseSurface,
               ),
             ),
-            Expanded(child: BadgesDisplay(badges: badges, playerLevel: playerLevel)),
+            Expanded(
+              child: BadgesDisplay(badges: badges, playerLevel: playerLevel),
+            ),
           ],
         ),
       ),
@@ -186,9 +191,13 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
 class BadgesDisplay extends StatefulWidget {
   final List<LevelBadge> badges;
   final int playerLevel;
-  
+
   /// Creates a [BadgesDisplay] that generates a grid of badge images.
-  const BadgesDisplay({super.key, required this.badges, required this.playerLevel});
+  const BadgesDisplay({
+    super.key,
+    required this.badges,
+    required this.playerLevel,
+  });
 
   @override
   State<BadgesDisplay> createState() => _BadgesDisplayState();
@@ -228,7 +237,7 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
 
         return GestureDetector(
           onTap: () async {
-            if(badge.isUnlocked(widget.playerLevel)) {
+            if (badge.isUnlocked(widget.playerLevel)) {
               // Run API based selection logic here
               try {
                 await submitUserBadge(badgeFilePath: badge.imagePath);
@@ -237,40 +246,40 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
                   selectedBadgeFilePath = badge.imagePath;
                 });
 
-                if(context.mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        "Badge selected!",
-                      ),
+                      content: Text("Badge selected!"),
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       duration: Duration(seconds: 2),
                     ),
-                  ); 
+                  );
                 }
               } catch (error) {
-                if(context.mounted) {
+                if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text("Badge selection storing failed: $error"),
-                      backgroundColor: Colors.red
+                      backgroundColor: Colors.red,
                     ),
                   );
                 }
               }
-            }
-            else {
+            } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    badge.getUnlockMessage(),
-                  ),
+                  content: Text(badge.getUnlockMessage()),
                   backgroundColor: Theme.of(context).colorScheme.primary,
                 ),
               );
             }
           },
-          child: getBadgeDisplay(context, badge, badge.isUnlocked(widget.playerLevel), selectedBadgeFilePath == badge.imagePath)
+          child: getBadgeDisplay(
+            context,
+            badge,
+            badge.isUnlocked(widget.playerLevel),
+            selectedBadgeFilePath == badge.imagePath,
+          ),
         );
       },
     );
