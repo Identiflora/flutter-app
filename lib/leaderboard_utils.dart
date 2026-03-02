@@ -104,7 +104,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     // LOAD ALL USERS WITH SCORES
     if (leaderboardType == "Global") {
       users = await submitGlobalLeaderboardRequest(leaderboardSize: maxUsers);
-    } else {
+    } 
+    else if (leaderboardType == "Regional") {
+      users = await submitRegionalLeaderboardRequest(leaderboardSize: maxUsers);
+    } 
+    else {
       users = List.empty();
     }
 
@@ -328,6 +332,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     "Error while loading leaaderboard: ${snapshot.error}",
                   ),
                   backgroundColor: Colors.red,
+                  duration: Duration(seconds: 8),
                 ),
               );
             });
