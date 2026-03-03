@@ -12,6 +12,7 @@ import 'package:identiflora/view_account/view_account_utils.dart';
 import 'camera_utils.dart';
 import 'account_utils.dart';
 import 'environment.dart';
+import 'package:identiflora/theme/theme.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: Environment.fileName);
@@ -28,9 +29,8 @@ class AppSetup extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Identiflora",
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
-      ),
+      theme: lightMode,
+      darkTheme: darkMode,
       //add routes so you can use "Navigator.popUntil(context, ModalRoute.withName('/routeName'))" to return to a page
       initialRoute: '/',
       routes: {'/view_account_screen': (context) => ViewAccountScreen()},
