@@ -72,6 +72,7 @@ class LeaderboardScreen extends StatefulWidget {
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
   String? leaderboardType = "Global";
+  String region = "";
 
   /// Gets popup options based on current leaderboard type to insure a dynamic popup view when switching types.
   List<PopupMenuEntry<String>> getPopupOptions(String? leaderboardType) {
@@ -115,6 +116,29 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return users;
   }
 
+  Future<String> _getUserRegion() async {
+    try {
+      return await getUserRegion();
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error while loading leaaderboard region: $error",
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 8),
+        ),
+      );
+
+      return "";
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -128,6 +152,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               setState(() {
                 leaderboardType = value;
               });
+
+              if(leaderboardType == "Regional") {
+                _getUserRegion().then((response) {
+                  setState(() {
+                    region = response;
+                  });
+                });
+              }
 
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -181,6 +213,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
                             child: Column(
                               children: [
+                                leaderboardType == "Regional" && region != "" ? 
+                                  Text(region, style: TextStyle(fontSize: 20), textAlign: TextAlign.center) 
+                                  : Container(),
+                                leaderboardType == "Regional" && region != "" ? const SizedBox(height: 16.0) : Container(),
+                                leaderboardType == "Regional" && region != "" ? 
+                                  Divider(
+                                    height: 0.5,
+                                    thickness: 0.5,
+                                    color: Theme.of(context).colorScheme.inverseSurface,
+                                  ) 
+                                  : Container(),
+                                const SizedBox(height: 8.0),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [

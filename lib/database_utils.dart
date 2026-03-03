@@ -863,6 +863,38 @@ Future<String> getUsername() async {
   }
 }
 
+// Get the current user's region
+Future<String> getUserRegion() async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/get-user-region');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      final username = jsonResponse as String;
+      return username;
+    } else if (response.statusCode == 404) {
+      return "Not found";
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
+  }
+}
+
 /// Sends a user set badge request to the API for storage of badge file path.
 /// Can be used directly in a Flutter button:
 ///   onPressed: () => submitUserBadge(
