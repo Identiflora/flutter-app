@@ -3,6 +3,28 @@ import 'dart:math';
 
 import 'package:identiflora/database_utils.dart';
 
+class LeaderboardUser {
+  final String userName; 
+  String? displayedBadgeFilePath;
+  final int userId;
+  int userScore;
+
+  LeaderboardUser({
+    required this.userName,
+    this.userScore = 0,
+    this.displayedBadgeFilePath,
+    this.userId = 0,
+  });
+
+  set setDisplayedBadgeFilePath(String badgeFilePath) {
+    displayedBadgeFilePath = badgeFilePath;
+  }
+
+  String? get getUnlockAtLevel {
+    return displayedBadgeFilePath;
+  }
+}
+
 //CODE FOR HOMEPAGE BUTTON
 class LeaderboardWidget extends StatefulWidget {
   const LeaderboardWidget({super.key});
@@ -50,6 +72,7 @@ class LeaderboardScreen extends StatefulWidget {
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
   String? leaderboardType = "Global";
+  String region = "";
 
   /// Gets popup options based on current leaderboard type to insure a dynamic popup view when switching types.
   List<PopupMenuEntry<String>> getPopupOptions(String? leaderboardType) {
@@ -82,11 +105,38 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     // LOAD ALL USERS WITH SCORES
     if (leaderboardType == "Global") {
       users = await submitGlobalLeaderboardRequest(leaderboardSize: maxUsers);
-    } else {
+    } 
+    else if (leaderboardType == "Regional") {
+      users = await submitRegionalLeaderboardRequest(leaderboardSize: maxUsers);
+    } 
+    else {
       users = List.empty();
     }
 
     return users;
+  }
+
+  Future<String> _getUserRegion() async {
+    try {
+      return await getUserRegion();
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Error while loading leaaderboard region: $error",
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 8),
+        ),
+      );
+
+      return "";
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -102,6 +152,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               setState(() {
                 leaderboardType = value;
               });
+
+              if(leaderboardType == "Regional") {
+                _getUserRegion().then((response) {
+                  setState(() {
+                    region = response;
+                  });
+                });
+              }
 
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -155,6 +213,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
                             child: Column(
                               children: [
+                                leaderboardType == "Regional" && region != "" ? 
+                                  Text(region, style: TextStyle(fontSize: 20), textAlign: TextAlign.center) 
+                                  : Container(),
+                                leaderboardType == "Regional" && region != "" ? const SizedBox(height: 16.0) : Container(),
+                                leaderboardType == "Regional" && region != "" ? 
+                                  Divider(
+                                    height: 0.5,
+                                    thickness: 0.5,
+                                    color: Theme.of(context).colorScheme.inverseSurface,
+                                  ) 
+                                  : Container(),
+                                const SizedBox(height: 8.0),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
@@ -236,27 +306,38 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 12.0),
-                                  SizedBox(
-                                    width: screenWidth * 0.45,
-                                    child: Row(
-                                      children: [
-                                        // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
-                                        CircleAvatar(
-                                          foregroundImage: const AssetImage('assets/brand/Identiflora_logo.png'), 
-                                          backgroundColor: Theme.of(context).colorScheme.surface, 
-                                          radius: 20,
-                                        ),
-                                        const SizedBox(width: 14.0),
-                                        Flexible(
-                                          child: Text(
-                                            user.userName,
-                                            style: TextStyle(fontSize: 14.0),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                  const SizedBox(width: 8.0),
+                                  GestureDetector(
+                                    onTap: () {
+                                      debugPrint("Tapped user with ID: ${user.userId}"); // REMOVE AND ADD VIEW USER PROFILE HERE
+                                    },
+                                    child: SizedBox(
+                                      width: screenWidth * 0.45,
+                                      child: Row(
+                                        children: [
+                                          // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
+                                          user.displayedBadgeFilePath != null ? 
+                                            CircleAvatar(
+                                              foregroundImage: AssetImage(user.displayedBadgeFilePath!),
+                                              backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(100),
+                                              radius: 20,
+                                            ) 
+                                            : CircleAvatar(
+                                              foregroundImage: AssetImage('assets/brand/Identiflora_logo.png'),
+                                              backgroundColor: Theme.of(context).colorScheme.surface,
+                                              radius: 20,
+                                            ) ,
+                                          const SizedBox(width: 8.0),
+                                          Flexible(
+                                            child: Text(
+                                              user.userName,
+                                              style: TextStyle(fontSize: 14.0),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -295,6 +376,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     "Error while loading leaaderboard: ${snapshot.error}",
                   ),
                   backgroundColor: Colors.red,
+                  duration: Duration(seconds: 8),
                 ),
               );
             });
@@ -319,19 +401,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     //END SCAFFOLD
   }
 } //END LEADERBOARDSCREEN STATE CLASS
-
-class LeaderboardUser {
-  final String userName;
-  final int userId;
-  int userScore;
-
-  //CONSTRUCTOR
-  LeaderboardUser({
-    required this.userName,
-    this.userScore = 0,
-    this.userId = 0,
-  });
-} //END LEADERBOARDUSER CLASS
 
 // CLASS THAT CREATES USERS RANDOM INDEX, AND ADDS THEM TO LEADERBOARD LIST
 class LeaderBoardControl {

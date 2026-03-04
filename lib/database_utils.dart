@@ -138,6 +138,7 @@ Future<AuthToken> submitUserRegistration({
   required String email,
   required String username,
   required String passwordHash,
+  required String region,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
@@ -147,6 +148,7 @@ Future<AuthToken> submitUserRegistration({
   final payload = jsonEncode({
     'user_email': email,
     'username': username,
+    'region': region,
     'password_hash': passwordHash,
   });
 
@@ -301,11 +303,78 @@ Future<AuthToken> submitUserLogin({
 ///     size: 50
 ///   );
 Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
-  required leaderboardSize,
+  required int leaderboardSize,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/global-leaderboard');
+
+  // Start http httpClient
+  final httpClient = http.Client();
+
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({"leaderboard_size": leaderboardSize}),
+    );
+
+    // 200-299 indicates success
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      List<LeaderboardUser> users = [];
+      int count = 0;
+      int? id;
+
+      // Create user list from json response
+      jsonMap.forEach((key, value) {
+        id = int.tryParse(key);
+        if (id == null) return;
+        users.insert(
+          count,
+          LeaderboardUser(userName: value[0], userScore: value[1], displayedBadgeFilePath: value[2], userId: id!),
+        );
+        count++;
+      });
+
+      return users;
+    }
+
+    // Explicitly handle 401 Unauthorized
+    if (response.statusCode == 401) {
+      throw AuthException(
+        'Invalid credentials: ${response.body}',
+        statusCode: 401,
+      );
+    }
+
+    // Handle other non-200 errors
+    throw AuthException(
+      'Server error: ${response.body}',
+      statusCode: response.statusCode,
+    );
+  } catch (e) {
+    // Catch generic errors (like no internet) and rethrow as AuthException
+    // or let them bubble up if they are already handled.
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    // close out http httpClient
+    httpClient.close();
+  }
+}
+
+// Send a regional leaderboard request to the API.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => submitRegionalLeaderboardRequest(
+///     size: 50
+///   );
+Future<List<LeaderboardUser>> submitRegionalLeaderboardRequest({
+  required int leaderboardSize,
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/regional-leaderboard');
 
   // Start http httpClient
   final httpClient = http.Client();
@@ -333,7 +402,7 @@ Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
         if (id == null) return;
         users.insert(
           count,
-          LeaderboardUser(userName: value[0], userScore: value[1], userId: id!),
+          LeaderboardUser(userName: value[0], userScore: value[1], displayedBadgeFilePath: value[2], userId: id!),
         );
         count++;
       });
@@ -419,7 +488,6 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
 
   // Prepare JSON payload expected by the API.
   final payload = jsonEncode({
-    'user_token': authToken,
     'add_points': addPoints,
   });
 
@@ -429,14 +497,14 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
       uri,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${await getAuthToken()}',
+        'Authorization': 'Bearer $authToken',
       },
       body: payload,
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final jsonResponse = jsonDecode(response.body);
-      final success = jsonResponse['success'] as bool;
+      final success = jsonResponse as bool;
       return success;
     }
     // Return blank string if invalid username
@@ -531,7 +599,6 @@ Future<AuthToken> submitUserGoogleLogin({
     httpClient.close();
   }
 }
-
 
 /// Registers new users found via Google login.<br>
 /// This submission is automatically called from Google login and should not be used otherwise.
@@ -782,7 +849,7 @@ Future<String> getUsername() async {
       final username = jsonResponse as String;
       return username;
     } else if (response.statusCode == 404) {
-      return "Not found"; 
+      return "Not found";
     } else {
       // Surface the response for debugging purposes.
       throw HttpException(
@@ -859,8 +926,207 @@ final client = HttpClient();
     client.close(force: true);
   }
 }
+
 Future<List<Map<String, dynamic>>> fetchFriends() async {
   final raw = await fetchFriendsRaw();
   return raw.map((e) => (e as Map).cast<String, dynamic>()).toList();
 }
 
+// Get the current user's region
+Future<String> getUserRegion() async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/get-user-region');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      final username = jsonResponse as String;
+      return username;
+    } else if (response.statusCode == 404) {
+      return "Not found";
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
+  }
+}
+
+/// Sends a user set badge request to the API for storage of badge file path.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => submitUserBadge(
+///     badgeFilePath: selectedBadgeFilePath
+///   );
+Future<bool> submitUserBadge({
+  required String badgeFilePath
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/set-user-badge');
+
+  debugPrint(badgeFilePath);
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        HttpHeaders.authorizationHeader: 'Bearer ${await getAuthToken()}',
+      },
+      body: jsonEncode({"badge_file_path": badgeFilePath})
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      final success = jsonResponse as bool;
+      return success;
+    } else  if (response.statusCode == 404) {
+      throw AuthException(
+        'User does not exist: ${response.body}',
+        statusCode: 404,
+      );
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
+  }
+}
+
+/// Sends a user set badge request to the API for getting stored badge file path.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => async {
+///      badgeFilePath = await fetchUserBadge();
+///   } 
+Future<String> fetchUserBadge() async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/get-user-badge');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      if(jsonResponse != null) {
+        final badgeFilePath = jsonResponse as String;
+        return badgeFilePath;
+      }
+      else {
+        return 'assets/brand/Identiflora_logo.png';
+      }
+    } else  if (response.statusCode == 404) {
+      throw AuthException(
+        'User does not exist: ${response.body}',
+        statusCode: 404,
+      );
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
+  }
+}
+
+/// Send a request to update the user's email
+Future<bool> submitEmailChange({required String newEmail}) async {
+  final authToken = await getAuthToken();
+
+  if (authToken == null) {
+    throw AuthException('User not authenticated');
+  }
+
+  String apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/update-email');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken', // Pass token for auth
+      },
+      body: jsonEncode({'new_email': newEmail}),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return true;
+    } else {
+      throw AuthException(
+        'Failed to update email: ${response.body}',
+        statusCode: response.statusCode,
+      );
+    }
+  } catch (e) {
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    httpClient.close();
+  }
+}
+
+/// Send a request to update the user's password
+Future<bool> submitPasswordChange({required String newPasswordHash}) async {
+  final authToken = await getAuthToken();
+
+  if (authToken == null) {
+    throw AuthException('User not authenticated');
+  }
+
+  String apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/update-password');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+      body: jsonEncode({'new_password_hash': newPasswordHash}),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return true;
+    } else {
+      throw AuthException(
+        'Failed to update password: ${response.body}',
+        statusCode: response.statusCode,
+      );
+    }
+  } catch (e) {
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    httpClient.close();
+  }
+}

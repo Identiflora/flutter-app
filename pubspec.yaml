@@ -23,18 +23,22 @@ dependencies:
   http: ^1.0.0
   flutter_dotenv: ^6.0.0
   settings_ui: 2.0.2
+  provider: 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_driver:
     sdk: flutter
   flutter_lints: ^6.0.0
+  test: ^1.26.2
 
 flutter:
   uses-material-design: true
   assets: 
     - assets/brand/
     - assets/homepage/
+    - assets/badge/
     - assets/model/
     - .env.development
     - .env.production
