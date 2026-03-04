@@ -112,33 +112,13 @@ class _SettingsScreen extends State<SettingsScreen> {
                   });
                 },
 
-                trailing: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.secondary,
-                        blurRadius: 2.0,
-                        spreadRadius: 1.0,
-                      ),
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.primary,
-                        blurRadius: 6.0,
-                        spreadRadius: 1.0,
-                      ),
-                    ],
-                  ),
-                  child: Switch(
-                    value: notificationsEnabled,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    activeThumbColor: Theme.of(context).colorScheme.primary,
-                    activeTrackColor: Theme.of(context).colorScheme.secondary,
-                    onChanged: (value) {
-                      setState(() {
-                        notificationsEnabled = value;
-                      });
-                    },
-                  ),
+                trailing: NeonSwitch(
+                  value: notificationsEnabled,
+                  onChanged: (value) {
+                    setState(() {
+                      notificationsEnabled = value;
+                    });
+                  },
                 ),
               ),
 

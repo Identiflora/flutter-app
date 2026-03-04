@@ -114,12 +114,15 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                 ),
                 SizedBox(width: 8.0),
               ],
-            ),// end username and edit icon
-
+            ), // end username and edit icon
             //line separator begin
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: NeonContainer(width: 350, height: 7),
+              child: NeonContainer(
+                width: 350,
+                height: 7,
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              ),
             ), //line separator end
 
             Row(

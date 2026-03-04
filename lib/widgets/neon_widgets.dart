@@ -57,16 +57,10 @@ class NeonContainer extends StatelessWidget {
     return Container(
       width: width,
       height: height,
-      padding: padding ?? const EdgeInsets.all(16.0),
       margin: margin,
       decoration: BoxDecoration(
-        // 2. Default to your app's surface color if no color is passed
         color: backgroundColor ?? Theme.of(context).colorScheme.surface,
-
-        // 3. Smooth rounded corners by default
         borderRadius: borderRadius ?? BorderRadius.circular(12.0),
-
-        // 4. A subtle glowing border matching your primary color
         border:
             border ??
             Border.all(
@@ -213,6 +207,31 @@ class NeonDropdownMenu extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class NeonSwitch extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  const NeonSwitch({super.key, required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return NeonContainer(
+      backgroundColor: Colors.transparent,
+      border: Border.all(color: Colors.transparent, width: 0),
+      borderRadius: BorderRadius.circular(30.0),
+      child: Switch(
+        value: value,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        activeThumbColor: Theme.of(context).colorScheme.primary,
+        activeTrackColor: Theme.of(context).colorScheme.secondary,
+        onChanged: (value) {
+          onChanged?.call(value);
+        },
+      ),
     );
   }
 }
