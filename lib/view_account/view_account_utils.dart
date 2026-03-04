@@ -6,6 +6,7 @@ import 'package:identiflora/user_data/badge_utils.dart';
 import 'package:identiflora/user_data/point_utils.dart';
 import 'level_bottom_sheet.dart';
 import 'package:identiflora/settings.dart';
+import 'package:identiflora/widgets/neon_widgets.dart';
 
 double normalize(double value, double min, double max) {
   return ((value - min) / (max - min)).clamp(0.0, 1.0);
@@ -68,29 +69,12 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    List<Shadow> iconShadows = [
-      BoxShadow(
-        color: Theme.of(context).colorScheme.secondary,
-        blurRadius: 2.0,
-        spreadRadius: 1.0,
-      ),
-      BoxShadow(
-        color: Theme.of(context).colorScheme.primary,
-        blurRadius: 15.0,
-        spreadRadius: 2.0,
-      ),
-    ];
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Account'),
         actions: [
           IconButton(
-            icon: Icon(
-              Icons.settings,
-              color: Theme.of(context).colorScheme.secondary,
-              shadows: iconShadows,
-            ),
+            icon: NeonIcon(Icons.settings, size: 40.0),
             iconSize: 45.0,
             onPressed: () {
               Navigator.push(
@@ -115,6 +99,8 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                   ? Text("1 more point until level ${playerLevel + 1}!")
                   : Text("${levelData.value[1]}/${levelData.value[0]}"),
             ),
+
+            // begin username and edit icon
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -124,54 +110,16 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                   onPressed: () {
                     //takes you to edit username
                   },
-                  icon: Icon(
-                    Icons.edit,
-                    color: Theme.of(context).colorScheme.secondary,
-                    shadows: [
-                      Shadow(
-                        color: Theme.of(context).colorScheme.primary,
-                        blurRadius: 5.0,
-                      ),
-                      Shadow(
-                        color: Theme.of(context).colorScheme.primary,
-                        blurRadius: 10.0,
-                      ),
-                    ],
-                  ),
+                  icon: NeonIcon(Icons.edit),
                 ),
                 SizedBox(width: 8.0),
               ],
-            ),
-            // playerLevel == levelData.value[3]
-            //     ? const Text("Max level reached!")
-            //     : levelData.value[0] - levelData.value[1] == 1
-            //     ? Text("1 more point until level ${playerLevel + 1}!")
-            //     : Text(
-            //         "${levelData.value[0] - levelData.value[1]} more points until level ${playerLevel + 1}!",
-            //       ),
+            ),// end username and edit icon
+
             //line separator begin
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Container(
-                width: 350,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context).colorScheme.secondary,
-                      blurRadius: 2.0,
-                      spreadRadius: 1.0,
-                    ),
-                    BoxShadow(
-                      color: Theme.of(context).colorScheme.primary,
-                      blurRadius: 6.0,
-                      spreadRadius: 1.0,
-                    ),
-                  ],
-                ),
-              ),
+              child: NeonContainer(width: 350, height: 7),
             ), //line separator end
 
             Row(

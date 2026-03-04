@@ -3,6 +3,9 @@ import 'package:settings_ui/settings_ui.dart';
 import 'cache_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:identiflora/theme/theme_provider.dart';
+import 'package:identiflora/theme/neon_theme.dart';
+import 'package:identiflora/widgets/neon_widgets.dart';
+
 class SettingsWidget extends StatefulWidget {
   const SettingsWidget({super.key});
 
@@ -50,18 +53,6 @@ class _SettingsScreen extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final themeMode = Provider.of<ThemeProvider>(context).themeMode;
-    List<Shadow> iconShadows = [
-      BoxShadow(
-        color: Theme.of(context).colorScheme.secondary,
-        blurRadius: 4.0,
-        spreadRadius: 1.0,
-      ),
-      BoxShadow(
-        color: Theme.of(context).colorScheme.primary,
-        blurRadius: 10.0,
-        spreadRadius: 1.0,
-      ),
-    ];
 
     // Map the enum back to your dropdown strings
     String currentTheme;
@@ -101,11 +92,7 @@ class _SettingsScreen extends State<SettingsScreen> {
 
             tiles: <AbstractSettingsTile>[
               SettingsTile.navigation(
-                leading: Icon(
-                  Icons.language,
-                  color: Theme.of(context).colorScheme.secondary,
-                  shadows: iconShadows,
-                ),
+                leading: NeonIcon(Icons.language),
                 title: const Text('Language'),
                 value: const Text('English'),
                 onPressed: (context) {
@@ -116,11 +103,7 @@ class _SettingsScreen extends State<SettingsScreen> {
 
               //notifications switch
               SettingsTile(
-                leading: Icon(
-                  Icons.notifications_active,
-                  color: Theme.of(context).colorScheme.secondary,
-                  shadows: iconShadows,
-                ),
+                leading: NeonIcon(Icons.notifications_active),
                 title: Text('Enable Notifications'),
 
                 onPressed: (context) {
@@ -160,32 +143,13 @@ class _SettingsScreen extends State<SettingsScreen> {
               ),
 
               SettingsTile(
-                leading: Icon(
-                  Icons.format_paint,
-                  color: Theme.of(context).colorScheme.secondary,
-                  shadows: iconShadows,
-                ),
+                leading: NeonIcon(Icons.format_paint),
                 title: const Text('Theme'),
 
                 trailing: DropdownButton<String>(
                   value: currentTheme,
                   underline: const SizedBox.shrink(),
-                  icon: Icon(
-                    Icons.unfold_more,
-                    color: Theme.of(context).colorScheme.secondary,
-                    shadows: [
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.secondary,
-                        blurRadius: 4.0,
-                        spreadRadius: 1.0,
-                      ),
-                      BoxShadow(
-                        color: Theme.of(context).colorScheme.primary,
-                        blurRadius: 10.0,
-                        spreadRadius: 1.0,
-                      ),
-                    ],
-                  ),
+                  icon: NeonIcon(Icons.unfold_more),
 
                   // Dropdown options
                   items: const [
@@ -254,20 +218,12 @@ class _SettingsScreen extends State<SettingsScreen> {
 
             tiles: <SettingsTile>[
               SettingsTile.navigation(
-                leading: Icon(
-                  Icons.person,
-                  color: Theme.of(context).colorScheme.secondary,
-                  shadows: iconShadows,
-                ),
+                leading: NeonIcon(Icons.person),
                 title: const Text('Profile'),
               ),
 
               SettingsTile.navigation(
-                leading: Icon(
-                  Icons.email,
-                  color: Theme.of(context).colorScheme.secondary,
-                  shadows: iconShadows,
-                ),
+                leading: NeonIcon(Icons.email),
                 title: const Text('Change Email'),
                 onPressed: (context) {
                   Navigator.push(
@@ -280,29 +236,17 @@ class _SettingsScreen extends State<SettingsScreen> {
               ),
 
               SettingsTile.navigation(
-                leading: Icon(
-                  Icons.password,
-                  color: Theme.of(context).colorScheme.secondary,
-                  shadows: iconShadows,
-                ),
+                leading: NeonIcon(Icons.password),
                 title: const Text('Change Password'),
               ),
 
               SettingsTile.navigation(
-                leading: Icon(
-                  Icons.remove_circle,
-                  color: Theme.of(context).colorScheme.secondary,
-                  shadows: iconShadows,
-                ),
+                leading: NeonIcon(Icons.remove_circle),
                 title: const Text('Delete Account'),
               ),
 
               SettingsTile.navigation(
-                leading: Icon(
-                  Icons.logout,
-                  color: Theme.of(context).colorScheme.secondary,
-                  shadows: iconShadows,
-                ),
+                leading: NeonIcon(Icons.logout),
                 title: const Text('Sign Out'),
                 onPressed: (context) {
                   showDialog(

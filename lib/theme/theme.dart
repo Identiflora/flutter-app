@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'glowing_text_theme.dart';
+import 'neon_theme.dart';
+import 'constants.dart';
 
 ThemeData lightMode = ThemeData(
   brightness: Brightness.light,
@@ -10,56 +11,66 @@ ThemeData lightMode = ThemeData(
   ),
 );
 
+const primaryNeonGreen = Color.fromARGB(255, 0, 177, 9);
+const secondaryNeonGreen = Color.fromARGB(255, 128, 255, 134);
+
 ThemeData darkMode = ThemeData(
   brightness: Brightness.dark,
+
+  // Color pallete used across application
   colorScheme: ColorScheme.dark(
     surface: Colors.grey.shade800,
     surfaceBright: Colors.grey.shade700,
-    primary: const Color.fromARGB(255, 0, 177, 9),
-    secondary: const Color.fromARGB(255, 128, 255, 134),
+    primary: primaryNeonGreen,
+    secondary: secondaryNeonGreen,
     onSurface: Colors.grey.shade300,
   ),
 
+  // Defines text color for all text
   textTheme: ThemeData.dark().textTheme.apply(
     bodyColor: Colors.grey.shade300,
     displayColor: Colors.grey.shade300,
   ),
 
-  extensions: <ThemeExtension<dynamic>>[
-    const GlowingTextTheme(
-      glowingText: TextStyle(
-        color: Color.fromARGB(255, 128, 255, 134), // secondary color
-        shadows: [
-          Shadow(
-            color: Color.fromARGB(255, 0, 177, 9), // primary color
-            blurRadius: 5.0,
-          ),
-          Shadow(
-            color: Color.fromARGB(255, 0, 177, 9), // primary color
-            blurRadius: 10.0,
-          ),
-        ],
+  // Automatically applied to all TextFields and Dropdowns
+  inputDecorationTheme: InputDecorationTheme(
+    filled: true,
+    fillColor: Colors.grey.shade800,
+    enabledBorder: identifloraEnabledBorder,
+    focusedBorder: identifloraFocusedBorder,
+    border: identifloraDefaultBorder,
+  ),
+
+  // Automatically applied to all outlined buttons
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      backgroundColor: Colors.grey.shade800, // surface color
+      foregroundColor: Colors.grey.shade300, // onSurface color
+      side: const BorderSide(color: secondaryNeonGreen, width: 1.5),
+      shape: const RoundedRectangleBorder(
+        borderRadius: identifloraButtonRadius,
       ),
+    ),
+  ),
+
+  // Custom shadows for neon effects
+  extensions: const <ThemeExtension<dynamic>>[
+    NeonTheme(
+      iconGlow: identifloraIconGlow,
+      containerGlow: identifloraContainerGlow,
+      buttonGlow: identifloraButtonGlow,
+      dropdownGlow: identifloraDropdownGlow,
     ),
   ],
 
   actionIconTheme: ActionIconThemeData(
-    // Back button icons in all appbars
+    // Makes all back buttons neon
     backButtonIconBuilder: (BuildContext context) {
       return Icon(
-        // Use Icons.arrow_back for Android style, or Icons.arrow_back_ios_new for Apple style, once IOS is implemented
         Icons.arrow_back,
         size: 35.0,
         color: Theme.of(context).colorScheme.secondary,
-
-        // Neon glow
-        shadows: [
-          Shadow(color: Theme.of(context).colorScheme.primary, blurRadius: 8.0),
-          Shadow(
-            color: Theme.of(context).colorScheme.primary,
-            blurRadius: 16.0,
-          ),
-        ],
+        shadows: identifloraBackButtonGlow,
       );
     },
   ),

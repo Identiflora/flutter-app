@@ -10,6 +10,7 @@ import 'auth_objects.dart';
 import 'cache_utils.dart';
 import 'dart:math';
 import 'package:identiflora/theme/glowing_text_theme.dart';
+import 'package:identiflora/widgets/neon_widgets.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -260,28 +261,36 @@ class _LoginFormState extends State<LoginForm> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
-        DecoratedInputField(controller: emailControl, labelText: "Email"),
-        DecoratedInputField(controller: passwordControl, labelText: "Password"),
-        DecoratedOutlinedButton(onPressed: loginPressed, labelText: "Login"),
+      children:
+          [
+                NeonInputField(controller: emailControl, labelText: "Email"),
+                NeonInputField(
+                  controller: passwordControl,
+                  labelText: "Password",
+                ),
+                NeonOutlinedButton(onPressed: loginPressed, labelText: "Login"),
 
-        Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: ElevatedButton.icon(
-            onPressed: () => _handleGoogleSignIn(context),
-            icon: Image.asset(
-              'assets/brand/Google_G_logo_500x500.png',
-              width: 25,
-              height: 25,
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.secondary,
-            ),
-            label: Text("Sign in with Google"),
-          ),
-        ),
-      ],
+                ElevatedButton.icon(
+                  onPressed: () => _handleGoogleSignIn(context),
+                  icon: Image.asset(
+                    'assets/brand/Google_G_logo_500x500.png',
+                    width: 25,
+                    height: 25,
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.secondary,
+                  ),
+                  label: Text("Sign in with Google"),
+                ),
+              ]
+              .map(
+                (childWidget) => Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: childWidget,
+                ),
+              )
+              .toList(),
     );
   }
 } //END LOGINFORMSTATE CLASS
@@ -365,24 +374,43 @@ class _SignUpFormState extends State<SignUpForm> {
   @override
   Widget build(BuildContext contex) {
     return Column(
-      children: [
-        DecoratedInputField(controller: emailControl, labelText: "Email"),
+      children:
+          [
+                NeonInputField(controller: emailControl, labelText: "Email"),
 
-        DecoratedInputField(controller: usernameControl, labelText: "Username"),
+                NeonInputField(
+                  controller: usernameControl,
+                  labelText: "Username",
+                ),
 
-        DecoratedDropdownMenu(
-          onSelected: _setDropdown,
-          labelText: "Region",
-          options: ['Northeast US', 'Midwest US', 'Southern US', 'Western US'],
-        ),
+                NeonDropdownMenu(
+                  onSelected: _setDropdown,
+                  labelText: "Region",
+                  options: [
+                    'Northeast US',
+                    'Midwest US',
+                    'Southern US',
+                    'Western US',
+                  ],
+                ),
 
-        DecoratedInputField(controller: passwordControl, labelText: "Password"),
-        DecoratedInputField(
-          controller: confirmControl,
-          labelText: "Confirm Password",
-        ),
-        DecoratedOutlinedButton(onPressed: signUp, labelText: "Sign Up"),
-      ],
+                NeonInputField(
+                  controller: passwordControl,
+                  labelText: "Password",
+                ),
+                NeonInputField(
+                  controller: confirmControl,
+                  labelText: "Confirm Password",
+                ),
+                NeonOutlinedButton(onPressed: signUp, labelText: "Sign Up"),
+              ]
+              .map(
+                (childWidget) => Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: childWidget,
+                ),
+              )
+              .toList(),
     );
   }
 } //END SIGNUPFORMSTATE CLASS
@@ -758,174 +786,78 @@ class NewPasswordForm extends StatelessWidget {
   }
 }
 
-class DecoratedInputField extends StatelessWidget {
-  final TextEditingController controller;
-  final String labelText;
+// class DecoratedDropdownMenu extends StatelessWidget {
+//   final void Function(String selection)? onSelected;
+//   final String labelText;
+//   final List<String> options;
 
-  /// Creates a [DecoratedInputField]
-  ///
-  /// Standard input field decorated to match Identiflora theme.
-  /// * [controller] is the text controller used to read and manipulate the input.
-  /// * [labelText] is the text displayed indicating what the input field is for.
-  const DecoratedInputField({
-    super.key,
-    required this.controller,
-    required this.labelText,
-  });
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4.0),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary,
-              blurRadius: 10.0,
-              spreadRadius: 1.0,
-            ),
-          ],
-        ),
-        child: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.secondary,
-                width: 1.5,
-              ),
-            ),
-            filled: true,
-            labelText: labelText,
-          ),
-        ),
-      ),
-    );
-  }
-}
+//   /// Creates a [DecoratedDropdownMenu]
+//   ///
+//   /// Standard dropdown menu decorated to match Identiflora theme.
+//   /// * [onSelected] is the function to be executed upon selection. The input to this function is the string associated with the selection.
+//   /// * [labelText] is the text displayed indicating what the dropdown menu is for.
+//   /// * [options] are the options for the dropdown menu.
+//   const DecoratedDropdownMenu({
+//     super.key,
+//     required this.onSelected,
+//     required this.labelText,
+//     required this.options,
+//   });
 
-class DecoratedOutlinedButton extends StatelessWidget {
-  final void Function()? onPressed;
-  final String labelText;
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: const EdgeInsets.all(16.0),
+//       child: LayoutBuilder(
+//         builder: (context, constraints) {
+//           // Sort the list alphabetically
+//           options.sort();
 
-  /// Creates a [DecoratedOutlinedButton]
-  ///
-  /// Standard outlined button decorated to match Identiflora theme.
-  /// * [onPressed] is the function to be executed when the button is pressed.
-  /// * [labelText] is the text displayed on the button.
-  const DecoratedOutlinedButton({
-    super.key,
-    required this.onPressed,
-    required this.labelText,
-  });
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20.0),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.primary,
-              blurRadius: 12.0,
-              spreadRadius: 1.0,
-            ),
-          ],
-        ),
-        child: OutlinedButton(
-          onPressed: onPressed,
-          style: OutlinedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            foregroundColor: Theme.of(context).colorScheme.onSurface,
-            side: BorderSide(
-              color: Theme.of(context).colorScheme.secondary,
-              width: 1.5,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20.0),
-            ),
-          ),
-          child: Text(labelText),
-        ),
-      ),
-    );
-  }
-}
+//           return Container(
+//             // 1. Add the glowing shadow behind the widget
+//             decoration: BoxDecoration(
+//               borderRadius: BorderRadius.circular(
+//                 4.0,
+//               ), // Matches default OutlineInputBorder radius
+//               boxShadow: [
+//                 BoxShadow(
+//                   color: Theme.of(context).colorScheme.primary,
+//                   blurRadius: 12.0,
+//                   spreadRadius: 1.0,
+//                 ),
+//               ],
+//             ),
 
-class DecoratedDropdownMenu extends StatelessWidget {
-  final void Function(String selection)? onSelected;
-  final String labelText;
-  final List<String> options;
+//             child: DropdownMenu<String>(
+//               width: constraints.maxWidth,
+//               label: Text(labelText),
 
-  /// Creates a [DecoratedDropdownMenu]
-  ///
-  /// Standard dropdown menu decorated to match Identiflora theme.
-  /// * [onSelected] is the function to be executed upon selection. The input to this function is the string associated with the selection.
-  /// * [labelText] is the text displayed indicating what the dropdown menu is for.
-  /// * [options] are the options for the dropdown menu.
-  const DecoratedDropdownMenu({
-    super.key,
-    required this.onSelected,
-    required this.labelText,
-    required this.options,
-  });
+//               // 2. Style the internal text field and mask the shadow
+//               inputDecorationTheme: InputDecorationTheme(
+//                 filled: true,
+//                 fillColor: Theme.of(context).colorScheme.surface,
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // Sort the list alphabetically
-          options.sort();
+//                 // Set the border colors to match the glow
+//                 enabledBorder: OutlineInputBorder(
+//                   borderSide: BorderSide(
+//                     color: Theme.of(context).colorScheme.secondary,
+//                     width: 1.5,
+//                   ),
+//                 ),
+//               ),
 
-          return Container(
-            // 1. Add the glowing shadow behind the widget
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(
-                4.0,
-              ), // Matches default OutlineInputBorder radius
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary,
-                  blurRadius: 12.0,
-                  spreadRadius: 1.0,
-                ),
-              ],
-            ),
-
-            child: DropdownMenu<String>(
-              width: constraints.maxWidth,
-              label: Text(labelText),
-
-              // 2. Style the internal text field and mask the shadow
-              inputDecorationTheme: InputDecorationTheme(
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surface,
-
-                // Set the border colors to match the glow
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.secondary,
-                    width: 1.5,
-                  ),
-                ),
-              ),
-
-              onSelected: (String? value) {
-                onSelected?.call(value as String);
-              },
-              dropdownMenuEntries: options.map<DropdownMenuEntry<String>>((
-                String option,
-              ) {
-                return DropdownMenuEntry<String>(value: option, label: option);
-              }).toList(),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
+//               onSelected: (String? value) {
+//                 onSelected?.call(value as String);
+//               },
+//               dropdownMenuEntries: options.map<DropdownMenuEntry<String>>((
+//                 String option,
+//               ) {
+//                 return DropdownMenuEntry<String>(value: option, label: option);
+//               }).toList(),
+//             ),
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }
