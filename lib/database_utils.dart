@@ -364,6 +364,76 @@ Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
   }
 }
 
+/// Send a leaderboard request to the API.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => submitFriendsLeaderboardRequest(
+///     size: 50
+///   );
+Future<List<LeaderboardUser>> submitFriendsLeaderboardRequest({
+  required int leaderboardSize,
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/friends-leaderboard');
+
+  // Start http httpClient
+  final httpClient = http.Client();
+
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await getAuthToken()}',
+      },
+      body: jsonEncode({"leaderboard_size": leaderboardSize}),
+    );
+
+    // 200-299 indicates success
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
+      List<LeaderboardUser> users = [];
+      int count = 0;
+      int? id;
+
+      // Create user list from json response
+      jsonMap.forEach((key, value) {
+        id = int.tryParse(key);
+        if (id == null) return;
+        users.insert(
+          count,
+          LeaderboardUser(userName: value[0], userScore: value[1], displayedBadgeFilePath: value[2], userId: id!),
+        );
+        count++;
+      });
+
+      return users;
+    }
+
+    // Explicitly handle 401 Unauthorized
+    if (response.statusCode == 401) {
+      throw AuthException(
+        'Invalid credentials: ${response.body}',
+        statusCode: 401,
+      );
+    }
+
+    // Handle other non-200 errors
+    throw AuthException(
+      'Server error: ${response.body}',
+      statusCode: response.statusCode,
+    );
+  } catch (e) {
+    // Catch generic errors (like no internet) and rethrow as AuthException
+    // or let them bubble up if they are already handled.
+    if (e is AuthException) rethrow;
+    throw AuthException('Network error occurred: $e');
+  } finally {
+    // close out http httpClient
+    httpClient.close();
+  }
+}
+
 // Send a regional leaderboard request to the API.
 /// Can be used directly in a Flutter button:
 ///   onPressed: () => submitRegionalLeaderboardRequest(
