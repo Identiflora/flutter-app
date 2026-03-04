@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'cache_utils.dart';
+import 'package:provider/provider.dart';
+import 'package:identiflora/theme/theme_provider.dart';
+import 'package:identiflora/theme/glowing_text_theme.dart';
 
 class SettingsWidget extends StatefulWidget {
   const SettingsWidget({super.key});
@@ -48,18 +51,63 @@ class _SettingsScreen extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = Provider.of<ThemeProvider>(context).themeMode;
+    List<Shadow> iconShadows = [
+      BoxShadow(
+        color: Theme.of(context).colorScheme.secondary,
+        blurRadius: 4.0,
+        spreadRadius: 1.0,
+      ),
+      BoxShadow(
+        color: Theme.of(context).colorScheme.primary,
+        blurRadius: 10.0,
+        spreadRadius: 1.0,
+      ),
+    ];
+
+    // Map the enum back to your dropdown strings
+    String currentTheme;
+    if (themeMode == ThemeMode.light) {
+      currentTheme = 'Light Theme';
+    } else if (themeMode == ThemeMode.dark) {
+      currentTheme = 'Dark Theme';
+    } else {
+      currentTheme = 'Device Theme';
+    }
     return Scaffold(
       appBar: AppBar(title: Text('Settings')),
       body: SettingsList(
         sections: [
           SettingsSection(
-            title: const Text(
-              'General Settings',
-              style: TextStyle(color: Colors.green, fontSize: 20),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'General Settings',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Divider(
+                    height: 0.5,
+                    thickness: 0.5,
+                    color: Theme.of(context).colorScheme.inverseSurface,
+                  ),
+                ),
+              ],
             ),
-            tiles: <SettingsTile>[
+
+            tiles: <AbstractSettingsTile>[
               SettingsTile.navigation(
-                leading: const Icon(Icons.language),
+                leading: Icon(
+                  Icons.language,
+                  color: Theme.of(context).colorScheme.secondary,
+                  shadows: iconShadows,
+                ),
                 title: const Text('Language'),
                 value: const Text('English'),
                 onPressed: (context) {
@@ -67,34 +115,161 @@ class _SettingsScreen extends State<SettingsScreen> {
                   // good for the settings page
                 },
               ),
-              SettingsTile.switchTile(
-                onToggle: (value) {
+
+              //notifications switch
+              SettingsTile(
+                leading: Icon(
+                  Icons.notifications_active,
+                  color: Theme.of(context).colorScheme.secondary,
+                  shadows: iconShadows,
+                ),
+                title: Text('Enable Notifications'),
+
+                onPressed: (context) {
                   setState(() {
-                    notificationsEnabled = value;
+                    notificationsEnabled = !notificationsEnabled;
                   });
                 },
-                initialValue: notificationsEnabled,
-                leading: const Icon(Icons.notifications_active),
-                title: const Text('Enable Notifications'),
+
+                trailing: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.secondary,
+                        blurRadius: 2.0,
+                        spreadRadius: 1.0,
+                      ),
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.primary,
+                        blurRadius: 6.0,
+                        spreadRadius: 1.0,
+                      ),
+                    ],
+                  ),
+                  child: Switch(
+                    value: notificationsEnabled,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    activeThumbColor: Theme.of(context).colorScheme.primary,
+                    activeTrackColor: Theme.of(context).colorScheme.secondary,
+                    onChanged: (value) {
+                      setState(() {
+                        notificationsEnabled = value;
+                      });
+                    },
+                  ),
+                ),
               ),
-              SettingsTile.navigation(
-                leading: const Icon(Icons.format_paint),
-                title: const Text('Change Theme'),
+
+              SettingsTile(
+                leading: Icon(
+                  Icons.format_paint,
+                  color: Theme.of(context).colorScheme.secondary,
+                  shadows: iconShadows,
+                ),
+                title: const Text('Theme'),
+
+                trailing: DropdownButton<String>(
+                  value: currentTheme,
+                  underline: const SizedBox.shrink(),
+                  icon: Icon(
+                    Icons.unfold_more,
+                    color: Theme.of(context).colorScheme.secondary,
+                    shadows: [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.secondary,
+                        blurRadius: 4.0,
+                        spreadRadius: 1.0,
+                      ),
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.primary,
+                        blurRadius: 10.0,
+                        spreadRadius: 1.0,
+                      ),
+                    ],
+                  ),
+
+                  // Dropdown options
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'Device Theme',
+                      child: Text('Device Theme'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Light Theme',
+                      child: Text('Light Theme'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Dark Theme',
+                      child: Text('Dark Theme'),
+                    ),
+                  ],
+
+                  // Handle the user selecting a new option
+                  onChanged: (String? selection) {
+                    if (selection == null) return;
+
+                    final provider = Provider.of<ThemeProvider>(
+                      context,
+                      listen: false,
+                    );
+
+                    switch (selection) {
+                      case 'Light Theme':
+                        provider.setThemeMode(ThemeMode.light);
+                        break;
+                      case 'Dark Theme':
+                        provider.setThemeMode(ThemeMode.dark);
+                        break;
+                      case 'Device Theme':
+                      default:
+                        provider.setThemeMode(ThemeMode.system);
+                        break;
+                    }
+                  },
+                ),
               ),
             ],
           ),
+
           SettingsSection(
-            title: const Text(
-              'Account',
-              style: TextStyle(color: Colors.green, fontSize: 20),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Account',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Divider(
+                    height: 0.5,
+                    thickness: 0.5,
+                    color: Theme.of(context).colorScheme.inverseSurface,
+                  ),
+                ),
+              ],
             ),
+
             tiles: <SettingsTile>[
               SettingsTile.navigation(
-                leading: const Icon(Icons.person),
+                leading: Icon(
+                  Icons.person,
+                  color: Theme.of(context).colorScheme.secondary,
+                  shadows: iconShadows,
+                ),
                 title: const Text('Profile'),
               ),
+
               SettingsTile.navigation(
-                leading: const Icon(Icons.email),
+                leading: Icon(
+                  Icons.email,
+                  color: Theme.of(context).colorScheme.secondary,
+                  shadows: iconShadows,
+                ),
                 title: const Text('Change Email'),
                 onPressed: (context) {
                   Navigator.push(
@@ -105,16 +280,31 @@ class _SettingsScreen extends State<SettingsScreen> {
                   );
                 },
               ),
+
               SettingsTile.navigation(
-                leading: const Icon(Icons.password),
+                leading: Icon(
+                  Icons.password,
+                  color: Theme.of(context).colorScheme.secondary,
+                  shadows: iconShadows,
+                ),
                 title: const Text('Change Password'),
               ),
+
               SettingsTile.navigation(
-                leading: const Icon(Icons.remove_circle),
+                leading: Icon(
+                  Icons.remove_circle,
+                  color: Theme.of(context).colorScheme.secondary,
+                  shadows: iconShadows,
+                ),
                 title: const Text('Delete Account'),
               ),
+
               SettingsTile.navigation(
-                leading: const Icon(Icons.logout),
+                leading: Icon(
+                  Icons.logout,
+                  color: Theme.of(context).colorScheme.secondary,
+                  shadows: iconShadows,
+                ),
                 title: const Text('Sign Out'),
                 onPressed: (context) {
                   showDialog(

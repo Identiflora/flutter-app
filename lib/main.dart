@@ -9,15 +9,22 @@ import 'package:identiflora/gallery_utils.dart';
 import 'package:identiflora/leaderboard_utils.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:identiflora/view_account/view_account_utils.dart';
+import 'package:provider/provider.dart';
 import 'camera_utils.dart';
 import 'account_utils.dart';
 import 'environment.dart';
 import 'package:identiflora/theme/theme.dart';
+import 'package:identiflora/theme/theme_provider.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: Environment.fileName);
   debugPrint('Using environment file: ${Environment.fileName}');
-  runApp(const AppSetup());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const AppSetup(),
+    ),
+  );
 }
 
 // Camera startup logic
@@ -27,14 +34,18 @@ class AppSetup extends StatelessWidget {
   // Determine if camera is accessible
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "Identiflora",
-      theme: lightMode,
-      darkTheme: darkMode,
-      //add routes so you can use "Navigator.popUntil(context, ModalRoute.withName('/routeName'))" to return to a page
-      initialRoute: '/',
-      routes: {'/view_account_screen': (context) => ViewAccountScreen()},
-      home: const HomeScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: "Identiflora",
+          theme: lightMode,
+          darkTheme: darkMode,
+          themeMode: themeProvider.themeMode,
+          initialRoute: '/',
+          routes: {'/view_account_screen': (context) => ViewAccountScreen()},
+          home: const HomeScreen(),
+        );
+      },
     );
   }
 }

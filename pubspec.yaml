@@ -23,6 +23,7 @@ dependencies:
   http: ^1.0.0
   flutter_dotenv: ^6.0.0
   settings_ui: 2.0.2
+  provider: 
 
 dev_dependencies:
   flutter_test:

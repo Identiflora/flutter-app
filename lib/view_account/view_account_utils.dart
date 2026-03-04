@@ -30,8 +30,7 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
     LevelBadge(imagePath: 'assets/badge/tree_badge.png', unlockAtLevel: 20),
   ]; //this is the list thats passed to the gridview to display the badges
 
-  String username =
-      "Not found"; // need to implement retrieving username in initState
+  String username = " ";
 
   int numFriends = 15; //need to calculate number of friends in initState
 
@@ -69,12 +68,29 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    List<Shadow> iconShadows = [
+      BoxShadow(
+        color: Theme.of(context).colorScheme.secondary,
+        blurRadius: 2.0,
+        spreadRadius: 1.0,
+      ),
+      BoxShadow(
+        color: Theme.of(context).colorScheme.primary,
+        blurRadius: 15.0,
+        spreadRadius: 2.0,
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Account'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: Icon(
+              Icons.settings,
+              color: Theme.of(context).colorScheme.secondary,
+              shadows: iconShadows,
+            ),
             iconSize: 45.0,
             onPressed: () {
               Navigator.push(
