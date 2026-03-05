@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 import 'package:identiflora/database_utils.dart';
-import 'package:identiflora/general_utils.dart';
+import 'package:identiflora/theme/general_utils.dart';
 import 'package:identiflora/widgets/leaderboard_widgets.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 
