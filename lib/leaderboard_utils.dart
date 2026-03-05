@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/general_utils.dart';
+import 'package:identiflora/widgets/leaderboard_widgets.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 
 class LeaderboardUser {
@@ -103,7 +105,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   ) async {
     final List<LeaderboardUser> users;
 
-    // LOAD ALL USERS WITH SCORES
     if (leaderboardType == "Global") {
       users = await submitGlobalLeaderboardRequest(leaderboardSize: maxUsers);
     } 
@@ -119,6 +120,29 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     return users;
   }
 
+  /// Get color for rank of user on leaderboard
+  Color getRankColor(int userIndex) {
+    Color rankColor;
+
+    switch (userIndex) {
+      case 1:
+        rankColor = Color.fromARGB(255, 255, 217, 0);
+        break;
+      case 2:
+        rankColor = Color.fromARGB(255, 192, 192, 192);
+        break;
+      case 3:
+        rankColor = Color.fromARGB(255, 205, 127, 50);
+        break;
+      default:
+        rankColor = Theme.of(context).colorScheme.surface;
+        break;
+    }
+
+    return rankColor;
+  }
+
+  /// Gets user's region or throws error
   Future<String> _getUserRegion() async {
     try {
       return await getUserRegion();
@@ -133,6 +157,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
       return "";
     }
+  }
+
+  Widget getLeaderboardErrorMessage(String? lowercaseLeaderboardType) {
+    return Center(
+      child: Text(
+        "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
+        textAlign: TextAlign.center,
+      ),
+    );
   }
 
   @override
@@ -164,18 +197,19 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
                   content: Text(
                     "Now Displaying $value Leaderboard",
-                    style: const TextStyle(color: Colors.black),
+                    style: TextStyle(color: Theme.of(context).textTheme.labelSmall!.color),
                   ),
                 ),
               );
             },
           ),
         ],
-      ), //END APPBAR
+      ),
 
+      // Main leaderboard functionality
       body: FutureBuilder<List<LeaderboardUser>>(
         future: addUsers(leaderboardType, 100),
         builder: (context, snapshot) {
@@ -191,12 +225,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             final leaderboard = snapshot.data;
 
             if (leaderboard!.isEmpty) {
-              return Center(
-                child: Text(
-                  "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
-                  textAlign: TextAlign.center,
-                ),
-              );
+              return getLeaderboardErrorMessage(lowercaseLeaderboardType);
             }
 
             double screenWidth = MediaQuery.of(context).size.width;
@@ -208,88 +237,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   itemBuilder: (context, index) {
                     // Return header if index is 0
                     if (index == 0) {
-                      return Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20.0,
-                              vertical: 8.0,
-                            ),
-                            child: Column(
-                              children: [
-                                leaderboardType == "Regional" && region != ""
-                                    ? Text(
-                                        region,
-                                        style: TextStyle(fontSize: 20),
-                                        textAlign: TextAlign.center,
-                                      )
-                                    : Container(),
-                                leaderboardType == "Regional" && region != ""
-                                    ? const SizedBox(height: 16.0)
-                                    : Container(),
-                                leaderboardType == "Regional" && region != ""
-                                    ? Divider(
-                                        height: 0.5,
-                                        thickness: 0.5,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.inverseSurface,
-                                      )
-                                    : Container(),
-                                const SizedBox(height: 8.0),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      "Rank",
-                                      style: TextStyle(fontSize: 20.0),
-                                    ),
-                                    const SizedBox(width: 16.0),
-                                    Text(
-                                      "User",
-                                      style: TextStyle(fontSize: 20.0),
-                                    ),
-                                    const SizedBox(width: 16.0),
-                                    Text(
-                                      "Points",
-                                      style: TextStyle(fontSize: 20.0),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8.0),
-                                Divider(
-                                  height: 1.0,
-                                  thickness: 1.0,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.inverseSurface,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                      return LeaderboardHeaderDisplay(
+                        leaderboardType: leaderboardType, 
+                        userRegion: region
                       );
                     }
 
-                    final user = leaderboard[index - 1];
-
-                    Color? rankColor = Theme.of(context).colorScheme.surface;
-
-                    switch (index) {
-                      case 1:
-                        rankColor = Color.fromARGB(255, 255, 217, 0);
-                        break;
-                      case 2:
-                        rankColor = Color.fromARGB(255, 192, 192, 192);
-                        break;
-                      case 3:
-                        rankColor = Color.fromARGB(255, 205, 127, 50);
-                        break;
-                      default:
-                        rankColor = Theme.of(context).colorScheme.surface;
-                        break;
-                    }
+                    // Gain user information and dynamic color
+                    final LeaderboardUser user = leaderboard[index - 1];
+                    final Color rankColor = getRankColor(index);
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(
@@ -306,31 +262,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      maxWidth: screenWidth * 0.2,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        index <= 3
-                                            ? Icon(
-                                                Icons.emoji_events,
-                                                color: rankColor,
-                                                size: 30,
-                                                shadows: [
-                                                  Shadow(blurRadius: 1.0),
-                                                ],
-                                              )
-                                            : Icon(null, size: 30),
-                                        index < 10
-                                            ? const SizedBox(width: 16.0)
-                                            : const SizedBox(width: 6.0),
-                                        Text(
-                                          "#$index",
-                                          style: TextStyle(fontSize: 14.0),
-                                        ),
-                                      ],
-                                    ),
+                                  LeaderboardUserRankDisplay(
+                                    screenWidth: screenWidth, 
+                                    userIndex: index, 
+                                    rankColor: rankColor
                                   ),
                                   const SizedBox(width: 8.0),
                                   GestureDetector(
@@ -339,70 +274,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                         "Tapped user with ID: ${user.userId}",
                                       ); // REMOVE AND ADD VIEW USER PROFILE HERE
                                     },
-                                    child: SizedBox(
-                                      width: screenWidth * 0.45,
-                                      child: Row(
-                                        children: [
-                                          // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
-                                          user.displayedBadgeFilePath != null
-                                              ? CircleAvatar(
-                                                  foregroundImage: AssetImage(
-                                                    user.displayedBadgeFilePath!,
-                                                  ),
-                                                  backgroundColor:
-                                                      Theme.of(context)
-                                                          .colorScheme
-                                                          .primary
-                                                          .withAlpha(100),
-                                                  radius: 20,
-                                                )
-                                              : CircleAvatar(
-                                                  foregroundImage: AssetImage(
-                                                    'assets/brand/Identiflora_logo.png',
-                                                  ),
-                                                  backgroundColor: Theme.of(
-                                                    context,
-                                                  ).colorScheme.surface,
-                                                  radius: 20,
-                                                ),
-                                          const SizedBox(width: 8.0),
-                                          Flexible(
-                                            child: Text(
-                                              user.userName,
-                                              style: TextStyle(fontSize: 14.0),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                    child: LeaderboardUserDisplay(
+                                      screenWidth: screenWidth, 
+                                      badgeFilePath: user.displayedBadgeFilePath, 
+                                      username: user.userName
+                                    )
                                   ),
                                 ],
                               ),
-                              Container(
-                                constraints: BoxConstraints(
-                                  maxWidth: screenWidth * 0.3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: index <= 3
-                                      ? rankColor.withAlpha(125)
-                                      : Theme.of(
-                                          context,
-                                        ).colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.all(
-                                    Radius.elliptical(15, 15),
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    "${user.userScore} pts.",
-                                    style: TextStyle(fontSize: 12.0),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
-                              ),
+                              LeaderboardUserPointDisplay(
+                                screenWidth: screenWidth, 
+                                userIndex: index, 
+                                userPoints: user.userScore, 
+                                rankColor: rankColor
+                              )
                             ],
                           ),
                         ),
@@ -414,29 +299,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             );
           } else if (snapshot.hasError) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    "Error while loading leaaderboard: ${snapshot.error}",
-                  ),
-                  backgroundColor: Colors.red,
-                  duration: Duration(seconds: 8),
-                ),
+              errorPopupMessage(
+                context, 
+                "Error while loading leaaderboard: ${snapshot.error}", 
+                Duration(seconds: 8)
               );
             });
-            return Center(
-              child: Text(
-                "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
-                textAlign: TextAlign.center,
-              ),
-            );
+            return getLeaderboardErrorMessage(lowercaseLeaderboardType);
           } else {
-            return Center(
-              child: Text(
-                "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
-                textAlign: TextAlign.center,
-              ),
-            );
+            return getLeaderboardErrorMessage(lowercaseLeaderboardType);
           }
         },
       ),
