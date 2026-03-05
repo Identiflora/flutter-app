@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/environment.dart';
+import 'package:identiflora/theme/general_utils.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
 import 'dart:math';
@@ -295,6 +296,15 @@ class _LoginFormState extends State<LoginForm> {
   }
 } //END LOGINFORMSTATE CLASS
 
+List<String> getRegions() {
+  return [
+    'Northeast US',
+    'Midwest US',
+    'Southern US',
+    'Western US',
+  ];
+}
+
 //USER SIGNUP CLASS
 class SignUpForm extends StatefulWidget {
   const SignUpForm({super.key});
@@ -386,12 +396,7 @@ class _SignUpFormState extends State<SignUpForm> {
                 NeonDropdownMenu(
                   onSelected: _setDropdown,
                   labelText: "Region",
-                  options: [
-                    'Northeast US',
-                    'Midwest US',
-                    'Southern US',
-                    'Western US',
-                  ],
+                  options: getRegions(),
                 ),
 
                 NeonInputField(
@@ -415,11 +420,23 @@ class _SignUpFormState extends State<SignUpForm> {
   }
 } //END SIGNUPFORMSTATE CLASS
 
-// Sign up form for new external user
-class ExternalSignUpForm extends StatelessWidget {
-  final usernameControl = TextEditingController();
+class ExternalSignUpForm extends StatefulWidget {
+  const ExternalSignUpForm({super.key});
 
-  ExternalSignUpForm({super.key});
+  @override
+  State<StatefulWidget> createState() => _ExternalSignUpFormState();
+}
+
+// Sign up form for new external user
+class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
+  final usernameControl = TextEditingController();
+  String? userRegion;
+
+  void _setDropdown(String value) {
+    setState(() {
+      userRegion = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -435,7 +452,7 @@ class ExternalSignUpForm extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Please enter a username so others know how to identify you!",
+                "Please enter a username and region so others know how to identify you!",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -445,24 +462,39 @@ class ExternalSignUpForm extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 16.0),
-                child: TextField(
-                  controller: usernameControl,
-                  decoration: const InputDecoration(labelText: 'Username'),
+                child: Column(
+                  children: [
+                    NeonInputField(
+                      controller: usernameControl,
+                      labelText: 'Username'
+                    ),
+                    const SizedBox(height: 16.0),
+                    NeonDropdownMenu(
+                      onSelected: _setDropdown,
+                      labelText: "Region",
+                      options: getRegions(),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  if (usernameControl.text.trim().isNotEmpty) {
-                    Navigator.pop(context, usernameControl.text.trim());
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Please make sure username has at least 1 character then try again.",
-                        ),
-                        backgroundColor: Colors.red,
-                      ),
+                  if (usernameControl.text.trim().isNotEmpty && userRegion != null) {
+                    List<String> userInfo = [usernameControl.text.trim(), userRegion!];
+                    Navigator.pop(context, userInfo);
+                  } else if (usernameControl.text.trim().isEmpty) {
+                    errorPopupMessage(
+                      context, 
+                      "Please make sure username has at least 1 character then try again.",
+                      null
+                    );
+                  }
+                  else {
+                    errorPopupMessage(
+                      context, 
+                      "Please make sure region is selected then try again.",
+                      null
                     );
                   }
                 },

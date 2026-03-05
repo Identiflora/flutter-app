@@ -626,20 +626,22 @@ Future<AuthToken> submitUserGoogleLogin({
       final jsonMap = jsonDecode(response.body) as Map<String, dynamic>;
 
       if (jsonMap.containsKey('register') && jsonMap['register'] as bool) {
-        late final String username;
+        late final List<String> userInfo;
 
         if (context.mounted) {
-          username = await Navigator.push(
+          userInfo = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => ExternalSignUpForm()),
           );
-        } else {
-          username = "";
+        } 
+        else {
+          userInfo = ["", ""];
         }
 
         return await submitUserGoogleRegistration(
           token: jsonMap['access_token'],
-          username: username,
+          username: userInfo[0],
+          region: userInfo[1]
         );
       }
 
@@ -675,6 +677,7 @@ Future<AuthToken> submitUserGoogleLogin({
 Future<AuthToken> submitUserGoogleRegistration({
   required String token,
   required String username,
+  required String region
 }) async {
   String apiBaseUrl = Environment.apiUrl;
 
@@ -690,7 +693,7 @@ Future<AuthToken> submitUserGoogleRegistration({
         'Content-Type': 'application/json',
         HttpHeaders.authorizationHeader: 'Bearer $token',
       },
-      body: jsonEncode({"username": username}),
+      body: jsonEncode({"username": username, "region": region}),
     );
 
     // 200-299 indicates success
