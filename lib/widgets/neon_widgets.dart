@@ -15,7 +15,7 @@ class NeonIcon extends StatelessWidget {
 
     return Icon(
       icon,
-      size: size ?? 24.0, 
+      size: size ?? 24.0,
       color: iconColor,
       shadows: neonTheme?.iconGlow,
     );
@@ -107,6 +107,7 @@ class NeonOutlinedButton extends StatelessWidget {
   final double? fontSize;
   final FontWeight? fontWeight;
   final double? borderWidth;
+  final Widget? icon;
 
   /// Creates a [NeonOutlinedButton]
   ///
@@ -119,21 +120,20 @@ class NeonOutlinedButton extends StatelessWidget {
     this.fontSize,
     this.fontWeight,
     this.borderWidth,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
     final neonTheme = Theme.of(context).extension<NeonTheme>();
     final effectiveRadius = borderRadius ?? BorderRadius.circular(20.0);
-    final effectiveFontSize = fontSize ?? 12.0;
+    final effectiveFontSize = fontSize ?? 15.0;
     final effectiveFontWeight = fontWeight ?? FontWeight.normal;
     final effectiveBorderWidth = borderWidth ?? 1.5;
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surface, 
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: effectiveRadius,
         border: Border.all(
           color: Theme.of(context).colorScheme.secondary,
@@ -147,7 +147,7 @@ class NeonOutlinedButton extends StatelessWidget {
         style: TextButton.styleFrom(
           foregroundColor: Theme.of(context).colorScheme.onSurface,
           shape: RoundedRectangleBorder(borderRadius: effectiveRadius),
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+          // padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           minimumSize: Size.zero,
           textStyle: TextStyle(
@@ -155,7 +155,18 @@ class NeonOutlinedButton extends StatelessWidget {
             fontWeight: effectiveFontWeight,
           ),
         ),
-        child: Text(labelText),
+        child: icon != null
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                    child: icon as Widget,
+                  ),
+                  Text(labelText),
+                ],
+              )
+            : Text(labelText),
       ),
     );
   }

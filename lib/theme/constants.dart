@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 const primaryNeonGreen = Color.fromARGB(255, 0, 177, 9);
+const primaryNeonGreenA100 = Color.fromARGB(150, 0, 177, 9);
 const secondaryNeonGreen = Color.fromARGB(255, 128, 255, 134);
+const secondaryNeonGreenA100 = Color.fromARGB(100, 128, 255, 134);
 
 // --- BORDERS ---
 const BorderRadius identifloraBorderRadius = BorderRadius.all(
@@ -24,19 +26,19 @@ const OutlineInputBorder identifloraDefaultBorder = OutlineInputBorder(
 
 // --- NEON GLOWS (THEME EXTENSION) ---
 const List<BoxShadow> identifloraIconGlow = [
-  BoxShadow(color: secondaryNeonGreen, blurRadius: 2.0, spreadRadius: 1.0),
-  BoxShadow(color: primaryNeonGreen, blurRadius: 4.0, spreadRadius: 1.0),
+  BoxShadow(color: secondaryNeonGreenA100, blurRadius: 1.0, spreadRadius: 1.0),
+  BoxShadow(color: primaryNeonGreenA100, blurRadius: 2.0, spreadRadius: 1.0),
 ];
 
 const List<BoxShadow> identifloraContainerGlow = [
-  BoxShadow(color: secondaryNeonGreen, blurRadius: 4.0, spreadRadius: 1.0),
-  BoxShadow(color: primaryNeonGreen, blurRadius: 10.0, spreadRadius: 1.0),
+  BoxShadow(color: secondaryNeonGreenA100, blurRadius: 1.0, spreadRadius: 1.0),
+  BoxShadow(color: primaryNeonGreenA100, blurRadius: 2.0, spreadRadius: 1.0),
 ];
 
 // --- APPBAR GLOW ---
 const List<Shadow> identifloraBackButtonGlow = [
-  Shadow(color: primaryNeonGreen, blurRadius: 8.0),
-  Shadow(color: primaryNeonGreen, blurRadius: 16.0),
+  BoxShadow(color: secondaryNeonGreenA100, blurRadius: 4.0, spreadRadius: 1.0),
+  BoxShadow(color: primaryNeonGreenA100, blurRadius: 8.0, spreadRadius: 2.0),
 ];
 
 // --- BUTTON CONSTANTS ---
@@ -45,12 +47,12 @@ const BorderRadius identifloraButtonRadius = BorderRadius.all(
 );
 
 const List<BoxShadow> identifloraButtonGlow = [
-  BoxShadow(color: secondaryNeonGreen, blurRadius: 4.0, spreadRadius: 1.0),
-  BoxShadow(color: primaryNeonGreen, blurRadius: 10.0, spreadRadius: 1.0),
+  BoxShadow(color: secondaryNeonGreenA100, blurRadius: 1.0, spreadRadius: 1.0),
+  BoxShadow(color: primaryNeonGreenA100, blurRadius: 2.0, spreadRadius: 1.0),
 ];
 
 // --- DROPDOWN CONSTANTS ---
 const List<BoxShadow> identifloraDropdownGlow = [
-  BoxShadow(color: secondaryNeonGreen, blurRadius: 4.0, spreadRadius: 1.0),
-  BoxShadow(color: primaryNeonGreen, blurRadius: 10.0, spreadRadius: 1.0),
+  BoxShadow(color: secondaryNeonGreenA100, blurRadius: 1.0, spreadRadius: 1.0),
+  BoxShadow(color: primaryNeonGreenA100, blurRadius: 2.0, spreadRadius: 1.0),
 ];

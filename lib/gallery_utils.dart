@@ -7,7 +7,7 @@ class GalleryWidget extends StatefulWidget {
   const GalleryWidget({super.key});
 
   @override
-  State<GalleryWidget> createState() => _GalleryWidgetState(); 
+  State<GalleryWidget> createState() => _GalleryWidgetState();
 }
 
 // Photo gallery widget logic
@@ -26,19 +26,24 @@ class _GalleryWidgetState extends State<GalleryWidget> {
               final image = await picker.pickImage(source: ImageSource.gallery);
 
               // Pass image to display picture screen
-              if(image != null && context.mounted) {
+              if (image != null && context.mounted) {
                 Navigator.push(
-                  context, 
+                  context,
                   MaterialPageRoute<void>(
-                    builder: (context) => DisplayPictureScreen(imgPath: image.path)
-                  )
+                    builder: (context) =>
+                        DisplayPictureScreen(imgPath: image.path),
+                  ),
                 );
               }
             },
-            child: Image.asset('assets/homepage/no_shadow_photo_gallery_icon.png', width: 80, height: 80)
+            child: Icon(
+              Icons.photo_library_outlined,
+              size: 80.0,
+              color: Theme.of(context).colorScheme.surface,
+            ),
           ),
         ),
-      )
+      ),
     );
   }
 }
