@@ -35,7 +35,7 @@ class _GalleryWidgetState extends State<GalleryWidget> {
                 );
               }
             },
-            child: Image.asset('assets/homepage/photo_gallery_icon.png', width: 80, height: 80)
+            child: Image.asset('assets/homepage/no_shadow_photo_gallery_icon.png', width: 80, height: 80)
           ),
         ),
       )

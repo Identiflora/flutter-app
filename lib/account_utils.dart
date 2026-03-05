@@ -67,7 +67,7 @@ class _Login extends State<LoginWidget> {
               }
             },
             child: Image.asset(
-              'assets/homepage/account_icon.png',
+              'assets/homepage/no_shadow_account_icon.png',
               width: 80,
               height: 80,
             ),

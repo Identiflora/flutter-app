@@ -52,7 +52,7 @@ class _Leaderboard extends State<LeaderboardWidget> {
               );
             },
             child: Image.asset(
-              'assets/homepage/leaderboard_icon.png',
+              'assets/homepage/no_shadow_leaderboard_icon.png',
               width: 80,
               height: 80,
             ),
