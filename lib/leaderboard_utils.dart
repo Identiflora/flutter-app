@@ -255,8 +255,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 ),
                                 const SizedBox(height: 8.0),
                                 Divider(
-                                  height: 0.5,
-                                  thickness: 0.5,
+                                  height: 1.0,
+                                  thickness: 1.0,
                                   color: Theme.of(
                                     context,
                                   ).colorScheme.inverseSurface,

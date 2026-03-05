@@ -24,8 +24,8 @@ const OutlineInputBorder identifloraDefaultBorder = OutlineInputBorder(
 
 // --- NEON GLOWS (THEME EXTENSION) ---
 const List<BoxShadow> identifloraIconGlow = [
-  BoxShadow(color: secondaryNeonGreen, blurRadius: 4.0, spreadRadius: 1.0),
-  BoxShadow(color: primaryNeonGreen, blurRadius: 10.0, spreadRadius: 1.0),
+  BoxShadow(color: secondaryNeonGreen, blurRadius: 2.0, spreadRadius: 1.0),
+  BoxShadow(color: primaryNeonGreen, blurRadius: 4.0, spreadRadius: 1.0),
 ];
 
 const List<BoxShadow> identifloraContainerGlow = [
