@@ -6,21 +6,16 @@ class NeonIcon extends StatelessWidget {
   final double? size;
   final Color? color;
 
-  // The IconData is required, but size and color are optional
   const NeonIcon(this.icon, {super.key, this.size, this.color});
 
   @override
   Widget build(BuildContext context) {
-    // 1. Grab the theme extension internally
     final neonTheme = Theme.of(context).extension<NeonTheme>();
-
-    // 2. Fall back to your secondary color if no specific color is provided
     final iconColor = color ?? Theme.of(context).colorScheme.secondary;
 
-    // 3. Return the standard Flutter Icon with the styling applied
     return Icon(
       icon,
-      size: size ?? 24.0, // Default Flutter icon size
+      size: size ?? 24.0,
       color: iconColor,
       shadows: neonTheme?.iconGlow,
     );
@@ -51,7 +46,6 @@ class NeonContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Grab the theme extension
     final neonTheme = Theme.of(context).extension<NeonTheme>();
 
     return Container(
@@ -67,8 +61,6 @@ class NeonContainer extends StatelessWidget {
               color: Theme.of(context).colorScheme.secondary,
               width: 1.5,
             ),
-
-        // 5. Apply the neon glow from the theme
         boxShadow: neonTheme?.containerGlow,
       ),
       child: child,
@@ -93,14 +85,11 @@ class NeonInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Grab the theme extension for the glow
     final neonTheme = Theme.of(context).extension<NeonTheme>();
 
-    // Removed the hardcoded Padding wrapper!
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(4.0),
-        // Apply the uniform glow behind the input field
         boxShadow: neonTheme?.containerGlow,
       ),
       child: TextField(
@@ -118,7 +107,11 @@ class NeonOutlinedButton extends StatelessWidget {
   final double? fontSize;
   final FontWeight? fontWeight;
   final double? borderWidth;
+  final Widget? icon;
 
+  /// Creates a [NeonOutlinedButton]
+  ///
+  /// Standard outlined button styled Neon to match Identiflora theme.
   const NeonOutlinedButton({
     super.key,
     required this.onPressed,
@@ -127,38 +120,34 @@ class NeonOutlinedButton extends StatelessWidget {
     this.fontSize,
     this.fontWeight,
     this.borderWidth,
+    this.icon,
   });
 
   @override
   Widget build(BuildContext context) {
     final neonTheme = Theme.of(context).extension<NeonTheme>();
     final effectiveRadius = borderRadius ?? BorderRadius.circular(20.0);
-    final effectiveFontSize = fontSize ?? 12.0;
+    final effectiveFontSize = fontSize ?? 15.0;
     final effectiveFontWeight = fontWeight ?? FontWeight.normal;
     final effectiveBorderWidth = borderWidth ?? 1.5;
 
     return Container(
-      // 1. The Container now handles BOTH the shadow and the border
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surface, // Blocks inner shadow bleed
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: effectiveRadius,
         border: Border.all(
-          color: Theme.of(context).colorScheme.secondary, // Green border
+          color: Theme.of(context).colorScheme.secondary,
           width: effectiveBorderWidth,
         ),
         boxShadow: neonTheme?.buttonGlow,
       ),
 
-      // 2. TextButton provides the text and the click ripple effect without bringing its own borders
       child: TextButton(
         onPressed: onPressed,
         style: TextButton.styleFrom(
           foregroundColor: Theme.of(context).colorScheme.onSurface,
           shape: RoundedRectangleBorder(borderRadius: effectiveRadius),
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-          // 3. This forces Flutter to remove the invisible thumb padding!
+          // padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           minimumSize: Size.zero,
           textStyle: TextStyle(
@@ -166,7 +155,18 @@ class NeonOutlinedButton extends StatelessWidget {
             fontWeight: effectiveFontWeight,
           ),
         ),
-        child: Text(labelText),
+        child: icon != null
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                    child: icon as Widget,
+                  ),
+                  Text(labelText),
+                ],
+              )
+            : Text(labelText),
       ),
     );
   }
@@ -229,6 +229,11 @@ class NeonSwitch extends StatelessWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
 
+  /// Creates a [NeonSwitch]
+  ///
+  /// Standard Switch decorated to match Identiflora theme.
+  /// * [value] is initial state of the switch.
+  /// * [onChanged] is the function to execute when switch is pressed.
   const NeonSwitch({super.key, required this.value, required this.onChanged});
 
   @override

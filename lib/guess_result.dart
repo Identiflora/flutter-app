@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:identiflora/user_data/point_utils.dart';
 import 'model_incorrect.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
+import 'package:identiflora/widgets/button_widgets.dart';
 
 class ResultsWidget extends StatefulWidget {
   final int userChoiceIndex;
@@ -126,7 +127,10 @@ class _Results extends State<ResultsWidget> {
                 children: [
                   // Yes Button
                   Expanded(
-                    child: ElevatedButton(
+                    child: DisabledButton(
+                      enableCondition: true,
+                      labelText: 'Yes',
+                      textColor: correctColor,
                       onPressed: () async {
                         if (isCorrect) {
                           Navigator.push(
@@ -140,26 +144,16 @@ class _Results extends State<ResultsWidget> {
                           Navigator.popUntil(context, ModalRoute.withName("/"));
                         }
                       },
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: correctColor,
-
-                        // backgroundColor: correctColor,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      child: const Text('Yes'),
                     ),
                   ),
                   const SizedBox(width: 16),
                   // No Button
                   Expanded(
-                    child: ElevatedButton(
+                    // Would like to eventually change to neon outlined buttons, red outline for no
+                    child: DisabledButton(
+                      enableCondition: true,
+                      labelText: 'No',
+                      textColor: incorrectColor,
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -170,20 +164,6 @@ class _Results extends State<ResultsWidget> {
                           ),
                         );
                       },
-                      style: ElevatedButton.styleFrom(
-                        // backgroundColor: incorrectColor,
-                        foregroundColor: incorrectColor,
-
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      child: const Text('No'),
                     ),
                   ),
                 ],

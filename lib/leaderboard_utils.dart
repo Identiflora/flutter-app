@@ -53,10 +53,10 @@ class _Leaderboard extends State<LeaderboardWidget> {
                 ),
               );
             },
-            child: Image.asset(
-              'assets/homepage/no_shadow_leaderboard_icon.png',
-              width: 80,
-              height: 80,
+            child: Icon(
+              Icons.leaderboard_outlined,
+              size: 80.0,
+              color: Theme.of(context).colorScheme.surface,
             ),
           ),
         ),
@@ -107,11 +107,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
     if (leaderboardType == "Global") {
       users = await submitGlobalLeaderboardRequest(leaderboardSize: maxUsers);
-    } 
-    else if (leaderboardType == "Friends") {
+    } else if (leaderboardType == "Friends") {
       users = await submitFriendsLeaderboardRequest(leaderboardSize: maxUsers);
-    }
-    else if (leaderboardType == "Regional") {
+    } else if (leaderboardType == "Regional") {
       users = await submitRegionalLeaderboardRequest(leaderboardSize: maxUsers);
     } else {
       users = List.empty();
@@ -200,7 +198,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   backgroundColor: Theme.of(context).colorScheme.surface,
                   content: Text(
                     "Now Displaying $value Leaderboard",
-                    style: TextStyle(color: Theme.of(context).textTheme.labelSmall!.color),
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.labelSmall!.color,
+                    ),
                   ),
                 ),
               );
@@ -238,8 +238,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                     // Return header if index is 0
                     if (index == 0) {
                       return LeaderboardHeaderDisplay(
-                        leaderboardType: leaderboardType, 
-                        userRegion: region
+                        leaderboardType: leaderboardType,
+                        userRegion: region,
                       );
                     }
 
@@ -263,9 +263,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   LeaderboardUserRankDisplay(
-                                    screenWidth: screenWidth, 
-                                    userIndex: index, 
-                                    rankColor: rankColor
+                                    screenWidth: screenWidth,
+                                    userIndex: index,
+                                    rankColor: rankColor,
                                   ),
                                   const SizedBox(width: 8.0),
                                   GestureDetector(
@@ -275,19 +275,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                       ); // REMOVE AND ADD VIEW USER PROFILE HERE
                                     },
                                     child: LeaderboardUserDisplay(
-                                      screenWidth: screenWidth, 
-                                      badgeFilePath: user.displayedBadgeFilePath, 
-                                      username: user.userName
-                                    )
+                                      screenWidth: screenWidth,
+                                      badgeFilePath:
+                                          user.displayedBadgeFilePath,
+                                      username: user.userName,
+                                    ),
                                   ),
                                 ],
                               ),
                               LeaderboardUserPointDisplay(
-                                screenWidth: screenWidth, 
-                                userIndex: index, 
-                                userPoints: user.userScore, 
-                                rankColor: rankColor
-                              )
+                                screenWidth: screenWidth,
+                                userIndex: index,
+                                userPoints: user.userScore,
+                                rankColor: rankColor,
+                              ),
                             ],
                           ),
                         ),
@@ -300,9 +301,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           } else if (snapshot.hasError) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               errorPopupMessage(
-                context, 
-                "Error while loading leaaderboard: ${snapshot.error}", 
-                Duration(seconds: 8)
+                context,
+                "Error while loading leaaderboard: ${snapshot.error}",
+                Duration(seconds: 8),
               );
             });
             return getLeaderboardErrorMessage(lowercaseLeaderboardType);

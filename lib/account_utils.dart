@@ -67,10 +67,10 @@ class _Login extends State<LoginWidget> {
                 }
               }
             },
-            child: Image.asset(
-              'assets/homepage/no_shadow_account_icon.png',
-              width: 80,
-              height: 80,
+            child: Icon(
+              Icons.account_circle_outlined,
+              size: 80.0,
+              color: Theme.of(context).colorScheme.surface,
             ),
           ),
         ),
@@ -110,11 +110,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 isLoginView
                     ? 'Need an account? Sign Up'
                     : 'Already have an account? Login',
-                style:
-                    Theme.of(
-                      context,
-                    ).extension<GlowingTextTheme>()?.glowingText ??
-                    const TextStyle(),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
             TextButton(
@@ -124,11 +122,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: Text(
                 isLoginView ? 'Forgot Password?' : '',
-                style:
-                    Theme.of(
-                      context,
-                    ).extension<GlowingTextTheme>()?.glowingText ??
-                    const TextStyle(),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
           ],
@@ -270,19 +266,15 @@ class _LoginFormState extends State<LoginForm> {
                   labelText: "Password",
                 ),
                 NeonOutlinedButton(onPressed: loginPressed, labelText: "Login"),
-
-                ElevatedButton.icon(
-                  onPressed: () => _handleGoogleSignIn(context),
+                NeonOutlinedButton(
+                  labelText: 'Sign in with Google',
+                  borderRadius: BorderRadius.circular(38.0),
                   icon: Image.asset(
                     'assets/brand/Google_G_logo_500x500.png',
                     width: 25,
                     height: 25,
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.secondary,
-                  ),
-                  label: Text("Sign in with Google"),
+                  onPressed: () => _handleGoogleSignIn(context),
                 ),
               ]
               .map(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'guess_result.dart';
+import 'package:identiflora/widgets/button_widgets.dart';
 
 class UserChoiceScreen extends StatefulWidget {
   final List<Map<String, dynamic>> predictions;
@@ -38,9 +39,9 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
   Widget build(BuildContext context) {
     // colors based on the geen theme i put in main
     final colorScheme = Theme.of(context).colorScheme;
-    final primaryColor = colorScheme.primary;
-    final inversePrimaryColor = colorScheme.inversePrimary;
-    final outlineColor = colorScheme.outline;
+    // final primaryColor = colorScheme.primary;
+    // final inversePrimaryColor = colorScheme.inversePrimary;
+    // final outlineColor = colorScheme.outline;
     final int correctIndex = widget.predictions.indexWhere(
       (element) => element['label'] == correctChoice,
     );
@@ -132,86 +133,40 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
                     ),
 
                     const SizedBox(height: 16.0),
-                    ElevatedButton(
-                      onPressed: userChoice != null
-                          ? () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => UserChoiceLoadingScreen(
-                                    userChoiceIndex: userChoice!,
-                                    correctIndex: correctIndex,
-                                    allPredictions: widget.predictions,
-                                  ),
-                                ),
-                              );
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(
+                    DisabledButton(
+                      enableCondition: userChoice != null,
+                      labelText: 'Confirm Selection',
+                      onPressed: () {
+                        Navigator.push(
                           context,
-                        ).colorScheme.onSurface.withAlpha(80),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 15,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        side: BorderSide(
-                          color: userChoice != null
-                              ? Theme.of(context).colorScheme.onSurface
-                              : Colors.transparent,
-                          width: 4.0,
-                        ),
-                      ),
-                      child: Text(
-                        'Confirm Selection',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: userChoice != null
-                              ? Theme.of(context).colorScheme.onSurface
-                              : Theme.of(context).colorScheme.surface,
-                        ),
-                      ),
+                          MaterialPageRoute(
+                            builder: (context) => UserChoiceLoadingScreen(
+                              userChoiceIndex: userChoice!,
+                              correctIndex: correctIndex,
+                              allPredictions: widget.predictions,
+                            ),
+                          ),
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 8.0),
-                    ElevatedButton(
-                      onPressed: userChoice == null
-                          ? () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => UserChoiceLoadingScreen(
-                                    userChoiceIndex: -1,
-                                    correctIndex: correctIndex,
-                                    allPredictions: widget.predictions,
-                                  ),
-                                ),
-                              );
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 15,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                      ),
-                      child: Text(
-                        'Skip Selection',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: userChoice != null
-                              ? Theme.of(context).colorScheme.surface
-                              : Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
+                    DisabledButton(
+                      enableCondition: userChoice == null,
+                      labelText: 'Skip Selection',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => UserChoiceLoadingScreen(
+                              userChoiceIndex: -1,
+                              correctIndex: correctIndex,
+                              allPredictions: widget.predictions,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    const SizedBox(height: 32.0),
                   ],
                 ),
               ),
