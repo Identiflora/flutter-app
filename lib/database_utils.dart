@@ -879,7 +879,10 @@ Future<int> getUserPoints() async {
   try {
     final response = await httpClient.post(
       uri,
-      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await getAuthToken()}'
+      },
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -911,7 +914,10 @@ Future<String> getUsername() async {
   try {
     final response = await httpClient.post(
       uri,
-      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await getAuthToken()}'
+      },
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -1012,7 +1018,10 @@ Future<String> getUserRegion() async {
   try {
     final response = await httpClient.post(
       uri,
-      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await getAuthToken()}'
+      },
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -1054,7 +1063,7 @@ Future<bool> submitUserBadge({
       uri,
       headers: {
         'Content-Type': 'application/json',
-        HttpHeaders.authorizationHeader: 'Bearer ${await getAuthToken()}',
+        'Authorization': 'Bearer ${await getAuthToken()}',
       },
       body: jsonEncode({"badge_file_path": badgeFilePath})
     );
@@ -1097,7 +1106,7 @@ Future<String> fetchUserBadge() async {
       uri,
       headers: {
         'Content-Type': 'application/json',
-        HttpHeaders.authorizationHeader: 'Bearer ${await getAuthToken()}',
+        'Authorization': 'Bearer ${await getAuthToken()}',
       },
     );
 
