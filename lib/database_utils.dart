@@ -1095,7 +1095,10 @@ Future<String> fetchUserBadge() async {
   try {
     final response = await httpClient.post(
       uri,
-      headers: {'Authorization': 'Bearer ${await getAuthToken()}'},
+      headers: {
+        'Content-Type': 'application/json',
+        HttpHeaders.authorizationHeader: 'Bearer ${await getAuthToken()}',
+      },
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
