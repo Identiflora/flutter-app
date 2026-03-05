@@ -39,7 +39,11 @@ class LevelBadge extends AccountBadge {
 
   LevelBadge({required super.imagePath, required this.unlockAtLevel});
 
-  LevelBadge.withImage({required super.imagePath, required dynamic displayImage, required this.unlockAtLevel});
+  LevelBadge.withImage({
+    required super.imagePath,
+    required dynamic displayImage,
+    required this.unlockAtLevel,
+  });
 
   set setUnlockAtLevel(int newLevel) {
     unlockAtLevel = newLevel;
@@ -64,30 +68,46 @@ class LevelBadge extends AccountBadge {
 /// ```dart
 /// badge.isUnlocked(unlockParameter)
 /// ```
-Widget getBadgeDisplay(BuildContext context, AccountBadge badge, bool unlockCondition, bool isSelected) {
+Widget getBadgeDisplay(
+  BuildContext context,
+  AccountBadge badge,
+  bool unlockCondition,
+  bool isSelected,
+) {
   return Stack(
     fit: StackFit.expand,
-    children: [ 
+    children: [
       CircleAvatar(
         radius: 25.0,
-        backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(100),
+        backgroundColor: Theme.of(context).colorScheme.surfaceBright,
         backgroundImage: badge.displayImage,
-        child: unlockCondition ? null : CircleAvatar(
-          radius: 50, 
-          backgroundColor: Colors.black.withAlpha(150), 
-          foregroundColor: Theme.of(context).colorScheme.inversePrimary, 
-          child: Icon(Icons.lock_person_rounded, size: 35)
-        )
+        child: unlockCondition
+            ? null
+            : CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.black.withAlpha(150),
+                foregroundColor: Theme.of(context).colorScheme.inversePrimary,
+                child: Icon(Icons.lock_person_rounded, size: 35),
+              ),
       ),
-      isSelected ? Positioned(
-        right: 0,
-        bottom: 0,
-        // Child is declared this way instead of using icons.check_circle so that checkmark isn't translucent
-        child: Container(
-          decoration: BoxDecoration(color: Colors.green, shape: BoxShape.circle), 
-          child: Icon(Icons.check, color: Theme.of(context).colorScheme.surface, size: 20,)
-        )
-      ) : Container()
-    ]
+      isSelected
+          ? Positioned(
+              right: 0,
+              bottom: 0,
+              // Child is declared this way instead of using icons.check_circle so that checkmark isn't translucent
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.check,
+                  color: Theme.of(context).colorScheme.surface,
+                  size: 20,
+                ),
+              ),
+            )
+          : Container(),
+    ],
   );
 }

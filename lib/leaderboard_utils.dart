@@ -2,6 +2,31 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/general_utils.dart';
+import 'package:identiflora/widgets/leaderboard_widgets.dart';
+import 'package:identiflora/widgets/neon_widgets.dart';
+
+class LeaderboardUser {
+  final String userName;
+  String? displayedBadgeFilePath;
+  final int userId;
+  int userScore;
+
+  LeaderboardUser({
+    required this.userName,
+    this.userScore = 0,
+    this.displayedBadgeFilePath,
+    this.userId = 0,
+  });
+
+  set setDisplayedBadgeFilePath(String badgeFilePath) {
+    displayedBadgeFilePath = badgeFilePath;
+  }
+
+  String? get getUnlockAtLevel {
+    return displayedBadgeFilePath;
+  }
+}
 
 //CODE FOR HOMEPAGE BUTTON
 class LeaderboardWidget extends StatefulWidget {
@@ -29,7 +54,7 @@ class _Leaderboard extends State<LeaderboardWidget> {
               );
             },
             child: Image.asset(
-              'assets/homepage/leaderboard_icon.png',
+              'assets/homepage/no_shadow_leaderboard_icon.png',
               width: 80,
               height: 80,
             ),
@@ -50,6 +75,7 @@ class LeaderboardScreen extends StatefulWidget {
 
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
   String? leaderboardType = "Global";
+  String region = "";
 
   /// Gets popup options based on current leaderboard type to insure a dynamic popup view when switching types.
   List<PopupMenuEntry<String>> getPopupOptions(String? leaderboardType) {
@@ -79,14 +105,72 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   ) async {
     final List<LeaderboardUser> users;
 
-    // LOAD ALL USERS WITH SCORES
     if (leaderboardType == "Global") {
       users = await submitGlobalLeaderboardRequest(leaderboardSize: maxUsers);
+    } 
+    else if (leaderboardType == "Friends") {
+      users = await submitFriendsLeaderboardRequest(leaderboardSize: maxUsers);
+    }
+    else if (leaderboardType == "Regional") {
+      users = await submitRegionalLeaderboardRequest(leaderboardSize: maxUsers);
     } else {
       users = List.empty();
     }
 
     return users;
+  }
+
+  /// Get color for rank of user on leaderboard
+  Color getRankColor(int userIndex) {
+    Color rankColor;
+
+    switch (userIndex) {
+      case 1:
+        rankColor = Color.fromARGB(255, 255, 217, 0);
+        break;
+      case 2:
+        rankColor = Color.fromARGB(255, 192, 192, 192);
+        break;
+      case 3:
+        rankColor = Color.fromARGB(255, 205, 127, 50);
+        break;
+      default:
+        rankColor = Theme.of(context).colorScheme.surface;
+        break;
+    }
+
+    return rankColor;
+  }
+
+  /// Gets user's region or throws error
+  Future<String> _getUserRegion() async {
+    try {
+      return await getUserRegion();
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error while loading leaaderboard region: $error"),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 8),
+        ),
+      );
+
+      return "";
+    }
+  }
+
+  Widget getLeaderboardErrorMessage(String? lowercaseLeaderboardType) {
+    return Center(
+      child: Text(
+        "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -103,25 +187,34 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 leaderboardType = value;
               });
 
+              if (leaderboardType == "Regional") {
+                _getUserRegion().then((response) {
+                  setState(() {
+                    region = response;
+                  });
+                });
+              }
+
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
                   content: Text(
                     "Now Displaying $value Leaderboard",
-                    style: const TextStyle(color: Colors.black),
+                    style: TextStyle(color: Theme.of(context).textTheme.labelSmall!.color),
                   ),
                 ),
               );
             },
           ),
         ],
-      ), //END APPBAR
+      ),
 
+      // Main leaderboard functionality
       body: FutureBuilder<List<LeaderboardUser>>(
         future: addUsers(leaderboardType, 100),
         builder: (context, snapshot) {
           String? lowercaseLeaderboardType = leaderboardType?.toLowerCase();
-      
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
               child: CircularProgressIndicator(
@@ -130,86 +223,36 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             );
           } else if (snapshot.hasData && snapshot.data != null) {
             final leaderboard = snapshot.data;
-      
+
             if (leaderboard!.isEmpty) {
-              return Center(
-                child: Text(
-                  "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
-                  textAlign: TextAlign.center,
-                ),
-              );
+              return getLeaderboardErrorMessage(lowercaseLeaderboardType);
             }
 
             double screenWidth = MediaQuery.of(context).size.width;
-      
+
             return SafeArea(
               child: Scrollbar(
                 child: ListView.builder(
                   itemCount: leaderboard.length + 1,
                   itemBuilder: (context, index) {
                     // Return header if index is 0
-                    if(index == 0) {
-                      return Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text("Rank", style: TextStyle(fontSize: 20.0)),
-                                    const SizedBox(width: 16.0),
-                                    Text("User", style: TextStyle(fontSize: 20.0)),
-                                    const SizedBox(width: 16.0),
-                                    Text("Points", style: TextStyle(fontSize: 20.0)),
-                                  ],
-                                ),
-                                const SizedBox(height: 8.0),
-                                Divider(
-                                  height: 0.5,
-                                  thickness: 0.5,
-                                  color: Theme.of(context).colorScheme.inverseSurface,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                    if (index == 0) {
+                      return LeaderboardHeaderDisplay(
+                        leaderboardType: leaderboardType, 
+                        userRegion: region
                       );
                     }
-                    
-                    final user = leaderboard[index - 1];
-                
-                    Color? rankColor = Theme.of(context).colorScheme.surface;
-                                
-                    switch(index) {
-                      case 1:
-                        rankColor = Color.fromARGB(255, 255, 217, 0);
-                        break;
-                      case 2:
-                        rankColor = Color.fromARGB(255, 192, 192, 192);
-                        break;
-                      case 3:
-                        rankColor = Color.fromARGB(255, 205, 127, 50);
-                        break;
-                      default:
-                        rankColor = Theme.of(context).colorScheme.surface;
-                        break;
-                    }
-                
+
+                    // Gain user information and dynamic color
+                    final LeaderboardUser user = leaderboard[index - 1];
+                    final Color rankColor = getRankColor(index);
+
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 12.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
-                          boxShadow: [
-                            BoxShadow(
-                              blurStyle: BlurStyle.outer,
-                              blurRadius: 3,
-                            ),
-                          ],
-                        ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12.0,
+                        horizontal: 12.0,
+                      ),
+                      child: NeonContainer(
                         child: Padding(
                           padding: const EdgeInsets.all(6.0),
                           child: Row(
@@ -219,65 +262,32 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      maxWidth: screenWidth * 0.2
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        index <= 3 ?
-                                          Icon(Icons.emoji_events, color: rankColor, size: 30, shadows: [Shadow(blurRadius: 1.0)]) 
-                                          : Icon(null, size: 30,),
-                                        index < 10 ? const SizedBox(width: 16.0) : const SizedBox(width: 6.0),
-                                        Text(
-                                          "#$index", 
-                                          style: TextStyle(fontSize: 14.0),
-                                        )
-                                      ],
-                                    ),
+                                  LeaderboardUserRankDisplay(
+                                    screenWidth: screenWidth, 
+                                    userIndex: index, 
+                                    rankColor: rankColor
                                   ),
-                                  const SizedBox(width: 12.0),
-                                  SizedBox(
-                                    width: screenWidth * 0.45,
-                                    child: Row(
-                                      children: [
-                                        // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
-                                        CircleAvatar(
-                                          foregroundImage: const AssetImage('assets/brand/Identiflora_logo.png'), 
-                                          backgroundColor: Theme.of(context).colorScheme.surface, 
-                                          radius: 20,
-                                        ),
-                                        const SizedBox(width: 14.0),
-                                        Flexible(
-                                          child: Text(
-                                            user.userName,
-                                            style: TextStyle(fontSize: 14.0),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  const SizedBox(width: 8.0),
+                                  GestureDetector(
+                                    onTap: () {
+                                      debugPrint(
+                                        "Tapped user with ID: ${user.userId}",
+                                      ); // REMOVE AND ADD VIEW USER PROFILE HERE
+                                    },
+                                    child: LeaderboardUserDisplay(
+                                      screenWidth: screenWidth, 
+                                      badgeFilePath: user.displayedBadgeFilePath, 
+                                      username: user.userName
+                                    )
                                   ),
                                 ],
                               ),
-                              Container(
-                                constraints: BoxConstraints(
-                                  maxWidth: screenWidth * 0.3
-                                ),
-                                decoration: BoxDecoration(
-                                  color: index <= 3 ? rankColor.withAlpha(125) : Theme.of(context).colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.all(Radius.elliptical(15, 15))
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    "${user.userScore} pts.", 
-                                    style: TextStyle(fontSize: 12.0), 
-                                    textAlign: TextAlign.right,
-                                  ),
-                                )
-                              ),
+                              LeaderboardUserPointDisplay(
+                                screenWidth: screenWidth, 
+                                userIndex: index, 
+                                userPoints: user.userScore, 
+                                rankColor: rankColor
+                              )
                             ],
                           ),
                         ),
@@ -289,28 +299,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             );
           } else if (snapshot.hasError) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    "Error while loading leaaderboard: ${snapshot.error}",
-                  ),
-                  backgroundColor: Colors.red,
-                ),
+              errorPopupMessage(
+                context, 
+                "Error while loading leaaderboard: ${snapshot.error}", 
+                Duration(seconds: 8)
               );
             });
-            return Center(
-              child: Text(
-                "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
-                textAlign: TextAlign.center,
-              ),
-            );
+            return getLeaderboardErrorMessage(lowercaseLeaderboardType);
           } else {
-            return Center(
-              child: Text(
-                "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
-                textAlign: TextAlign.center,
-              ),
-            );
+            return getLeaderboardErrorMessage(lowercaseLeaderboardType);
           }
         },
       ),
@@ -319,19 +316,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     //END SCAFFOLD
   }
 } //END LEADERBOARDSCREEN STATE CLASS
-
-class LeaderboardUser {
-  final String userName;
-  final int userId;
-  int userScore;
-
-  //CONSTRUCTOR
-  LeaderboardUser({
-    required this.userName,
-    this.userScore = 0,
-    this.userId = 0,
-  });
-} //END LEADERBOARDUSER CLASS
 
 // CLASS THAT CREATES USERS RANDOM INDEX, AND ADDS THEM TO LEADERBOARD LIST
 class LeaderBoardControl {

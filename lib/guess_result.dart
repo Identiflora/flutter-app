@@ -3,13 +3,14 @@ import 'package:identiflora/user_data/point_utils.dart';
 import 'model_incorrect.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/widgets/neon_widgets.dart';
 
 class ResultsWidget extends StatefulWidget {
   final int userChoiceIndex;
   final int correctIndex;
   final List<Map<String, dynamic>> allPredictions;
   final String imgURL;
-  
+
   const ResultsWidget({
     required this.userChoiceIndex,
     required this.correctIndex,
@@ -25,13 +26,14 @@ class ResultsWidget extends StatefulWidget {
 class _Results extends State<ResultsWidget> {
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> topMatch = widget.allPredictions[widget.correctIndex];
+    final Map<String, dynamic> topMatch =
+        widget.allPredictions[widget.correctIndex];
     final String modelTopName = topMatch['label'];
     final Map<String, dynamic> userPick;
     String userPickedName = "";
-    
+
     // Check for bounds and skip case
-    if(widget.userChoiceIndex <= 4 && widget.userChoiceIndex >= 0) {
+    if (widget.userChoiceIndex <= 4 && widget.userChoiceIndex >= 0) {
       userPick = widget.allPredictions[widget.userChoiceIndex];
       userPickedName = userPick['label'];
     }
@@ -39,15 +41,14 @@ class _Results extends State<ResultsWidget> {
     final bool isCorrect = widget.userChoiceIndex == widget.correctIndex;
 
     // correct color based off themeing with a hard dark red for incorrect
-    final Color incorrectColor = const Color.fromARGB(255, 180, 39, 39);
-    final Color correctColor = Theme.of(context).colorScheme.primary;
-    
+    final Color incorrectColor = const Color.fromARGB(255, 255, 132, 132);
+    final Color correctColor = Theme.of(context).colorScheme.secondary;
+
     const TextStyle mainTextStyle = TextStyle(
       fontSize: 22,
       height: 1.2,
-      color: Colors.black, 
     );
-    
+
     final TextStyle plantNameStyle = mainTextStyle.copyWith(
       fontWeight: FontWeight.bold,
     );
@@ -55,10 +56,7 @@ class _Results extends State<ResultsWidget> {
     final int addPoints = 1;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Results'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Results'), centerTitle: true),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 24.0),
@@ -73,11 +71,12 @@ class _Results extends State<ResultsWidget> {
                     if (isCorrect) ...[
                       const TextSpan(text: "You said this plant is a\n"),
                       TextSpan(
-                        text: userPickedName, 
+                        text: userPickedName,
                         style: plantNameStyle.copyWith(color: correctColor),
                       ),
                       const TextSpan(text: "\nand were correct!"),
-                    ] else if(widget.userChoiceIndex != -1)...[
+                    ] else if (widget.userChoiceIndex != -1) ...[
+                      // Incorrect guess
                       const TextSpan(text: "You said this plant is a\n"),
                       TextSpan(
                         text: "$userPickedName...\n",
@@ -88,8 +87,8 @@ class _Results extends State<ResultsWidget> {
                         text: modelTopName,
                         style: plantNameStyle.copyWith(color: correctColor),
                       ),
-                    ]
-                    else ...[
+                    ] else ...[
+                      // Skipped Guess
                       const TextSpan(text: "This plant is a\n"),
                       TextSpan(
                         text: modelTopName,
@@ -102,20 +101,13 @@ class _Results extends State<ResultsWidget> {
               const SizedBox(height: 24),
               SizedBox(
                 height: 300,
-                child: Container(
-                  decoration: widget.imgURL == "" ? null : BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: const BorderRadius.all(Radius.elliptical(15, 15)),
-                    boxShadow: const [
-                      BoxShadow(
-                        blurStyle: BlurStyle.outer,
-                        blurRadius: 5,
-                      ),
-                    ],
-                  ),
+                child: NeonContainer(
+                  borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
                   child: ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.elliptical(15, 15)),
-                    child: widget.imgURL == "" ? const Placeholder() : Image.network(widget.imgURL, fit: BoxFit.cover,)
+                    borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
+                    child: widget.imgURL == ""
+                        ? Placeholder()
+                        : Image.network(widget.imgURL, fit: BoxFit.cover),
                   ),
                 ),
               ),
@@ -177,6 +169,8 @@ class _Results extends State<ResultsWidget> {
                       },
                       style: ElevatedButton.styleFrom(
                         foregroundColor: correctColor,
+
+                        // backgroundColor: correctColor,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),
@@ -189,7 +183,7 @@ class _Results extends State<ResultsWidget> {
                       child: const Text('Yes'),
                     ),
                   ),
-                  const SizedBox(width: 16), 
+                  const SizedBox(width: 16),
                   // No Button
                   Expanded(
                     child: ElevatedButton(
@@ -197,7 +191,9 @@ class _Results extends State<ResultsWidget> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => TopMatchesWidget(predictions: widget.allPredictions),
+                            builder: (context) => TopMatchesWidget(
+                              predictions: widget.allPredictions,
+                            ),
                           ),
                         );
                       },

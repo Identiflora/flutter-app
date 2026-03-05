@@ -9,6 +9,8 @@ import 'package:identiflora/environment.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
 import 'dart:math';
+import 'package:identiflora/theme/glowing_text_theme.dart';
+import 'package:identiflora/widgets/neon_widgets.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -65,7 +67,7 @@ class _Login extends State<LoginWidget> {
               }
             },
             child: Image.asset(
-              'assets/homepage/account_icon.png',
+              'assets/homepage/no_shadow_account_icon.png',
               width: 80,
               height: 80,
             ),
@@ -101,16 +103,17 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           children: <Widget>[
             isLoginView ? const LoginForm() : const SignUpForm(),
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: TextButton(
-                onPressed: toggleView,
-                child: Text(
-                  isLoginView
-                      ? 'Need an account? Sign Up'
-                      : 'Already have an account? Login',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+            TextButton(
+              onPressed: toggleView,
+              child: Text(
+                isLoginView
+                    ? 'Need an account? Sign Up'
+                    : 'Already have an account? Login',
+                style:
+                    Theme.of(
+                      context,
+                    ).extension<GlowingTextTheme>()?.glowingText ??
+                    const TextStyle(),
               ),
             ),
             TextButton(
@@ -120,7 +123,11 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: Text(
                 isLoginView ? 'Forgot Password?' : '',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style:
+                    Theme.of(
+                      context,
+                    ).extension<GlowingTextTheme>()?.glowingText ??
+                    const TextStyle(),
               ),
             ),
           ],
@@ -254,35 +261,36 @@ class _LoginFormState extends State<LoginForm> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
-        TextField(
-          controller: emailControl,
-          decoration: const InputDecoration(
-            labelText: "Email",
-            border: OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 16),
+      children:
+          [
+                NeonInputField(controller: emailControl, labelText: "Email"),
+                NeonInputField(
+                  controller: passwordControl,
+                  labelText: "Password",
+                ),
+                NeonOutlinedButton(onPressed: loginPressed, labelText: "Login"),
 
-        TextField(
-          controller: passwordControl,
-          obscureText: true,
-          decoration: const InputDecoration(
-            labelText: "Password",
-            border: OutlineInputBorder(),
-          ),
-        ),
-        ElevatedButton(onPressed: loginPressed, child: const Text("Login")),
-        ElevatedButton.icon(
-          onPressed: () => _handleGoogleSignIn(context),
-          icon: Image.asset(
-            'assets/brand/Google_G_logo_500x500.png',
-            width: 25,
-            height: 25,
-          ),
-          label: const Text("Sign in with Google"),
-        ),
-      ],
+                ElevatedButton.icon(
+                  onPressed: () => _handleGoogleSignIn(context),
+                  icon: Image.asset(
+                    'assets/brand/Google_G_logo_500x500.png',
+                    width: 25,
+                    height: 25,
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.secondary,
+                  ),
+                  label: Text("Sign in with Google"),
+                ),
+              ]
+              .map(
+                (childWidget) => Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: childWidget,
+                ),
+              )
+              .toList(),
     );
   }
 } //END LOGINFORMSTATE CLASS
@@ -301,12 +309,14 @@ class _SignUpFormState extends State<SignUpForm> {
   final usernameControl = TextEditingController();
   final passwordControl = TextEditingController();
   final confirmControl = TextEditingController();
+  String? userRegion;
 
   void signUp() async {
     final email = emailControl.text.trim();
     final username = usernameControl.text.trim();
     final password = passwordControl.text.trim();
     final confirm = confirmControl.text.trim();
+    final region = userRegion;
 
     //CHECK IF PASSWORDS MATCH
     if (password != confirm) {
@@ -318,7 +328,7 @@ class _SignUpFormState extends State<SignUpForm> {
       );
       return;
     } //END SIGNUP
-
+    debugPrint("Region: $region");
     //ONLY AFTER CONFIRMING PASSWORDS - HASH
     final hashedPassword = hashPassword(password);
     try {
@@ -326,6 +336,7 @@ class _SignUpFormState extends State<SignUpForm> {
         email: email,
         username: username,
         passwordHash: hashedPassword,
+        region: region as String,
       );
       debugPrint("Received token for $email: ${token.accessToken}");
       //SAVE AUTHTOKEN TO DEVICE
@@ -354,38 +365,52 @@ class _SignUpFormState extends State<SignUpForm> {
     }
   } //end sign up
 
+  void _setDropdown(String value) {
+    setState(() {
+      userRegion = value;
+    });
+  }
+
   @override
   Widget build(BuildContext contex) {
     return Column(
-      children: [
-        TextField(
-          controller: emailControl,
-          decoration: const InputDecoration(labelText: 'Email'),
-        ),
-        const SizedBox(height: 16),
+      children:
+          [
+                NeonInputField(controller: emailControl, labelText: "Email"),
 
-        TextField(
-          controller: usernameControl,
-          decoration: const InputDecoration(labelText: 'Username'),
-        ),
-        const SizedBox(height: 16),
+                NeonInputField(
+                  controller: usernameControl,
+                  labelText: "Username",
+                ),
 
-        TextField(
-          controller: passwordControl,
-          obscureText: true,
-          decoration: const InputDecoration(labelText: 'Password'),
-        ),
-        const SizedBox(height: 16),
+                NeonDropdownMenu(
+                  onSelected: _setDropdown,
+                  labelText: "Region",
+                  options: [
+                    'Northeast US',
+                    'Midwest US',
+                    'Southern US',
+                    'Western US',
+                  ],
+                ),
 
-        TextField(
-          controller: confirmControl,
-          obscureText: true,
-          decoration: const InputDecoration(labelText: 'Confirm Password'),
-        ),
-        const SizedBox(height: 16),
-
-        ElevatedButton(onPressed: signUp, child: const Text("Sign Up")),
-      ],
+                NeonInputField(
+                  controller: passwordControl,
+                  labelText: "Password",
+                ),
+                NeonInputField(
+                  controller: confirmControl,
+                  labelText: "Confirm Password",
+                ),
+                NeonOutlinedButton(onPressed: signUp, labelText: "Sign Up"),
+              ]
+              .map(
+                (childWidget) => Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: childWidget,
+                ),
+              )
+              .toList(),
     );
   }
 } //END SIGNUPFORMSTATE CLASS
@@ -409,13 +434,12 @@ class ExternalSignUpForm extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 "Please enter a username so others know how to identify you!",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   height: 1.2,
-                  color: Colors.black,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -468,11 +492,11 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
 
       return true;
     } catch (error) {
-      if(context.mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Login failed: $error"),
-            backgroundColor: Colors.red
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -484,10 +508,7 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Loading...'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Loading...'), centerTitle: true),
       body: SafeArea(
         child: FutureBuilder<bool>(
           future: loginAndStore(googleToken, context),
@@ -502,10 +523,7 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
                       child: Text(
                         "Please wait while we log you in...",
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                        style: TextStyle(fontSize: 20),
                       ),
                     ),
                     Padding(
@@ -542,10 +560,7 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
                       child: Text(
                         "Login complete! One moment...",
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                        style: TextStyle(fontSize: 20),
                       ),
                     ),
                     Padding(
@@ -587,7 +602,7 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.0),
                       ),
-                      textStyle: const TextStyle(
+                      textStyle: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
@@ -623,13 +638,12 @@ class PasswordResetForm extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 "Please enter the email associated with your account.",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   height: 1.2,
-                  color: Colors.black,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -716,23 +730,19 @@ class NewPasswordForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reset Password'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Reset Password'), centerTitle: true),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 "Please enter a new password to be associated with your account.",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   height: 1.2,
-                  color: Colors.black,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -775,3 +785,79 @@ class NewPasswordForm extends StatelessWidget {
     );
   }
 }
+
+// class DecoratedDropdownMenu extends StatelessWidget {
+//   final void Function(String selection)? onSelected;
+//   final String labelText;
+//   final List<String> options;
+
+//   /// Creates a [DecoratedDropdownMenu]
+//   ///
+//   /// Standard dropdown menu decorated to match Identiflora theme.
+//   /// * [onSelected] is the function to be executed upon selection. The input to this function is the string associated with the selection.
+//   /// * [labelText] is the text displayed indicating what the dropdown menu is for.
+//   /// * [options] are the options for the dropdown menu.
+//   const DecoratedDropdownMenu({
+//     super.key,
+//     required this.onSelected,
+//     required this.labelText,
+//     required this.options,
+//   });
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: const EdgeInsets.all(16.0),
+//       child: LayoutBuilder(
+//         builder: (context, constraints) {
+//           // Sort the list alphabetically
+//           options.sort();
+
+//           return Container(
+//             // 1. Add the glowing shadow behind the widget
+//             decoration: BoxDecoration(
+//               borderRadius: BorderRadius.circular(
+//                 4.0,
+//               ), // Matches default OutlineInputBorder radius
+//               boxShadow: [
+//                 BoxShadow(
+//                   color: Theme.of(context).colorScheme.primary,
+//                   blurRadius: 12.0,
+//                   spreadRadius: 1.0,
+//                 ),
+//               ],
+//             ),
+
+//             child: DropdownMenu<String>(
+//               width: constraints.maxWidth,
+//               label: Text(labelText),
+
+//               // 2. Style the internal text field and mask the shadow
+//               inputDecorationTheme: InputDecorationTheme(
+//                 filled: true,
+//                 fillColor: Theme.of(context).colorScheme.surface,
+
+//                 // Set the border colors to match the glow
+//                 enabledBorder: OutlineInputBorder(
+//                   borderSide: BorderSide(
+//                     color: Theme.of(context).colorScheme.secondary,
+//                     width: 1.5,
+//                   ),
+//                 ),
+//               ),
+
+//               onSelected: (String? value) {
+//                 onSelected?.call(value as String);
+//               },
+//               dropdownMenuEntries: options.map<DropdownMenuEntry<String>>((
+//                 String option,
+//               ) {
+//                 return DropdownMenuEntry<String>(value: option, label: option);
+//               }).toList(),
+//             ),
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }

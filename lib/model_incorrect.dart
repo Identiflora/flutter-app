@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/main.dart';
+import 'package:identiflora/widgets/neon_widgets.dart';
 
 // object for plant information for the grid cards
 class PlantMatch {
@@ -29,7 +30,6 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
   Widget build(BuildContext context) {
     const TextStyle mainTextStyle = TextStyle(
       fontSize: 22,
-      color: Colors.black,
       fontWeight: FontWeight.bold,
     );
 
@@ -46,10 +46,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
     }).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sorry about that!'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Sorry about that!'), centerTitle: true),
       body: SafeArea(
         child: Scrollbar(
           child: Padding(
@@ -74,234 +71,231 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                     mainAxisSpacing: 16.0,
                     childAspectRatio: 0.6,
                   ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final match = matches[index];
-                      Color confidenceColor;
-                      // these ranges might to be tweaked based on what the average
-                      // confidence scores seem to actually be in practice
-                      if (match.confidenceScore >= 0.6) {
-                        confidenceColor = Colors.green;
-                      } else if (match.confidenceScore >= 0.3) {
-                        confidenceColor = Colors.orange;
-                      } else {
-                        confidenceColor = Colors.red;
-                      }
-                      return FutureBuilder(
-                        future: getPlantSpeciesUrl(
-                          scientificName: match.scientificName,
-                        ),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Center(
-                              child: CircularProgressIndicator(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            );
-                          } else if (snapshot.hasData && snapshot.data != null) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                                borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
-                                boxShadow: [
-                                  BoxShadow(
-                                    blurStyle: BlurStyle.outer,
-                                    blurRadius: 3,
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final match = matches[index];
+                    Color confidenceColor;
+                    // these ranges might to be tweaked based on what the average
+                    // confidence scores seem to actually be in practice
+                    if (match.confidenceScore >= 0.6) {
+                      confidenceColor = Colors.green;
+                    } else if (match.confidenceScore >= 0.3) {
+                      confidenceColor = Colors.orange;
+                    } else {
+                      confidenceColor = Colors.red;
+                    }
+                    return FutureBuilder(
+                      future: getPlantSpeciesUrl(
+                        scientificName: match.scientificName,
+                      ),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(
+                            child: CircularProgressIndicator(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          );
+                        } else if (snapshot.hasData && snapshot.data != null) {
+                          return NeonContainer(
+                            borderRadius: BorderRadius.all(
+                              Radius.elliptical(15, 15),
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                // opens full preview of image with submission confirmation
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute<void>(
+                                    builder: (context) => DisplayBigPlantScreen(
+                                      match: match,
+                                      imgPath: snapshot.data!,
+                                      confidenceColor: confidenceColor,
+                                    ),
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        8.0,
+                                        8.0,
+                                        8.0,
+                                        0,
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                          12.0,
+                                        ),
+                                        // Plant image, might need to be reformatted if we are pulling from database
+                                        child: Image.network(
+                                          snapshot.data!,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      10.0,
+                                      8.0,
+                                      10.0,
+                                      8.0,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        // Common Name
+                                        Text(
+                                          match.commonName,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        // Scientific Name
+                                        Text(
+                                          match.scientificName,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        // Confidence Score
+                                        Text(
+                                          '${(match.confidenceScore * 100).toStringAsFixed(1)}% Likely',
+                                          style: TextStyle(
+                                            color: confidenceColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
-                              child: InkWell(
-                                onTap: () {
-                                  // opens full preview of image with submission confirmation
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute<void>(
-                                      builder: (context) => DisplayBigPlantScreen(
-                                        match: match,
-                                        imgPath: snapshot.data!,
-                                        confidenceColor: confidenceColor,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                borderRadius: BorderRadius.circular(12.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                          8.0,
-                                          8.0,
-                                          8.0,
-                                          0,
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            12.0,
-                                          ),
-                                          // Plant image, might need to be reformatted if we are pulling from database
-                                          child: Image.network(snapshot.data!, fit: BoxFit.cover,),
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        10.0,
-                                        8.0,
-                                        10.0,
-                                        8.0,
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          // Common Name
-                                          Text(
-                                            match.commonName,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 4),
-                            
-                                          // Scientific Name
-                                          Text(
-                                            match.scientificName,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                              fontStyle: FontStyle.italic,
-                                            ),
-                                            maxLines: 3,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 4),
-                            
-                                          // Confidence Score
-                                          Text(
-                                            '${(match.confidenceScore * 100).toStringAsFixed(1)}% Likely',
-                                            style: TextStyle(
-                                              color: confidenceColor,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            ),
+                          );
+                        } else {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.all(
+                                Radius.elliptical(15, 15),
                               ),
-                            );
-                          } else {
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                                borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
-                                boxShadow: [
-                                  BoxShadow(
-                                    blurStyle: BlurStyle.outer,
-                                    blurRadius: 3,
+                              boxShadow: [
+                                BoxShadow(
+                                  blurStyle: BlurStyle.outer,
+                                  blurRadius: 3,
+                                ),
+                              ],
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                // opens full preview of image with submission confirmation
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute<void>(
+                                    builder: (context) => DisplayBigPlantScreen(
+                                      match: match,
+                                      imgPath: "",
+                                      confidenceColor: confidenceColor,
+                                    ),
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        8.0,
+                                        8.0,
+                                        8.0,
+                                        0,
+                                      ),
+                                      child: ClipRRect(
+                                        child: const Placeholder(
+                                          color: Colors.grey,
+                                          strokeWidth: 1.0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      10.0,
+                                      8.0,
+                                      10.0,
+                                      8.0,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        // Common Name
+                                        Text(
+                                          match.commonName,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        // Scientific Name
+                                        Text(
+                                          match.scientificName,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        // Confidence Score
+                                        Text(
+                                          '${(match.confidenceScore * 100).toStringAsFixed(1)}% Likely',
+                                          style: TextStyle(
+                                            color: confidenceColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
-                              child: InkWell(
-                                onTap: () {
-                                  // opens full preview of image with submission confirmation
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute<void>(
-                                      builder: (context) => DisplayBigPlantScreen(
-                                        match: match,
-                                        imgPath: "",
-                                        confidenceColor: confidenceColor,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                borderRadius: BorderRadius.circular(12.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
-                                    Expanded(
-                                      child: Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                          8.0,
-                                          8.0,
-                                          8.0,
-                                          0,
-                                        ),
-                                        child: ClipRRect(
-                                          child: const Placeholder(
-                                            color: Colors.grey,
-                                            strokeWidth: 1.0,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        10.0,
-                                        8.0,
-                                        10.0,
-                                        8.0,
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          // Common Name
-                                          Text(
-                                            match.commonName,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 4),
-                            
-                                          // Scientific Name
-                                          Text(
-                                            match.scientificName,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                              fontStyle: FontStyle.italic,
-                                            ),
-                                            maxLines: 3,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 4),
-                            
-                                          // Confidence Score
-                                          Text(
-                                            '${(match.confidenceScore * 100).toStringAsFixed(1)}% Likely',
-                                            style: TextStyle(
-                                              color: confidenceColor,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      );
-                    },
-                    childCount: matches.length
-                  )
+                            ),
+                          );
+                        }
+                      },
+                    );
+                  }, childCount: matches.length),
                 ),
               ],
             ),
@@ -324,7 +318,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
     super.key,
     required this.match,
     required this.imgPath,
-    required this.confidenceColor
+    required this.confidenceColor,
   });
 
   /// Get the appropriate text button for navigation.<br><br>
@@ -338,10 +332,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.0),
           ),
-          textStyle: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         onPressed: () {
           // Navigate to next page
@@ -357,13 +348,8 @@ class DisplayBigPlantScreen extends StatelessWidget {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         foregroundColor: Theme.of(context).colorScheme.primary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        textStyle: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+        textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
       ),
       onPressed: () async {
         // where database would be sent information on the model being incorrect
@@ -385,7 +371,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
         //   );
         // }
 
-        //above cannot be completed until history is implemented. 
+        //above cannot be completed until history is implemented.
 
         Navigator.push(
           context,
@@ -406,10 +392,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
     final double confidence = match.confidenceScore * 100;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Is this correct?"),
-        centerTitle: true
-      ),
+      appBar: AppBar(title: Text("Is this correct?"), centerTitle: true),
       body: SafeArea(
         child: Container(
           color: Theme.of(context).colorScheme.surfaceContainerHigh,
@@ -424,57 +407,80 @@ class DisplayBigPlantScreen extends StatelessWidget {
                     Text(
                       "Is this the plant that should have been identified?",
                       style: TextStyle(fontSize: 22),
-                      textAlign: TextAlign.center
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24.0),
                     ClipRRect(
                       borderRadius: BorderRadius.all(Radius.elliptical(10, 10)),
-                      child: imgPath == "" ? 
-                        const Placeholder(color: Colors.grey, strokeWidth: 1.0) 
-                        : Image.network(imgPath, fit: BoxFit.cover)
+                      child: imgPath == ""
+                          ? const Placeholder(
+                              color: Colors.grey,
+                              strokeWidth: 1.0,
+                            )
+                          : Image.network(imgPath, fit: BoxFit.cover),
                     ),
                     const SizedBox(height: 24.0),
                     const Text(
                       "Common Name",
-                      style: TextStyle(fontSize: 22, decoration: TextDecoration.underline),
-                      textAlign: TextAlign.center
+                      style: TextStyle(
+                        fontSize: 22,
+                        decoration: TextDecoration.underline,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                     Text(
                       name,
-                      style: TextStyle(fontSize: 22, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center
+                      style: TextStyle(
+                        fontSize: 22,
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10.0),
                     const Text(
                       "Scientific Name",
-                      style: TextStyle(fontSize: 22, decoration: TextDecoration.underline),
-                      textAlign: TextAlign.center
+                      style: TextStyle(
+                        fontSize: 22,
+                        decoration: TextDecoration.underline,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                     Text(
                       sciName,
-                      style: TextStyle(fontSize: 22, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center
+                      style: TextStyle(
+                        fontSize: 22,
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10.0),
                     const Text(
                       "Model identified this as",
                       style: TextStyle(fontSize: 22),
-                      textAlign: TextAlign.center
+                      textAlign: TextAlign.center,
                     ),
                     Text(
                       "${confidence.toStringAsFixed(1)}% Likely",
-                      style: TextStyle(fontSize: 22, color: confidenceColor, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center
+                      style: TextStyle(
+                        fontSize: 22,
+                        color: confidenceColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Expanded(child: getButton(context, false)),
-                        Expanded(child: Padding(
-                          padding: const EdgeInsets.only(left: 8.0),
-                          child: getButton(context, true),
-                        )),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: getButton(context, true),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16.0),

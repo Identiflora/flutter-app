@@ -1,9 +1,17 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/friends_utils.dart';
 import 'package:identiflora/user_data/badge_utils.dart';
 import 'package:identiflora/user_data/point_utils.dart';
 import 'level_bottom_sheet.dart';
 import 'package:identiflora/settings.dart';
+import 'package:identiflora/widgets/neon_widgets.dart';
+
+double normalize(double value, double min, double max) {
+  return ((value - min) / (max - min)).clamp(0.0, 1.0);
+}
 
 class ViewAccountScreen extends StatefulWidget {
   const ViewAccountScreen({super.key});
@@ -24,14 +32,9 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
     LevelBadge(imagePath: 'assets/badge/tree_badge.png', unlockAtLevel: 20),
   ]; //this is the list thats passed to the gridview to display the badges
 
-  String username =
-      "Not found"; // need to implement retrieving username in initState
+  String username = " ";
 
   int numFriends = 15; //need to calculate number of friends in initState
-
-  double normalize(double value, double min, double max) {
-    return ((value - min) / (max - min)).clamp(0.0, 1.0);
-  }
 
   @override
   void initState() {
@@ -72,7 +75,7 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
         title: Text('Account'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: NeonIcon(Icons.settings, size: 40.0),
             iconSize: 45.0,
             onPressed: () {
               Navigator.push(
@@ -88,6 +91,17 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ProgressAvatar(normalizedPlayerPoints: normalizedPlayerPoints),
+
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: playerLevel == levelData.value[3]
+                  ? const Text("Max level reached!")
+                  : levelData.value[0] - levelData.value[1] == 1
+                  ? Text("1 more point until level ${playerLevel + 1}!")
+                  : Text("${levelData.value[1]}/${levelData.value[0]}"),
+            ),
+
+            // begin username and edit icon
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -97,28 +111,18 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                   onPressed: () {
                     //takes you to edit username
                   },
-                  icon: Icon(
-                    Icons.edit,
-                    color: Theme.of(context).colorScheme.primary.withAlpha(170),
-                  ),
+                  icon: NeonIcon(Icons.edit),
                 ),
                 SizedBox(width: 8.0),
               ],
-            ),
-            playerLevel == levelData.value[3] ? const Text("Max level reached!") :
-            levelData.value[0] - levelData.value[1] == 1 ? 
-              Text("1 more point until level ${playerLevel + 1}!") 
-              : Text("${levelData.value[0] - levelData.value[1]} more points until level ${playerLevel + 1}!"),
+            ), // end username and edit icon
             //line separator begin
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Container(
+              child: NeonContainer(
                 width: 350,
                 height: 7,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                backgroundColor: Theme.of(context).colorScheme.secondary,
               ),
             ), //line separator end
 
@@ -145,14 +149,46 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                   numericValue: numFriends,
                   category: "Friends",
                   onTap: () {
-                    debugPrint(
-                      "Friends button pressed",
-                    ); //this is where you can navigate to the friends page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const FriendsScreen()),
+                    );
                   },
                 ),
               ],
             ),
-            Expanded(child: BadgesDisplay(badges: badges, playerLevel: playerLevel)),
+
+            // Padding(
+            //   padding: const EdgeInsets.all(16.0),
+            //   child: Container(
+            //     width: 350,
+            //     height: 7,
+            //     decoration: BoxDecoration(
+            //       color: Theme.of(context).colorScheme.primary,
+            //       borderRadius: BorderRadius.circular(10),
+            //     ),
+            //   ),
+            // ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: const Text("Badges", style: TextStyle(fontSize: 20.0)),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0,
+                vertical: 2.0,
+              ),
+              child: Divider(
+                height: 0.5,
+                thickness: 0.5,
+                color: Theme.of(context).colorScheme.inverseSurface,
+              ),
+            ),
+
+            Expanded(
+              child: BadgesDisplay(badges: badges, playerLevel: playerLevel),
+            ),
           ],
         ),
       ),
@@ -163,16 +199,35 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
 class BadgesDisplay extends StatefulWidget {
   final List<LevelBadge> badges;
   final int playerLevel;
-  
+
   /// Creates a [BadgesDisplay] that generates a grid of badge images.
-  const BadgesDisplay({super.key, required this.badges, required this.playerLevel});
+  const BadgesDisplay({
+    super.key,
+    required this.badges,
+    required this.playerLevel,
+  });
 
   @override
   State<BadgesDisplay> createState() => _BadgesDisplayState();
 }
 
 class _BadgesDisplayState extends State<BadgesDisplay> {
-  int selectIndex = -1;
+  String selectedBadgeFilePath = '';
+
+  Future<String> _getPlayerSelectedBadge() async {
+    return await fetchUserBadge();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _getPlayerSelectedBadge().then((response) {
+      setState(() {
+        selectedBadgeFilePath = response;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -189,26 +244,50 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
         AccountBadge badge = widget.badges[index];
 
         return GestureDetector(
-          onTap: () {
-            if(badge.isUnlocked(widget.playerLevel)) {
+          onTap: () async {
+            if (badge.isUnlocked(widget.playerLevel)) {
               // Run API based selection logic here
-              
-              setState(() {
-                selectIndex = index;
-              });
-            }
-            else {
+              try {
+                await submitUserBadge(badgeFilePath: badge.imagePath);
+
+                setState(() {
+                  selectedBadgeFilePath = badge.imagePath;
+                });
+
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Badge selected!"),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              } catch (error) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Badge selection storing failed: $error"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(
-                    badge.getUnlockMessage(),
-                  ),
+                  content: Text(badge.getUnlockMessage()),
                   backgroundColor: Theme.of(context).colorScheme.primary,
                 ),
               );
             }
           },
-          child: getBadgeDisplay(context, badge, badge.isUnlocked(widget.playerLevel), selectIndex == index)
+          child: getBadgeDisplay(
+            context,
+            badge,
+            badge.isUnlocked(widget.playerLevel),
+            selectedBadgeFilePath == badge.imagePath,
+          ),
         );
       },
     );
@@ -233,7 +312,7 @@ class ProgressAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.only(top: 22.0, bottom: 16.0),
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -241,7 +320,7 @@ class ProgressAvatar extends StatelessWidget {
           CircleAvatar(
             backgroundColor: Theme.of(context)
                 .colorScheme
-                .primary, //eventually make this a profile picture or let them choose color
+                .surface, //eventually make this a profile picture or let them choose color
             foregroundImage: const AssetImage(
               'assets/brand/Identiflora_logo.png',
             ),
@@ -259,14 +338,49 @@ class ProgressAvatar extends StatelessWidget {
                 //This is the actual progress bar
                 return Transform.flip(
                   flipX: true,
-                  child: CircularProgressIndicator(
-                    value: animatedValue,
-                    semanticsLabel: 'Linear progress indicator',
-                    strokeWidth: 18.0,
-                    strokeCap: StrokeCap.round,
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.primary.withAlpha(120),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Outter glow of progress indicator
+                      ImageFiltered(
+                        imageFilter: ImageFilter.blur(
+                          sigmaX: 22.0,
+                          sigmaY: 22.0,
+                        ),
+                        child: CircularProgressIndicator(
+                          value: animatedValue,
+                          strokeWidth: 24.0,
+                          strokeCap: StrokeCap.round,
+                          backgroundColor: Colors.transparent,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withAlpha(80),
+                        ),
+                      ),
+
+                      // Inner glow of progress indicator
+                      ImageFiltered(
+                        imageFilter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+                        child: CircularProgressIndicator(
+                          value: animatedValue,
+                          strokeWidth: 12.0,
+                          strokeCap: StrokeCap.round,
+                          backgroundColor: Colors.transparent,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+
+                      CircularProgressIndicator(
+                        value: animatedValue,
+                        semanticsLabel: 'Linear progress indicator',
+                        strokeWidth: 12.0,
+                        strokeCap: StrokeCap.round,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha(50),
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ],
                   ),
                 );
               },
