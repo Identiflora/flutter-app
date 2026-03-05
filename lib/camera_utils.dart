@@ -194,29 +194,26 @@ SafeArea getCameraButton(
   return SafeArea(
     child: Align(
       alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: GestureDetector(
-          onTap: () async {
-            if (controller.value.isTakingPicture) return;
-
-            final image = await controller.takePicture();
-
-            if (pastContext.mounted) {
-              Navigator.push(
-                pastContext,
-                MaterialPageRoute<void>(
-                  builder: (context) =>
-                      DisplayPictureScreen(imgPath: image.path),
-                ),
-              );
-            }
-          },
-          child: Icon(
-            Icons.lens_outlined,
-            size: 100.0,
-            color: Theme.of(pastContext).colorScheme.surface,
-          ),
+      child: GestureDetector(
+        onTap: () async {
+          if (controller.value.isTakingPicture) return;
+      
+          final image = await controller.takePicture();
+      
+          if (pastContext.mounted) {
+            Navigator.push(
+              pastContext,
+              MaterialPageRoute<void>(
+                builder: (context) =>
+                    DisplayPictureScreen(imgPath: image.path),
+              ),
+            );
+          }
+        },
+        child: Icon(
+          Icons.lens_outlined,
+          size: 100.0,
+          color: Theme.of(pastContext).colorScheme.surface,
         ),
       ),
     ),
