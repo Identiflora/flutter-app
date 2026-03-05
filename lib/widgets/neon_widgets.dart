@@ -64,7 +64,7 @@ class NeonContainer extends StatelessWidget {
         border:
             border ??
             Border.all(
-              color: Theme.of(context).colorScheme.primary,
+              color: Theme.of(context).colorScheme.secondary,
               width: 1.5,
             ),
 
@@ -114,16 +114,28 @@ class NeonInputField extends StatelessWidget {
 class NeonOutlinedButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final String labelText;
+  final BorderRadius? borderRadius;
+  final double? fontSize;
+  final FontWeight? fontWeight;
+  final double? borderWidth;
 
   const NeonOutlinedButton({
     super.key,
     required this.onPressed,
     required this.labelText,
+    this.borderRadius,
+    this.fontSize,
+    this.fontWeight,
+    this.borderWidth,
   });
 
   @override
   Widget build(BuildContext context) {
     final neonTheme = Theme.of(context).extension<NeonTheme>();
+    final effectiveRadius = borderRadius ?? BorderRadius.circular(20.0);
+    final effectiveFontSize = fontSize ?? 12.0;
+    final effectiveFontWeight = fontWeight ?? FontWeight.normal;
+    final effectiveBorderWidth = borderWidth ?? 1.5;
 
     return Container(
       // 1. The Container now handles BOTH the shadow and the border
@@ -131,10 +143,10 @@ class NeonOutlinedButton extends StatelessWidget {
         color: Theme.of(
           context,
         ).colorScheme.surface, // Blocks inner shadow bleed
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: effectiveRadius,
         border: Border.all(
           color: Theme.of(context).colorScheme.secondary, // Green border
-          width: 1.5,
+          width: effectiveBorderWidth,
         ),
         boxShadow: neonTheme?.buttonGlow,
       ),
@@ -144,13 +156,15 @@ class NeonOutlinedButton extends StatelessWidget {
         onPressed: onPressed,
         style: TextButton.styleFrom(
           foregroundColor: Theme.of(context).colorScheme.onSurface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: effectiveRadius),
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           // 3. This forces Flutter to remove the invisible thumb padding!
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           minimumSize: Size.zero,
+          textStyle: TextStyle(
+            fontSize: effectiveFontSize,
+            fontWeight: effectiveFontWeight,
+          ),
         ),
         child: Text(labelText),
       ),

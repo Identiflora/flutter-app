@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:math';
 
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/widgets/neon_widgets.dart';
 
 class LeaderboardUser {
-  final String userName; 
+  final String userName;
   String? displayedBadgeFilePath;
   final int userId;
   int userScore;
@@ -105,11 +106,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     // LOAD ALL USERS WITH SCORES
     if (leaderboardType == "Global") {
       users = await submitGlobalLeaderboardRequest(leaderboardSize: maxUsers);
-    } 
-    else if (leaderboardType == "Regional") {
+    } else if (leaderboardType == "Regional") {
       users = await submitRegionalLeaderboardRequest(leaderboardSize: maxUsers);
-    } 
-    else {
+    } else {
       users = List.empty();
     }
 
@@ -122,9 +121,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            "Error while loading leaaderboard region: $error",
-          ),
+          content: Text("Error while loading leaaderboard region: $error"),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 8),
         ),
@@ -153,7 +150,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 leaderboardType = value;
               });
 
-              if(leaderboardType == "Regional") {
+              if (leaderboardType == "Regional") {
                 _getUserRegion().then((response) {
                   setState(() {
                     region = response;
@@ -179,7 +176,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         future: addUsers(leaderboardType, 100),
         builder: (context, snapshot) {
           String? lowercaseLeaderboardType = leaderboardType?.toLowerCase();
-      
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
               child: CircularProgressIndicator(
@@ -188,7 +185,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             );
           } else if (snapshot.hasData && snapshot.data != null) {
             final leaderboard = snapshot.data;
-      
+
             if (leaderboard!.isEmpty) {
               return Center(
                 child: Text(
@@ -199,47 +196,70 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             }
 
             double screenWidth = MediaQuery.of(context).size.width;
-      
+
             return SafeArea(
               child: Scrollbar(
                 child: ListView.builder(
                   itemCount: leaderboard.length + 1,
                   itemBuilder: (context, index) {
                     // Return header if index is 0
-                    if(index == 0) {
+                    if (index == 0) {
                       return Column(
                         children: [
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20.0,
+                              vertical: 8.0,
+                            ),
                             child: Column(
                               children: [
-                                leaderboardType == "Regional" && region != "" ? 
-                                  Text(region, style: TextStyle(fontSize: 20), textAlign: TextAlign.center) 
-                                  : Container(),
-                                leaderboardType == "Regional" && region != "" ? const SizedBox(height: 16.0) : Container(),
-                                leaderboardType == "Regional" && region != "" ? 
-                                  Divider(
-                                    height: 0.5,
-                                    thickness: 0.5,
-                                    color: Theme.of(context).colorScheme.inverseSurface,
-                                  ) 
-                                  : Container(),
+                                leaderboardType == "Regional" && region != ""
+                                    ? Text(
+                                        region,
+                                        style: TextStyle(fontSize: 20),
+                                        textAlign: TextAlign.center,
+                                      )
+                                    : Container(),
+                                leaderboardType == "Regional" && region != ""
+                                    ? const SizedBox(height: 16.0)
+                                    : Container(),
+                                leaderboardType == "Regional" && region != ""
+                                    ? Divider(
+                                        height: 0.5,
+                                        thickness: 0.5,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.inverseSurface,
+                                      )
+                                    : Container(),
                                 const SizedBox(height: 8.0),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text("Rank", style: TextStyle(fontSize: 20.0)),
+                                    Text(
+                                      "Rank",
+                                      style: TextStyle(fontSize: 20.0),
+                                    ),
                                     const SizedBox(width: 16.0),
-                                    Text("User", style: TextStyle(fontSize: 20.0)),
+                                    Text(
+                                      "User",
+                                      style: TextStyle(fontSize: 20.0),
+                                    ),
                                     const SizedBox(width: 16.0),
-                                    Text("Points", style: TextStyle(fontSize: 20.0)),
+                                    Text(
+                                      "Points",
+                                      style: TextStyle(fontSize: 20.0),
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 8.0),
                                 Divider(
                                   height: 0.5,
                                   thickness: 0.5,
-                                  color: Theme.of(context).colorScheme.inverseSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.inverseSurface,
                                 ),
                               ],
                             ),
@@ -247,12 +267,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         ],
                       );
                     }
-                    
+
                     final user = leaderboard[index - 1];
-                
+
                     Color? rankColor = Theme.of(context).colorScheme.surface;
-                                
-                    switch(index) {
+
+                    switch (index) {
                       case 1:
                         rankColor = Color.fromARGB(255, 255, 217, 0);
                         break;
@@ -266,20 +286,13 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                         rankColor = Theme.of(context).colorScheme.surface;
                         break;
                     }
-                
+
                     return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5.5, horizontal: 12.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
-                          boxShadow: [
-                            BoxShadow(
-                              blurStyle: BlurStyle.outer,
-                              blurRadius: 3,
-                            ),
-                          ],
-                        ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12.0,
+                        horizontal: 12.0,
+                      ),
+                      child: NeonContainer(
                         child: Padding(
                           padding: const EdgeInsets.all(6.0),
                           child: Row(
@@ -291,42 +304,63 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                 children: [
                                   ConstrainedBox(
                                     constraints: BoxConstraints(
-                                      maxWidth: screenWidth * 0.2
+                                      maxWidth: screenWidth * 0.2,
                                     ),
                                     child: Row(
                                       children: [
-                                        index <= 3 ?
-                                          Icon(Icons.emoji_events, color: rankColor, size: 30, shadows: [Shadow(blurRadius: 1.0)]) 
-                                          : Icon(null, size: 30,),
-                                        index < 10 ? const SizedBox(width: 16.0) : const SizedBox(width: 6.0),
+                                        index <= 3
+                                            ? Icon(
+                                                Icons.emoji_events,
+                                                color: rankColor,
+                                                size: 30,
+                                                shadows: [
+                                                  Shadow(blurRadius: 1.0),
+                                                ],
+                                              )
+                                            : Icon(null, size: 30),
+                                        index < 10
+                                            ? const SizedBox(width: 16.0)
+                                            : const SizedBox(width: 6.0),
                                         Text(
-                                          "#$index", 
+                                          "#$index",
                                           style: TextStyle(fontSize: 14.0),
-                                        )
+                                        ),
                                       ],
                                     ),
                                   ),
                                   const SizedBox(width: 8.0),
                                   GestureDetector(
                                     onTap: () {
-                                      debugPrint("Tapped user with ID: ${user.userId}"); // REMOVE AND ADD VIEW USER PROFILE HERE
+                                      debugPrint(
+                                        "Tapped user with ID: ${user.userId}",
+                                      ); // REMOVE AND ADD VIEW USER PROFILE HERE
                                     },
                                     child: SizedBox(
                                       width: screenWidth * 0.45,
                                       child: Row(
                                         children: [
                                           // THIS NEEDS CHANGED FOR DYNAMICALLY CHANGING BADGE/PFP
-                                          user.displayedBadgeFilePath != null ? 
-                                            CircleAvatar(
-                                              foregroundImage: AssetImage(user.displayedBadgeFilePath!),
-                                              backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(100),
-                                              radius: 20,
-                                            ) 
-                                            : CircleAvatar(
-                                              foregroundImage: AssetImage('assets/brand/Identiflora_logo.png'),
-                                              backgroundColor: Theme.of(context).colorScheme.surface,
-                                              radius: 20,
-                                            ) ,
+                                          user.displayedBadgeFilePath != null
+                                              ? CircleAvatar(
+                                                  foregroundImage: AssetImage(
+                                                    user.displayedBadgeFilePath!,
+                                                  ),
+                                                  backgroundColor:
+                                                      Theme.of(context)
+                                                          .colorScheme
+                                                          .primary
+                                                          .withAlpha(100),
+                                                  radius: 20,
+                                                )
+                                              : CircleAvatar(
+                                                  foregroundImage: AssetImage(
+                                                    'assets/brand/Identiflora_logo.png',
+                                                  ),
+                                                  backgroundColor: Theme.of(
+                                                    context,
+                                                  ).colorScheme.surface,
+                                                  radius: 20,
+                                                ),
                                           const SizedBox(width: 8.0),
                                           Flexible(
                                             child: Text(
@@ -344,20 +378,26 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                               ),
                               Container(
                                 constraints: BoxConstraints(
-                                  maxWidth: screenWidth * 0.3
+                                  maxWidth: screenWidth * 0.3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: index <= 3 ? rankColor.withAlpha(125) : Theme.of(context).colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.all(Radius.elliptical(15, 15))
+                                  color: index <= 3
+                                      ? rankColor.withAlpha(125)
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.primaryContainer,
+                                  borderRadius: BorderRadius.all(
+                                    Radius.elliptical(15, 15),
+                                  ),
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: Text(
-                                    "${user.userScore} pts.", 
-                                    style: TextStyle(fontSize: 12.0), 
+                                    "${user.userScore} pts.",
+                                    style: TextStyle(fontSize: 12.0),
                                     textAlign: TextAlign.right,
                                   ),
-                                )
+                                ),
                               ),
                             ],
                           ),

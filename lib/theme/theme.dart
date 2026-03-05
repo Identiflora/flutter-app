@@ -41,6 +41,11 @@ ThemeData darkMode = ThemeData(
     border: identifloraDefaultBorder,
   ),
 
+  iconTheme: IconThemeData(
+    color: secondaryNeonGreen,
+    shadows: identifloraBackButtonGlow, //reusing same glow for back button
+  ),
+
   // Automatically applied to all outlined buttons
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
@@ -60,6 +65,7 @@ ThemeData darkMode = ThemeData(
       containerGlow: identifloraContainerGlow,
       buttonGlow: identifloraButtonGlow,
       dropdownGlow: identifloraDropdownGlow,
+      popupGlow: identifloraIconGlow,
     ),
   ],
 
