@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class DisabledButton extends StatelessWidget {
   final bool enableCondition;
   final String labelText;
+  final Color? textColor;
   final void Function()? onPressed;
 
   /// Creates a [DisabledButton]
@@ -15,6 +16,7 @@ class DisabledButton extends StatelessWidget {
     super.key,
     required this.enableCondition,
     required this.labelText,
+    this.textColor,
     required this.onPressed,
   });
 
@@ -38,7 +40,7 @@ class DisabledButton extends StatelessWidget {
         style: TextStyle(
           fontSize: 18,
           color: enableCondition
-              ? Theme.of(context).colorScheme.onSurface
+              ? (textColor ?? Theme.of(context).colorScheme.onSurface)
               : Theme.of(context).colorScheme.surface,
         ),
       ),
