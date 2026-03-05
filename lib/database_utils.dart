@@ -874,27 +874,31 @@ Future<bool> submitPasswordChange({required String newPasswordHash}) async {
 }
 
 // Sends a plant submission with location to the API
-/// do we not already have a plant submission function?
+
 Future<bool> savePlantSubmission({
-  required String speciesName,
+  required List<Map<String, dynamic>> allPredictions,
+  required String userGuess,
   required double latitude,
   required double longitude,
-  // still need image submission part
+  String imgUrl = "",
 }) async {
   String apiBaseUrl = Environment.apiUrl;
-  //
-  // place holder API call
-  //
   final uri = Uri.parse(apiBaseUrl).resolve('/user/submissions');
 
   final authToken = await getAuthToken();
   if (authToken == null) return false;
 
+  // Extracts the class_index IDs from the model's output.
+  // The order of this list will represent the Rank (1-5) in the database.
+  final List<int> predictionIds = allPredictions.map((p) => p['class_index'] as int).toList();
+
   final payload = jsonEncode({
-    'species_name': speciesName,
+    'prediction_ids': predictionIds, 
+    'user_guess': userGuess,
     'latitude': latitude,
     'longitude': longitude,
     'timestamp': DateTime.now().toIso8601String(),
+    'img_url': imgUrl,
   });
 
   final httpClient = http.Client();
@@ -913,7 +917,8 @@ Future<bool> savePlantSubmission({
   }
 }
 
-// Fetches the user's plant submission history
+// Fetches the user's plant submission history, needs to be updated to new
+// History format
 Future<List<Map<String, dynamic>>> fetchSubmissionHistory() async {
   String apiBaseUrl = Environment.apiUrl;
   //

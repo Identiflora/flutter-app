@@ -44,7 +44,6 @@ class _Results extends State<ResultsWidget> {
     
     const TextStyle mainTextStyle = TextStyle(
       fontSize: 22,
-      // fontWeight: FontWeight.bold,
       height: 1.2,
       color: Colors.black, 
     );
@@ -71,10 +70,7 @@ class _Results extends State<ResultsWidget> {
                 text: TextSpan(
                   style: mainTextStyle,
                   children: <TextSpan>[
-                    // if anyone sees this why does this if else need these ...
-                    // I dont get it but it doesnt work without it
                     if (isCorrect) ...[
-                      // Correct guess
                       const TextSpan(text: "You said this plant is a\n"),
                       TextSpan(
                         text: userPickedName, 
@@ -82,7 +78,6 @@ class _Results extends State<ResultsWidget> {
                       ),
                       const TextSpan(text: "\nand were correct!"),
                     ] else if(widget.userChoiceIndex != -1)...[
-                      // Incorrect guess
                       const TextSpan(text: "You said this plant is a\n"),
                       TextSpan(
                         text: "$userPickedName...\n",
@@ -95,7 +90,6 @@ class _Results extends State<ResultsWidget> {
                       ),
                     ]
                     else ...[
-                      // Skipped Guess
                       const TextSpan(text: "This plant is a\n"),
                       TextSpan(
                         text: modelTopName,
@@ -111,8 +105,8 @@ class _Results extends State<ResultsWidget> {
                 child: Container(
                   decoration: widget.imgURL == "" ? null : BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
-                    boxShadow: [
+                    borderRadius: const BorderRadius.all(Radius.elliptical(15, 15)),
+                    boxShadow: const [
                       BoxShadow(
                         blurStyle: BlurStyle.outer,
                         blurRadius: 5,
@@ -120,8 +114,8 @@ class _Results extends State<ResultsWidget> {
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
-                    child: widget.imgURL == "" ? Placeholder() : Image.network(widget.imgURL, fit: BoxFit.cover,)
+                    borderRadius: const BorderRadius.all(Radius.elliptical(15, 15)),
+                    child: widget.imgURL == "" ? const Placeholder() : Image.network(widget.imgURL, fit: BoxFit.cover,)
                   ),
                 ),
               ),
@@ -140,19 +134,16 @@ class _Results extends State<ResultsWidget> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        if (isCorrect) {
-                         double lat = 0.0, lng = 0.0;  
-                        // Check if location services are enabled on the device
-                        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+                        double lat = 0.0, lng = 0.0;  
                         
+                        // Location service check
+                        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
                         if (serviceEnabled) {
-                          // Check if the app has location permission
                           LocationPermission permission = await Geolocator.checkPermission();
                           if (permission == LocationPermission.denied) {
                             permission = await Geolocator.requestPermission();
                           }
                           
-                          // Check if we have permission and the location service is running
                           if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
                             try {
                               Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
@@ -162,32 +153,30 @@ class _Results extends State<ResultsWidget> {
                               debugPrint("Error getting location: $e");
                             }
                           }
-                        } else {
-                          // However we handle issues with location/the user denying acess
                         }
 
-                        // Save submission to history (saves 0.0, 0.0 if location failed/denied)
+                        // Send results to the database
                         await savePlantSubmission(
-                          speciesName: modelTopName, 
+                          allPredictions: widget.allPredictions,
+                          userGuess: modelTopName, 
                           latitude: lat, 
-                          longitude: lng
+                          longitude: lng,
+                          imgUrl: widget.imgURL,
                         );
 
-                        // Continue to points screen
-                        if(context.mounted) {
+                        // Navigation and Points
+                        if (isCorrect && context.mounted) {
+                          // Award points only if the original guess was right
                           Navigator.push(context, MaterialPageRoute(
                             builder: (context) => UserPointsLoadingScreen(newPoints: addPoints),
                           ));
-                        }
-                        }
-                        else {
+                        } else if (context.mounted) {
+                          // If they were wrong but clicked Yes (confirming the correct one), just go home
                           Navigator.popUntil(context, ModalRoute.withName("/"));
                         }
                       },
                       style: ElevatedButton.styleFrom(
                         foregroundColor: correctColor,
-                        // backgroundColor: correctColor,
-                                          
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),
@@ -213,9 +202,7 @@ class _Results extends State<ResultsWidget> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        // backgroundColor: incorrectColor,
                         foregroundColor: incorrectColor,
-                        
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),
