@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/friends_utils.dart';
 import 'package:identiflora/user_data/badge_utils.dart';
 import 'package:identiflora/user_data/point_utils.dart';
 import 'level_bottom_sheet.dart';
@@ -148,9 +149,10 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                   numericValue: numFriends,
                   category: "Friends",
                   onTap: () {
-                    debugPrint(
-                      "Friends button pressed",
-                    ); //this is where you can navigate to the friends page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const FriendsScreen()),
+                    );
                   },
                 ),
               ],

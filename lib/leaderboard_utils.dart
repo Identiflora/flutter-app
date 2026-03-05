@@ -106,7 +106,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     // LOAD ALL USERS WITH SCORES
     if (leaderboardType == "Global") {
       users = await submitGlobalLeaderboardRequest(leaderboardSize: maxUsers);
-    } else if (leaderboardType == "Regional") {
+    } 
+    else if (leaderboardType == "Friends") {
+      users = await submitFriendsLeaderboardRequest(leaderboardSize: maxUsers);
+    }
+    else if (leaderboardType == "Regional") {
       users = await submitRegionalLeaderboardRequest(leaderboardSize: maxUsers);
     } else {
       users = List.empty();
