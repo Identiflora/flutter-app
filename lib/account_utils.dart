@@ -176,14 +176,10 @@ class _LoginFormState extends State<LoginForm> {
       );
       hasOTP = true;
     } else if (otpResult == 0 && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "This one time password has expired! Please press 'Forgot password?' again for a new one time password.",
-          ),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 15),
-        ),
+      errorPopupMessage(
+        context, 
+        "This one time password has expired! Please press 'Forgot password?' again for a new one time password.", 
+        Duration(seconds: 15)
       );
       return;
     }
@@ -244,11 +240,10 @@ class _LoginFormState extends State<LoginForm> {
       }
     } catch (err) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Login failed: $err"),
-            backgroundColor: Colors.red,
-          ),
+        errorPopupMessage(
+          context, 
+          "Login failed: $err", 
+          null
         );
       }
       return;
@@ -472,20 +467,20 @@ class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  if (usernameControl.text.trim().isNotEmpty && userRegion != null) {
+                  if (validUsername(usernameControl.text.trim()) && userRegion != null) {
                     List<String> userInfo = [usernameControl.text.trim(), userRegion!];
                     Navigator.pop(context, userInfo);
-                  } else if (usernameControl.text.trim().isEmpty) {
+                  } else if (!validUsername(usernameControl.text.trim())) {
                     errorPopupMessage(
                       context, 
-                      "Please make sure username has at least 1 character then try again.",
+                      "Username field must not be empty and have less than 20 characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
                       null
                     );
                   }
                   else {
                     errorPopupMessage(
                       context, 
-                      "Please make sure region is selected then try again.",
+                      "Please make sure a region is selected then try again.",
                       null
                     );
                   }
@@ -517,11 +512,10 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
       return true;
     } catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Login failed: $error"),
-            backgroundColor: Colors.red,
-          ),
+        errorPopupMessage(
+          context, 
+          "Login failed: $error", 
+          null
         );
       }
     }
@@ -598,11 +592,10 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
               );
             } else {
               if (snapshot.hasError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Login failed: ${snapshot.error}"),
-                    backgroundColor: Colors.red,
-                  ),
+                errorPopupMessage(
+                  context, 
+                  "Login failed: ${snapshot.error}", 
+                  null
                 );
               }
 
@@ -653,7 +646,7 @@ class PasswordResetForm extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Please provide us with additional information.'),
+        title: const Text('Additional Information Needed'),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -682,7 +675,7 @@ class PasswordResetForm extends StatelessWidget {
 
               ElevatedButton(
                 onPressed: () async {
-                  if (emailControl.text.trim().length >= 5) {
+                  if (validEmail(emailControl.text.trim())) {
                     try {
                       bool success = await submitUserPasswordReset(
                         email: emailControl.text.trim(),
@@ -701,37 +694,30 @@ class PasswordResetForm extends StatelessWidget {
                         );
                         Navigator.pop(context);
                       } else if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password.",
-                            ),
-                            backgroundColor: Colors.red,
-                            duration: Duration(seconds: 15),
-                          ),
+                        errorPopupMessage(
+                          context, 
+                          "Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password.", 
+                          Duration(seconds: 15)
                         );
+                        
                         Navigator.pop(context);
                       }
                     } catch (err) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("Password reset failed: $err"),
-                            backgroundColor: Colors.red,
-                            duration: Duration(seconds: 15),
-                          ),
+                        errorPopupMessage(
+                          context, 
+                          "Password reset failed: $err", 
+                          null
                         );
+                        
                         Navigator.pop(context);
                       }
                     }
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Please make sure your email has at least 5 characters then try again.",
-                        ),
-                        backgroundColor: Colors.red,
-                      ),
+                    errorPopupMessage(
+                      context, 
+                      "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}", 
+                      Duration(seconds: 8)
                     );
                   }
                 },
@@ -782,12 +768,11 @@ class NewPasswordForm extends StatelessWidget {
 
               ElevatedButton(
                 onPressed: () {
-                  if (passwordControl.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Please complete all fields."),
-                        backgroundColor: Colors.red,
-                      ),
+                  if (!validPassword(passwordControl.text.trim())) {
+                    errorPopupMessage(
+                      context, 
+                      "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}", 
+                      Duration(seconds: 8)
                     );
                   } else {
                     Navigator.pop(context, passwordControl.text.trim());
