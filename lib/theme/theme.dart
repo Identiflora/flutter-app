@@ -25,6 +25,7 @@ ThemeData darkMode = ThemeData(
     primary: primaryNeonGreen,
     secondary: secondaryNeonGreen,
     onSurface: Colors.grey.shade300,
+    error: Color.fromARGB(255, 255, 132, 132),
   ),
 
   // Defines text color for all text
