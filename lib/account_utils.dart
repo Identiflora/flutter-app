@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/environment.dart';
 import 'package:identiflora/theme/general_utils.dart';
+import 'package:identiflora/view_account/view_account_utils.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
 import 'dart:math';
@@ -37,34 +38,39 @@ class _Login extends State<LoginWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GestureDetector(
             onTap: () async {
-              bool tokenSuccess = false;
               try {
-                tokenSuccess = await authenticateToken();
-                if (!(tokenSuccess)) {
-                  //if token is not valid, go to login screen
-                  if (context.mounted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                    );
-                  }
-                } else {
-                  //if token is valid, go to view account screen
-                  if (context.mounted) {
-                    Navigator.pushNamed(context, '/view_account_screen');
-                  }
-                }
+                Navigator.push(
+                  context, 
+                  MaterialPageRoute(
+                    builder: (context) => LoadingScreen<bool>.withNav(
+                      loadingMsg: "Loading account information...", 
+                      foundMsg: "Account found! One moment...", 
+                      errorMsg: "Unable to find account information. Returning...", 
+                      futureFunction: authenticateToken(),
+                      postLoadingBuilder: (context, success) {
+                        if(success == null || !success) {
+                          return const LoginScreen();
+                        }
+                        return ViewAccountScreen();
+                      },
+                      navigateOnError: true,
+                    )
+                  )
+                );
               } on RateLimitException catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(e.message),
-                      backgroundColor: Colors.red,
-                    ),
+                  errorPopupMessage(
+                    context, 
+                    e.message, 
+                    null
                   );
                 }
+              } catch (error) {
+                errorPopupMessage(
+                  context, 
+                  "$error", 
+                  null
+                );
               }
             },
             child: Icon(

@@ -186,8 +186,6 @@ class LoadingScreen<T> extends StatelessWidget {
     this.popErrorScreenButton
   });
 
-  
-
   final String exceptionMsg = "Loading screen must have loading builder or pop route and pop error screen message! Please declare these.";
 
   bool checkValueEqual(T value) {
