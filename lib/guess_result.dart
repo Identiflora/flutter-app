@@ -72,27 +72,27 @@ class _Results extends State<ResultsWidget> {
                     // I dont get it but it doesnt work without it
                     if (isCorrect) ...[
                       // Correct guess
-                      const TextSpan(text: "You said this plant is a\n"),
+                      TextSpan(text: "You said this plant is a\n", style: TextStyle(color: Theme.of(context).textTheme.displayMedium!.color)),
                       TextSpan(
                         text: userPickedName,
                         style: plantNameStyle.copyWith(color: correctColor),
                       ),
-                      const TextSpan(text: "\nand were correct!"),
+                      TextSpan(text: "\nand were correct!", style: TextStyle(color: Theme.of(context).textTheme.displayMedium!.color)),
                     ] else if (widget.userChoiceIndex != -1) ...[
                       // Incorrect guess
-                      const TextSpan(text: "You said this plant is a\n"),
+                      TextSpan(text: "You said this plant is a\n", style: TextStyle(color: Theme.of(context).textTheme.displayMedium!.color)),
                       TextSpan(
                         text: "$userPickedName...\n",
                         style: plantNameStyle.copyWith(color: incorrectColor),
                       ),
-                      const TextSpan(text: "but it is actually a\n"),
+                      TextSpan(text: "but it is actually a\n", style: TextStyle(color: Theme.of(context).textTheme.displayMedium!.color)),
                       TextSpan(
                         text: modelTopName,
                         style: plantNameStyle.copyWith(color: correctColor),
                       ),
                     ] else ...[
                       // Skipped Guess
-                      const TextSpan(text: "This plant is a\n"),
+                      TextSpan(text: "This plant is a\n", style: TextStyle(color: Theme.of(context).textTheme.displayMedium!.color)),
                       TextSpan(
                         text: modelTopName,
                         style: plantNameStyle.copyWith(color: correctColor),
