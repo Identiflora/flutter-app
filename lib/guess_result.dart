@@ -40,7 +40,7 @@ class _Results extends State<ResultsWidget> {
     final bool isCorrect = widget.userChoiceIndex == widget.correctIndex;
 
     // correct color based off themeing with a hard dark red for incorrect
-    final Color incorrectColor = const Color.fromARGB(255, 255, 132, 132);
+    final Color incorrectColor = Theme.of(context).colorScheme.error;
     final Color correctColor = Theme.of(context).colorScheme.secondary;
 
     const TextStyle mainTextStyle = TextStyle(

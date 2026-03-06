@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/main.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
+import 'package:identiflora/widgets/button_widgets.dart';
 
 // object for plant information for the grid cards
 class PlantMatch {
@@ -324,33 +325,22 @@ class DisplayBigPlantScreen extends StatelessWidget {
   /// Get the appropriate text button for navigation.<br><br>
   /// identifyPage = true = no button<br>
   /// identifyPage = false = yes button
-  ElevatedButton getButton(BuildContext context, bool identifyPage) {
+  DisabledButton getButton(BuildContext context, bool identifyPage) {
     if (identifyPage) {
-      return ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          foregroundColor: Color.fromARGB(255, 180, 39, 39),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+      return DisabledButton(
+        enableCondition: true,
+        labelText: 'No',
+        textColor: Theme.of(context).colorScheme.error,
         onPressed: () {
-          // Navigate to next page
           Navigator.pop(context);
         },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16.0),
-          child: const Text("No"),
-        ),
       );
     }
 
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        foregroundColor: Theme.of(context).colorScheme.primary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-        textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-      ),
+    return DisabledButton(
+      enableCondition: true,
+      labelText: 'Yes',
+      textColor: Theme.of(context).colorScheme.primary,
       onPressed: () async {
         // where database would be sent information on the model being incorrect
 
@@ -378,10 +368,6 @@ class DisplayBigPlantScreen extends StatelessWidget {
           MaterialPageRoute<void>(builder: (context) => AppSetup()),
         );
       },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16.0),
-        child: const Text("Yes"),
-      ),
     );
   }
 
