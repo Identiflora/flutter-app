@@ -167,28 +167,40 @@ class _LoginFormState extends State<LoginForm> {
       return;
     } //END FUNCT
 
-    final int otpResult = await submitUserOTPVerify(
-      unhashedPassword: password,
-      email: email,
-    );
-    debugPrint("$otpResult");
-    bool hasOTP = false;
+    bool hasOTP = false, hasOTPError = false;
 
-    // Result = 1 means OTP is valid and user needs new password, result = 0 means OTP is expired, but exists, result = -1 means there is not OTP
-    if (otpResult == 1 && mounted) {
-      // Get new password instead of OTP
-      password = await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => NewPasswordForm()),
+    try {
+      final int otpResult = await submitUserOTPVerify(
+        unhashedPassword: password,
+        email: email,
       );
-      hasOTP = true;
-    } else if (otpResult == 0 && mounted) {
-      errorPopupMessage(
-        context, 
-        "This one time password has expired! Please press 'Forgot password?' again for a new one time password.", 
-        Duration(seconds: 15)
-      );
-      return;
+      debugPrint("$otpResult");
+
+      // Result = 1 means OTP is valid and user needs new password, result = 0 means OTP is expired, but exists, result = -1 means there is not OTP
+      if (otpResult == 1 && mounted) {
+        // Get new password instead of OTP
+        password = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => NewPasswordForm()),
+        );
+        hasOTP = true;
+      } else if (otpResult == 0 && mounted) {
+        errorPopupMessage(
+          context, 
+          "This one time password has expired! Please press 'Forgot password?' again for a new one time password.", 
+          Duration(seconds: 15)
+        );
+        return;
+      }
+    } catch (error) {
+      hasOTPError = true;
+      if(mounted) {
+        errorPopupMessage(
+          context, 
+          "$error", 
+          null
+        );
+      }
     }
 
     //ADDED FOR PASS HASHING - USE CREATED FUNCT ABOVE
@@ -214,7 +226,7 @@ class _LoginFormState extends State<LoginForm> {
         Navigator.popUntil(context, ModalRoute.withName("/"));
       }
     } catch (err) {
-      if (mounted) {
+      if (mounted && !hasOTPError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Login failed: $err"),
