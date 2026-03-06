@@ -3,7 +3,6 @@ import 'package:settings_ui/settings_ui.dart';
 import 'cache_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:identiflora/theme/theme_provider.dart';
-import 'package:identiflora/theme/neon_theme.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 
 class SettingsWidget extends StatefulWidget {

@@ -153,7 +153,7 @@ class LeaderboardUserDisplay extends StatelessWidget {
                   foregroundImage: AssetImage(
                     badgeFilePath!,
                   ),
-                  backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(100),
+                  backgroundColor: Theme.of(context).colorScheme.surfaceBright,
                   radius: 20,
                 )
               : CircleAvatar(
@@ -201,7 +201,7 @@ class LeaderboardUserPointDisplay extends StatelessWidget {
         maxWidth: screenWidth * 0.3,
       ),
       decoration: BoxDecoration(
-        color: userIndex <= 3 ? rankColor.withAlpha(125) : Theme.of(context).colorScheme.primaryContainer,
+        color: userIndex <= 3 ? rankColor : Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.all(
           Radius.elliptical(15, 15),
         ),
@@ -210,7 +210,7 @@ class LeaderboardUserPointDisplay extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: Text(
           "$userPoints pts.",
-          style: TextStyle(fontSize: 12.0),
+          style: TextStyle(fontSize: 12.0, color: Theme.of(context).colorScheme.surface),
           textAlign: TextAlign.right,
         ),
       ),

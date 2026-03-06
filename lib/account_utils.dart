@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/environment.dart';
+import 'package:identiflora/theme/general_utils.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
 import 'dart:math';
@@ -66,10 +67,11 @@ class _Login extends State<LoginWidget> {
                 }
               }
             },
-            child: Image.asset(
-              'assets/homepage/no_shadow_account_icon.png',
-              width: 80,
-              height: 80,
+            child: Icon(
+              Icons.account_circle_outlined,
+              size: 80.0,
+              color: Theme.of(context).colorScheme.surface,
+              shadows: [BoxShadow(color: Colors.white, blurRadius: 12)], // SHOULD CHANGE TO BE SET BY THEME
             ),
           ),
         ),
@@ -109,11 +111,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 isLoginView
                     ? 'Need an account? Sign Up'
                     : 'Already have an account? Login',
-                style:
-                    Theme.of(
-                      context,
-                    ).extension<GlowingTextTheme>()?.glowingText ??
-                    const TextStyle(),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
             TextButton(
@@ -123,11 +123,9 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               child: Text(
                 isLoginView ? 'Forgot Password?' : '',
-                style:
-                    Theme.of(
-                      context,
-                    ).extension<GlowingTextTheme>()?.glowingText ??
-                    const TextStyle(),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
           ],
@@ -179,14 +177,10 @@ class _LoginFormState extends State<LoginForm> {
       );
       hasOTP = true;
     } else if (otpResult == 0 && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "This one time password has expired! Please press 'Forgot password?' again for a new one time password.",
-          ),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 15),
-        ),
+      errorPopupMessage(
+        context, 
+        "This one time password has expired! Please press 'Forgot password?' again for a new one time password.", 
+        Duration(seconds: 15)
       );
       return;
     }
@@ -247,11 +241,10 @@ class _LoginFormState extends State<LoginForm> {
       }
     } catch (err) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Login failed: $err"),
-            backgroundColor: Colors.red,
-          ),
+        errorPopupMessage(
+          context, 
+          "Login failed: $err", 
+          null
         );
       }
       return;
@@ -269,19 +262,15 @@ class _LoginFormState extends State<LoginForm> {
                   labelText: "Password",
                 ),
                 NeonOutlinedButton(onPressed: loginPressed, labelText: "Login"),
-
-                ElevatedButton.icon(
-                  onPressed: () => _handleGoogleSignIn(context),
+                NeonOutlinedButton(
+                  labelText: 'Sign in with Google',
+                  borderRadius: BorderRadius.circular(38.0),
                   icon: Image.asset(
                     'assets/brand/Google_G_logo_500x500.png',
                     width: 25,
                     height: 25,
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.secondary,
-                  ),
-                  label: Text("Sign in with Google"),
+                  onPressed: () => _handleGoogleSignIn(context),
                 ),
               ]
               .map(
@@ -294,6 +283,15 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 } //END LOGINFORMSTATE CLASS
+
+List<String> getRegions() {
+  return [
+    'Northeast US',
+    'Midwest US',
+    'Southern US',
+    'Western US',
+  ];
+}
 
 //USER SIGNUP CLASS
 class SignUpForm extends StatefulWidget {
@@ -386,12 +384,7 @@ class _SignUpFormState extends State<SignUpForm> {
                 NeonDropdownMenu(
                   onSelected: _setDropdown,
                   labelText: "Region",
-                  options: [
-                    'Northeast US',
-                    'Midwest US',
-                    'Southern US',
-                    'Western US',
-                  ],
+                  options: getRegions(),
                 ),
 
                 NeonInputField(
@@ -415,11 +408,23 @@ class _SignUpFormState extends State<SignUpForm> {
   }
 } //END SIGNUPFORMSTATE CLASS
 
-// Sign up form for new external user
-class ExternalSignUpForm extends StatelessWidget {
-  final usernameControl = TextEditingController();
+class ExternalSignUpForm extends StatefulWidget {
+  const ExternalSignUpForm({super.key});
 
-  ExternalSignUpForm({super.key});
+  @override
+  State<StatefulWidget> createState() => _ExternalSignUpFormState();
+}
+
+// Sign up form for new external user
+class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
+  final usernameControl = TextEditingController();
+  String? userRegion;
+
+  void _setDropdown(String value) {
+    setState(() {
+      userRegion = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -435,7 +440,7 @@ class ExternalSignUpForm extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Please enter a username so others know how to identify you!",
+                "Please enter a username and region so others know how to identify you!",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -445,24 +450,39 @@ class ExternalSignUpForm extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 16.0),
-                child: TextField(
-                  controller: usernameControl,
-                  decoration: const InputDecoration(labelText: 'Username'),
+                child: Column(
+                  children: [
+                    NeonInputField(
+                      controller: usernameControl,
+                      labelText: 'Username'
+                    ),
+                    const SizedBox(height: 16.0),
+                    NeonDropdownMenu(
+                      onSelected: _setDropdown,
+                      labelText: "Region",
+                      options: getRegions(),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
-                  if (usernameControl.text.trim().isNotEmpty) {
-                    Navigator.pop(context, usernameControl.text.trim());
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Please make sure username has at least 1 character then try again.",
-                        ),
-                        backgroundColor: Colors.red,
-                      ),
+                  if (validUsername(usernameControl.text.trim()) && userRegion != null) {
+                    List<String> userInfo = [usernameControl.text.trim(), userRegion!];
+                    Navigator.pop(context, userInfo);
+                  } else if (!validUsername(usernameControl.text.trim())) {
+                    errorPopupMessage(
+                      context, 
+                      "Username field must not be empty and have less than 20 characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
+                      null
+                    );
+                  }
+                  else {
+                    errorPopupMessage(
+                      context, 
+                      "Please make sure a region is selected then try again.",
+                      null
                     );
                   }
                 },
@@ -493,11 +513,10 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
       return true;
     } catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Login failed: $error"),
-            backgroundColor: Colors.red,
-          ),
+        errorPopupMessage(
+          context, 
+          "Login failed: $error", 
+          null
         );
       }
     }
@@ -574,11 +593,10 @@ class GoogleLoginLoadingScreen extends StatelessWidget {
               );
             } else {
               if (snapshot.hasError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Login failed: ${snapshot.error}"),
-                    backgroundColor: Colors.red,
-                  ),
+                errorPopupMessage(
+                  context, 
+                  "Login failed: ${snapshot.error}", 
+                  null
                 );
               }
 
@@ -629,7 +647,7 @@ class PasswordResetForm extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Please provide us with additional information.'),
+        title: const Text('Additional Information Needed'),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -658,7 +676,7 @@ class PasswordResetForm extends StatelessWidget {
 
               ElevatedButton(
                 onPressed: () async {
-                  if (emailControl.text.trim().length >= 5) {
+                  if (validEmail(emailControl.text.trim())) {
                     try {
                       bool success = await submitUserPasswordReset(
                         email: emailControl.text.trim(),
@@ -677,37 +695,30 @@ class PasswordResetForm extends StatelessWidget {
                         );
                         Navigator.pop(context);
                       } else if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password.",
-                            ),
-                            backgroundColor: Colors.red,
-                            duration: Duration(seconds: 15),
-                          ),
+                        errorPopupMessage(
+                          context, 
+                          "Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password.", 
+                          Duration(seconds: 15)
                         );
+                        
                         Navigator.pop(context);
                       }
                     } catch (err) {
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("Password reset failed: $err"),
-                            backgroundColor: Colors.red,
-                            duration: Duration(seconds: 15),
-                          ),
+                        errorPopupMessage(
+                          context, 
+                          "Password reset failed: $err", 
+                          null
                         );
+                        
                         Navigator.pop(context);
                       }
                     }
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          "Please make sure your email has at least 5 characters then try again.",
-                        ),
-                        backgroundColor: Colors.red,
-                      ),
+                    errorPopupMessage(
+                      context, 
+                      "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}", 
+                      Duration(seconds: 8)
                     );
                   }
                 },
@@ -758,12 +769,11 @@ class NewPasswordForm extends StatelessWidget {
 
               ElevatedButton(
                 onPressed: () {
-                  if (passwordControl.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Please complete all fields."),
-                        backgroundColor: Colors.red,
-                      ),
+                  if (!validPassword(passwordControl.text.trim())) {
+                    errorPopupMessage(
+                      context, 
+                      "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}", 
+                      Duration(seconds: 8)
                     );
                   } else {
                     Navigator.pop(context, passwordControl.text.trim());

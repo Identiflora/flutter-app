@@ -6,6 +6,7 @@ ThemeData lightMode = ThemeData(
   brightness: Brightness.light,
   colorScheme: ColorScheme.light(
     surface: Colors.white,
+    surfaceBright: Colors.grey.shade300,
     primary: const Color.fromARGB(255, 0, 153, 10),
     secondary: const Color.fromARGB(255, 0, 119, 4),
   ),
@@ -24,6 +25,7 @@ ThemeData darkMode = ThemeData(
     primary: primaryNeonGreen,
     secondary: secondaryNeonGreen,
     onSurface: Colors.grey.shade300,
+    error: Color.fromARGB(255, 255, 132, 132),
   ),
 
   // Defines text color for all text

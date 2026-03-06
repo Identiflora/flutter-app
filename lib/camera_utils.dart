@@ -14,38 +14,44 @@ Future<CameraDescription> getCamera() async {
 /// Get the widget for the first available camera
 FutureBuilder<CameraDescription> getAvailableCameraWidget() {
   return FutureBuilder<CameraDescription>(
-    future: getCamera(), 
+    future: getCamera(),
     builder: (context, snapshot) {
-      if(snapshot.connectionState == ConnectionState.waiting) {
-        return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
-      }
-      else if(snapshot.hasError) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return Center(
+          child: CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      } else if (snapshot.hasError) {
         return Text("Camera had error when loading: ${snapshot.error}");
-      }
-      else if(snapshot.hasData) {
+      } else if (snapshot.hasData) {
         return CameraWidget(camera: snapshot.data!);
-      }
-      else {
-        return Center(child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
+      } else {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
               "No camera found. Please ensure camera is available.",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)
+              style: TextStyle(
+                fontSize: 20,
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-        ));
+          ),
+        );
       }
-    }
+    },
   );
 }
 
 /// Explictly get camera permission
 Future<bool> getCameraPermission() async {
   final status = await Permission.camera.request();
-  if(status.isGranted) {
+  if (status.isGranted) {
     return true;
-  }
-  else {
+  } else {
     return false;
   }
 }
@@ -53,28 +59,35 @@ Future<bool> getCameraPermission() async {
 /// Get camera display widget after requesting permission to access camera
 FutureBuilder<bool> getCameraWidget() {
   return FutureBuilder<bool>(
-    future: getCameraPermission(), 
+    future: getCameraPermission(),
     builder: (context, snapshot) {
-      if(snapshot.connectionState == ConnectionState.waiting) {
-        return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
-      }
-      else if(snapshot.hasError) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return Center(
+          child: CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      } else if (snapshot.hasError) {
         return Text("Camera had error when loading: ${snapshot.error}");
-      }
-      else if(snapshot.hasData && snapshot.data!) {
+      } else if (snapshot.hasData && snapshot.data!) {
         return getAvailableCameraWidget();
-      }
-      else {
-        return Center(child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
+      } else {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
               "Identiflora cannot access your camera! Please check that camera permission is allowed.",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)
+              style: TextStyle(
+                fontSize: 20,
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-        ));
+          ),
+        );
       }
-    }
+    },
   );
 }
 
@@ -99,19 +112,23 @@ class _CameraWidgetState extends State<CameraWidget> {
   /// Logic to display camera
   OverflowBox getCameraPreview(CameraController controller, Size size) {
     return OverflowBox(
-          minHeight: size.height,
-          minWidth: size.width,
-          maxHeight: size.height * controller.value.aspectRatio,
-          maxWidth: size.width * controller.value.aspectRatio,
-          child: CameraPreview(controller)
-        );
+      minHeight: size.height,
+      minWidth: size.width,
+      maxHeight: size.height * controller.value.aspectRatio,
+      maxWidth: size.width * controller.value.aspectRatio,
+      child: CameraPreview(controller),
+    );
   }
 
   // Find appropriate controller upon init
   @override
   void initState() {
     super.initState();
-    _controller = CameraController(widget.camera, ResolutionPreset.max, enableAudio: false);
+    _controller = CameraController(
+      widget.camera,
+      ResolutionPreset.max,
+      enableAudio: false,
+    );
   }
 
   // Stop controlling camera when this widget is closed
@@ -120,68 +137,88 @@ class _CameraWidgetState extends State<CameraWidget> {
     _controller.dispose();
     super.dispose();
   }
-  
+
   // Display camera with button overlays
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    
+
     return Scaffold(
       body: FutureBuilder<void>(
-        future: controlCamera(), 
+        future: controlCamera(),
         builder: (context, snapshot) {
-          if(snapshot.connectionState == ConnectionState.done && _controller.value.isInitialized) {
-            return Stack(children: [
-              Center(child: getCameraPreview(_controller, size)),
-              getCameraButton(_controller, context)
-            ]);
+          if (snapshot.connectionState == ConnectionState.done &&
+              _controller.value.isInitialized) {
+            return Stack(
+              children: [
+                Center(child: getCameraPreview(_controller, size)),
+                getCameraButton(_controller, context),
+              ],
+            );
           }
           // Prevents null exception if user somehow gets through permissions without agreeing
-          else if(snapshot.connectionState == ConnectionState.done && !_controller.value.isInitialized) {
-            return Center(child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(
+          else if (snapshot.connectionState == ConnectionState.done &&
+              !_controller.value.isInitialized) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
                   "Identiflora cannot access your camera! Please check that camera permission is allowed.",
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-            ));
-          }
-          else {
-            return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
+              ),
+            );
+          } else {
+            return Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            );
           }
         },
-      )
+      ),
     );
-  }}
+  }
+}
 
 /// Get the picture taking button that is aligned correctly. This button takes a picture then passes it into a screen object to display the picture.
-SafeArea getCameraButton(CameraController controller, BuildContext pastContext) {
+SafeArea getCameraButton(
+  CameraController controller,
+  BuildContext pastContext,
+) {
   return SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter, 
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: GestureDetector(
-                  onTap: () async {
-                    if(controller.value.isTakingPicture) return;
-                    
-                    final image = await controller.takePicture();
-
-                    if(pastContext.mounted) {
-                      Navigator.push(
-                        pastContext, 
-                        MaterialPageRoute<void>(
-                          builder: (context) => DisplayPictureScreen(imgPath: image.path)
-                        )
-                      );
-                    }
-                  }, 
-                  child: Image.asset('assets/homepage/camera-circle-icon.png', width: 80, height: 80)
-                ),
-              )
-            )
-          );
+    child: Align(
+      alignment: Alignment.bottomCenter,
+      child: GestureDetector(
+        onTap: () async {
+          if (controller.value.isTakingPicture) return;
+      
+          final image = await controller.takePicture();
+      
+          if (pastContext.mounted) {
+            Navigator.push(
+              pastContext,
+              MaterialPageRoute<void>(
+                builder: (context) =>
+                    DisplayPictureScreen(imgPath: image.path),
+              ),
+            );
+          }
+        },
+        child: Icon(
+          Icons.lens_outlined,
+          size: 100.0,
+          color: Theme.of(pastContext).colorScheme.surface,
+          shadows: [BoxShadow(color: Colors.white, blurRadius: 12)], // SHOULD CHANGE TO BE SET BY THEME
+        ),
+      ),
+    ),
+  );
 }
 
 // Display screen for picture that was taken
@@ -192,27 +229,37 @@ class DisplayPictureScreen extends StatelessWidget {
   DisplayPictureScreen({super.key, required this.imgPath});
 
   /// Get the appropriate text button for navigation
-  TextButton getTextButton(BuildContext context, String label, bool identifyPage) {
-    if(identifyPage) {
+  TextButton getTextButton(
+    BuildContext context,
+    String label,
+    bool identifyPage,
+  ) {
+    if (identifyPage) {
       return TextButton(
         onPressed: () async {
-          List<Map<String, dynamic>> results = await _plantService.predict(File(imgPath));
+          List<Map<String, dynamic>> results = await _plantService.predict(
+            File(imgPath),
+          );
           // Navigate to next page
           Navigator.push(
             // ignore: use_build_context_synchronously
-            context, 
+            context,
             MaterialPageRoute<void>(
               // This is also the location to pass the taken photo to the model and will require rescalling or cropping before this point
-              builder: (context) => UserChoiceScreen(
-                predictions: results,
-              ),
-            )
+              builder: (context) => UserChoiceScreen(predictions: results),
+            ),
           );
-        }, 
+        },
         child: FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text("Identify", style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary))
-        )
+          child: Text(
+            "Identify",
+            style: TextStyle(
+              fontSize: 20,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ),
       );
     }
 
@@ -220,14 +267,20 @@ class DisplayPictureScreen extends StatelessWidget {
       onPressed: () {
         // Return to last page
         Navigator.pop(context);
-      }, 
+      },
       child: FittedBox(
         fit: BoxFit.scaleDown,
-        child: Text("Retry", style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.primary))
-      )
+        child: Text(
+          "Retry",
+          style: TextStyle(
+            fontSize: 20,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -243,14 +296,14 @@ class DisplayPictureScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     getTextButton(context, "Retry", false),
-                    getTextButton(context, "Identify", true)
+                    getTextButton(context, "Identify", true),
                   ],
                 ),
-              )
-            ]
+              ),
+            ],
           ),
-        )
-      )
+        ),
+      ),
     );
   }
 }
