@@ -57,6 +57,7 @@ class _Leaderboard extends State<LeaderboardWidget> {
               Icons.leaderboard_outlined,
               size: 80.0,
               color: Theme.of(context).colorScheme.surface,
+              shadows: [BoxShadow(color: Colors.white, blurRadius: 12)], // SHOULD CHANGE TO BE SET BY THEME
             ),
           ),
         ),

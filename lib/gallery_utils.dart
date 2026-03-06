@@ -40,6 +40,7 @@ class _GalleryWidgetState extends State<GalleryWidget> {
               Icons.photo_library_outlined,
               size: 80.0,
               color: Theme.of(context).colorScheme.surface,
+              shadows: [BoxShadow(color: Colors.white, blurRadius: 15)], // SHOULD CHANGE TO BE SET BY THEME
             ),
           ),
         ),

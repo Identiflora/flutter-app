@@ -214,6 +214,7 @@ SafeArea getCameraButton(
           Icons.lens_outlined,
           size: 100.0,
           color: Theme.of(pastContext).colorScheme.surface,
+          shadows: [BoxShadow(color: Colors.white, blurRadius: 12)], // SHOULD CHANGE TO BE SET BY THEME
         ),
       ),
     ),
