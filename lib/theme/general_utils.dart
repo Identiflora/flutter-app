@@ -102,3 +102,264 @@ bool validPassword(String unhashedPasswordString) {
   return !hasBlacklistedChar(unhashedPasswordString, null) 
           && unhashedPasswordString.length >= 4;
 }
+
+/// General use loading screen for easy implementation that requires end action among other required fields. 
+/// * Navigation to a new window using postLoadingBuilder.
+/// * Pop from window to a specific route using postLoadingPop and popErrorScreenButton.
+/// 
+/// 
+/// <br>Example navigation use case:
+/// ```dart
+/// Navigator.push(
+///   context,
+///   MaterialPageRoute(
+///     builder: (context) => LoadingScreen<String>.withNav(
+///       loadingMsg: "Retrieving this identification information...", 
+///       foundMsg: "Identification information found! One moment...", 
+///       errorMsg: "Unable to find identification information. One moment...", 
+///       futureFunction: getPlantSpeciesUrl(
+///          scientificName: widget.predictions[correctIndex]['label']
+///       ),
+///       postLoadingBuilder: (context, imgURL) => ResultsWidget(
+///         userChoiceIndex: userChoice!,
+///         correctIndex: correctIndex,
+///         allPredictions: widget.predictions,
+///          imgURL: imgURL ?? "",
+///       ),
+///       navigateOnError: true,
+///      )
+///   ),
+/// );
+/// ```
+/// 
+/// <br>Example pop use case:
+/// ```dart
+/// Navigator.push(
+///   context,
+///   MaterialPageRoute(
+///     builder: (context) => LoadingScreen<bool>.withPop(
+///       loadingMsg: "Please wait while we update your points...", 
+///       foundMsg: "Points updated! One moment...", 
+///       errorMsg: "We could not find your account to update points for.", 
+///       futureFunction: submitUserGlobalPoints(addPoints: addPoints), 
+///       postLoadingPop: ModalRoute.withName("/"),
+///       popErrorScreenButton: "Return to Homepage",
+///       valueEqualCheck: true,
+///     )
+///   ),
+/// );
+/// ```
+class LoadingScreen<T> extends StatelessWidget {
+  final String loadingMsg, foundMsg, errorMsg;
+  final Future<T>? futureFunction;
+  final RoutePredicate? postLoadingPop;
+  final String? popErrorScreenButton, successMsg;
+  final Widget Function(BuildContext, T?)? postLoadingBuilder;
+  final bool? navigateOnError; 
+  final T? valueEqualCheck;
+
+  const LoadingScreen.withPop({
+    super.key,
+    required this.loadingMsg,
+    required this.foundMsg,
+    required this.errorMsg,
+    required this.futureFunction,
+    required this.postLoadingPop,
+    required this.popErrorScreenButton,
+    this.valueEqualCheck,
+    this.successMsg,
+    this.postLoadingBuilder,
+    this.navigateOnError
+  });
+
+   const LoadingScreen.withNav({
+    super.key,
+    required this.loadingMsg,
+    required this.foundMsg,
+    required this.errorMsg,
+    required this.futureFunction,
+    required this.postLoadingBuilder,
+    this.navigateOnError,
+    this.valueEqualCheck,
+    this.successMsg,
+    this.postLoadingPop,
+    this.popErrorScreenButton
+  });
+
+  
+
+  final String exceptionMsg = "Loading screen must have loading builder or pop route and pop error screen message! Please declare these.";
+
+  bool checkValueEqual(T value) {
+    if(valueEqualCheck != null) {
+      return value == valueEqualCheck;
+    }
+    return true;
+  }
+
+  Widget getMessage(BuildContext context, String message) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Text(
+        message,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 20,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget getCircleIndicator(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0),
+      child: CircularProgressIndicator(
+        color: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Loading...'), centerTitle: true),
+      body: SafeArea(
+        child: FutureBuilder<T>(
+          future: futureFunction,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    getMessage(context, loadingMsg),
+                    getCircleIndicator(context)
+                  ],
+                ),
+              );
+            } else if (snapshot.hasData && snapshot.data != null && checkValueEqual(snapshot.data!)) {
+              // Run after next frame
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if(successMsg != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(successMsg!),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+
+                if(postLoadingBuilder != null) {
+                  // Remove loading screen from stack
+                  Navigator.pop(context);
+
+                  // Navigate to new screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => postLoadingBuilder!(context, snapshot.data)
+                    ),
+                  );
+                }
+                else if(postLoadingPop != null && popErrorScreenButton != null) {
+                  Navigator.popUntil(context, postLoadingPop!);
+                }
+                else {
+                  throw FormatException(exceptionMsg);
+                }
+              });
+
+              // Return a found message for current frame
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    getMessage(context, foundMsg),
+                    getCircleIndicator(context)
+                  ],
+                ),
+              );
+            } else {
+              if (snapshot.hasError) {
+                errorPopupMessage(
+                  context, 
+                  "Error: ${snapshot.error}", 
+                  null
+                );
+              }
+
+              if(postLoadingPop == null || popErrorScreenButton == null) {
+                // Run after next frame
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if(postLoadingBuilder != null) {
+                    // Remove loading screen from stack
+                    Navigator.pop(context);
+
+                    if(navigateOnError != null && navigateOnError!) {
+                      // Navigate to new screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => postLoadingBuilder!(context, snapshot.data),
+                        ),
+                      );
+                    }
+                  }
+                  else {
+                    throw FormatException(exceptionMsg);
+                  }
+                });
+
+                // Return a found message for current frame
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      getMessage(context, errorMsg),
+                      getCircleIndicator(context)
+                    ],
+                  ),
+                );
+              }
+              else if(postLoadingPop != null && popErrorScreenButton != null) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(errorMsg,
+                        textAlign: TextAlign.center, 
+                        style: TextStyle(fontSize: 20)
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.popUntil(context, postLoadingPop!);
+                      }, 
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.surfaceBright,
+                        foregroundColor: Theme.of(context).colorScheme.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      child: Text(popErrorScreenButton!)
+                    )
+                  ],
+                );
+              }
+              else {
+                throw FormatException(exceptionMsg);
+              }
+            }
+          },
+        ),
+      ),
+    );
+  }
+}

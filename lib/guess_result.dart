@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:identiflora/user_data/point_utils.dart';
+import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/theme/general_utils.dart';
 import 'model_incorrect.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
@@ -136,8 +137,15 @@ class _Results extends State<ResultsWidget> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  UserPointsLoadingScreen(newPoints: addPoints),
+                              builder: (context) => LoadingScreen<bool>.withPop(
+                                loadingMsg: "Please wait while we update your points...", 
+                                foundMsg: "Points updated! One moment...", 
+                                errorMsg: "We could not find your account to update points for. Please check that you are logged in and try again.", 
+                                futureFunction: submitUserGlobalPoints(addPoints: addPoints), 
+                                postLoadingPop: ModalRoute.withName("/"),
+                                popErrorScreenButton: "Return to Homepage",
+                                valueEqualCheck: true,
+                              )
                             ),
                           );
                         } else {
