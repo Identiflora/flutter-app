@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:identiflora/account_utils.dart';
+import 'package:identiflora/database_utils.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'cache_utils.dart';
 import 'package:provider/provider.dart';
@@ -64,211 +66,265 @@ class _SettingsScreen extends State<SettingsScreen> {
     }
     return Scaffold(
       appBar: AppBar(title: Text('Settings')),
-      body: SettingsList(
-        sections: [
-          SettingsSection(
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'General Settings',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Theme.of(context).colorScheme.onSurface,
+      body: SafeArea(
+        child: SettingsList(
+          sections: [
+            SettingsSection(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'General Settings',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                   ),
-                ),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Divider(
-                    height: 0.5,
-                    thickness: 0.5,
-                    color: Theme.of(context).colorScheme.inverseSurface,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Divider(
+                      height: 0.5,
+                      thickness: 0.5,
+                      color: Theme.of(context).colorScheme.inverseSurface,
+                    ),
                   ),
-                ),
-              ],
-            ),
-
-            tiles: <AbstractSettingsTile>[
-              SettingsTile.navigation(
-                leading: NeonIcon(Icons.language),
-                title: const Text('Language'),
-                value: const Text('English'),
-                onPressed: (context) {
-                  // I don't know if we'll actually include language support but it looks
-                  // good for the settings page
-                },
+                ],
               ),
 
-              //notifications switch
-              SettingsTile(
-                leading: NeonIcon(Icons.notifications_active),
-                title: Text('Enable Notifications'),
+              tiles: <AbstractSettingsTile>[
+                SettingsTile.navigation(
+                  leading: NeonIcon(Icons.language),
+                  title: const Text('Language'),
+                  value: const Text('English'),
+                  onPressed: (context) {
+                    // I don't know if we'll actually include language support but it looks
+                    // good for the settings page
+                  },
+                ),
 
-                onPressed: (context) {
-                  setState(() {
-                    notificationsEnabled = !notificationsEnabled;
-                  });
-                },
+                //notifications switch
+                SettingsTile(
+                  leading: NeonIcon(Icons.notifications_active),
+                  title: Text('Enable Notifications'),
 
-                trailing: NeonSwitch(
-                  value: notificationsEnabled,
-                  onChanged: (value) {
+                  onPressed: (context) {
                     setState(() {
-                      notificationsEnabled = value;
+                      notificationsEnabled = !notificationsEnabled;
                     });
                   },
-                ),
-              ),
 
-              SettingsTile(
-                leading: NeonIcon(Icons.format_paint),
-                title: const Text('Theme'),
-
-                trailing: DropdownButton<String>(
-                  value: currentTheme,
-                  underline: const SizedBox.shrink(),
-                  icon: NeonIcon(Icons.unfold_more),
-
-                  // Dropdown options
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'Device Theme',
-                      child: Text('Device Theme'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Light Theme',
-                      child: Text('Light Theme'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Dark Theme',
-                      child: Text('Dark Theme'),
-                    ),
-                  ],
-
-                  // Handle the user selecting a new option
-                  onChanged: (String? selection) {
-                    if (selection == null) return;
-
-                    final provider = Provider.of<ThemeProvider>(
-                      context,
-                      listen: false,
-                    );
-
-                    switch (selection) {
-                      case 'Light Theme':
-                        provider.setThemeMode(ThemeMode.light);
-                        break;
-                      case 'Dark Theme':
-                        provider.setThemeMode(ThemeMode.dark);
-                        break;
-                      case 'Device Theme':
-                      default:
-                        provider.setThemeMode(ThemeMode.system);
-                        break;
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-
-          SettingsSection(
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Account',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Theme.of(context).colorScheme.onSurface,
+                  trailing: NeonSwitch(
+                    value: notificationsEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        notificationsEnabled = value;
+                      });
+                    },
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Divider(
-                    height: 0.5,
-                    thickness: 0.5,
-                    color: Theme.of(context).colorScheme.inverseSurface,
+
+                SettingsTile(
+                  leading: NeonIcon(Icons.format_paint),
+                  title: const Text('Theme'),
+
+                  trailing: DropdownButton<String>(
+                    value: currentTheme,
+                    underline: const SizedBox.shrink(),
+                    icon: NeonIcon(Icons.unfold_more),
+
+                    // Dropdown options
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'Device Theme',
+                        child: Text('Device Theme'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Light Theme',
+                        child: Text('Light Theme'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'Dark Theme',
+                        child: Text('Dark Theme'),
+                      ),
+                    ],
+
+                    // Handle the user selecting a new option
+                    onChanged: (String? selection) {
+                      if (selection == null) return;
+
+                      final provider = Provider.of<ThemeProvider>(
+                        context,
+                        listen: false,
+                      );
+
+                      switch (selection) {
+                        case 'Light Theme':
+                          provider.setThemeMode(ThemeMode.light);
+                          break;
+                        case 'Dark Theme':
+                          provider.setThemeMode(ThemeMode.dark);
+                          break;
+                        case 'Device Theme':
+                        default:
+                          provider.setThemeMode(ThemeMode.system);
+                          break;
+                      }
+                    },
                   ),
                 ),
               ],
             ),
 
-            tiles: <SettingsTile>[
-              SettingsTile.navigation(
-                leading: NeonIcon(Icons.person),
-                title: const Text('Profile'),
-              ),
-
-              SettingsTile.navigation(
-                leading: NeonIcon(Icons.email),
-                title: const Text('Change Email'),
-                onPressed: (context) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ChangeEmail(),
+            SettingsSection(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Account',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
-                  );
-                },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Divider(
+                      height: 0.5,
+                      thickness: 0.5,
+                      color: Theme.of(context).colorScheme.inverseSurface,
+                    ),
+                  ),
+                ],
               ),
 
-              SettingsTile.navigation(
-                leading: NeonIcon(Icons.password),
-                title: const Text('Change Password'),
-              ),
+              tiles: <SettingsTile>[
+                  SettingsTile.navigation(
+                  leading: NeonIcon(Icons.email),
+                  title: const Text('Change Email'),
+                  onPressed: (context) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ChangeEmail(),
+                      ),
+                    );
+                  },
+                ),
 
-              SettingsTile.navigation(
-                leading: NeonIcon(Icons.remove_circle),
-                title: const Text('Delete Account'),
-              ),
+                SettingsTile.navigation(
+                  leading: NeonIcon(Icons.password),
+                  title: const Text('Change Password'),
+                  onPressed: (context) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ChangePassword()),
+                    );
+                  },
+                ),
 
-              SettingsTile.navigation(
-                leading: NeonIcon(Icons.logout),
-                title: const Text('Sign Out'),
-                onPressed: (context) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Are you sure you want to sign out?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel'),
+                SettingsTile.navigation(
+                  leading: const NeonIcon(Icons.remove_circle),
+                  title: const Text('Delete Account'),
+                  onPressed: (context) {
+                    showDialog(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: const Text('Delete Account?'),
+                        content: const Text(
+                          'This action is permanent. All your plant submissions, points, and badges will be lost forever.',
                         ),
-                        TextButton(
-                          onPressed: () {
-                            // Sign out logic
-                            deleteAuthToken();
-                            Navigator.popUntil(
-                              context,
-                              ModalRoute.withName('/'),
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Successfully signed out"),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            'Sign Out',
-                            style: TextStyle(color: Colors.red),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(dialogContext),
+                            child: const Text('Cancel'),
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
+                          TextButton(
+                            onPressed: () async {
+                              try {
+                                final success = await submitDeleteAccount();
+                                if (success) {
+                                  await deleteAuthToken();
+                                  if (!context.mounted) return;
+                                  Navigator.popUntil(context, ModalRoute.withName('/'));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Account deleted successfully"),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text("Error: $e"),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
+                SettingsTile.navigation(
+                  leading: NeonIcon(Icons.logout),
+                  title: const Text('Sign Out'),
+                  onPressed: (context) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Are you sure you want to sign out?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              // Sign out logic
+                              deleteAuthToken();
+                              Navigator.popUntil(
+                                context,
+                                ModalRoute.withName('/'),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Successfully signed out"),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              'Sign Out',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      )
     );
   }
 }
+
+// Change email page and submissions logic
+// Should be moved to its own file
 
 class ChangeEmail extends StatefulWidget {
   const ChangeEmail({super.key});
@@ -282,6 +338,8 @@ class _ChangeEmailState extends State<ChangeEmail> {
 
   void confirmPressed() async {
     final newEmail = newEmailControl.text.trim();
+
+    // still needs more validity/injection checks
 
     if (newEmail.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -301,15 +359,29 @@ class _ChangeEmailState extends State<ChangeEmail> {
       );
       return;
     }
-    // Submit new email logic
+    try {
+    bool success = await submitEmailChange(newEmail: newEmail);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Successfully changed password!"),
-        backgroundColor: Colors.green,
-      ),
-    );
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Successfully updated email!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context);
+    }
+  } catch (err) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to update email: $err"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -319,14 +391,7 @@ class _ChangeEmailState extends State<ChangeEmail> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              controller: newEmailControl,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: "New Email",
-                border: OutlineInputBorder(),
-              ),
-            ),
+            NeonInputField(controller: newEmailControl, labelText: "New Email"),
             const SizedBox(height: 16),
             SizedBox(
               child: ElevatedButton(
@@ -334,6 +399,73 @@ class _ChangeEmailState extends State<ChangeEmail> {
                 child: const Text("Confirm"),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Change Password page and submission logic
+// Should also be moved to its own file
+
+class ChangePassword extends StatefulWidget {
+  const ChangePassword({super.key});
+
+  @override
+  State<ChangePassword> createState() => _ChangePasswordState();
+}
+
+class _ChangePasswordState extends State<ChangePassword> {
+  final newPasswordControl = TextEditingController();
+  final confirmPasswordControl = TextEditingController();
+
+  void confirmPressed() async {
+
+    //Needs symbol enforcement and injection protections still
+    final password = newPasswordControl.text.trim();
+    final confirm = confirmPasswordControl.text.trim();
+
+    if (password != confirm) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match"), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    try {
+      final hashedPassword = hashPassword(password);
+      
+      bool success = await submitPasswordChange(newPasswordHash: hashedPassword);
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Successfully updated password!"), backgroundColor: Colors.green),
+        );
+        Navigator.pop(context);
+      }
+    } catch (err) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $err"), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Change Password")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            NeonInputField(controller: newPasswordControl, labelText: "New Password"),
+            const SizedBox(height: 12),
+            NeonInputField(controller: confirmPasswordControl, labelText: "Confirm New Password"),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: confirmPressed, child: const Text("Confirm")),
           ],
         ),
       ),

@@ -1215,3 +1215,26 @@ Future<bool> submitPasswordChange({required String newPasswordHash}) async {
     httpClient.close();
   }
 }
+
+// Permanently deletes the currently logged in user's account.
+Future<bool> submitDeleteAccount() async {
+  final authToken = await getAuthToken();
+  if (authToken == null) throw AuthException('User not authenticated');
+
+  final uri = Uri.parse(Environment.apiUrl).resolve('/user/account');
+  final httpClient = http.Client();
+
+  try {
+    final response = await httpClient.delete(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    return response.statusCode >= 200 && response.statusCode < 300;
+  } finally {
+    httpClient.close();
+  }
+}
