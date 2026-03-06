@@ -1264,9 +1264,6 @@ Future<bool> savePlantSubmission({
 // History format
 Future<List<Map<String, dynamic>>> fetchSubmissionHistory() async {
   String apiBaseUrl = Environment.apiUrl;
-  //
-  // place holder API call
-  //
   final uri = Uri.parse(apiBaseUrl).resolve('/user/history');
 
   final authToken = await getAuthToken();
@@ -1277,7 +1274,7 @@ Future<List<Map<String, dynamic>>> fetchSubmissionHistory() async {
     final response = await httpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $authToken'},
-    );
+    ).timeout(const Duration(seconds: 30));
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final List<dynamic> jsonList = jsonDecode(response.body);

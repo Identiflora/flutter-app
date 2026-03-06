@@ -142,10 +142,15 @@ class _Results extends State<ResultsWidget> {
                           
                           if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
                             try {
-                              Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+                              Position position = await Geolocator.getCurrentPosition(
+                                locationSettings: LocationSettings(
+                                  accuracy: LocationAccuracy.high
+                                )
+                              );
                               lat = position.latitude;
                               lng = position.longitude;
                             } catch (e) {
+                              // we should probably do something in this error
                               debugPrint("Error getting location: $e");
                             }
                           }
