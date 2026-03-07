@@ -25,26 +25,16 @@ class HistoryWidget extends StatelessWidget {
       right: 10,
       bottom: 10,
       child: GestureDetector(
-        onTap: () => Navigator.pushNamed(context, '/history'), 
-        child: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: theme.colorScheme.surface,
-            border: Border.all(
-              color: theme.colorScheme.primary,
-              width: 2.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.primary.withAlpha(120),
-                blurRadius: 15,
-                spreadRadius: 2,
-              )
-            ],
-          ),
-          child: const NeonIcon(Icons.history, size: 30.0),
+        onTap: () => Navigator.push(
+            context, MaterialPageRoute(
+              builder: (context) => HistoryPage()
+            )
+          ), 
+        child: Icon(
+          Icons.history, 
+          size: 100.0,
+          color: Theme.of(context).colorScheme.surface,
+          shadows: [BoxShadow(color: Colors.white, blurRadius: 12)], // SHOULD CHANGE TO BE SET BY THEME
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/gallery_utils.dart';
+import 'package:identiflora/history.dart';
 import 'package:identiflora/leaderboard_utils.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:identiflora/view_account/view_account_utils.dart';
@@ -56,6 +57,7 @@ class HomeScreen extends StatelessWidget {
           LoginWidget(),
           GalleryWidget(),
           LeaderboardWidget(),
+          HistoryWidget()
         ],
       ),
     );
