@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:identiflora/user_data/point_utils.dart';
+import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/theme/general_utils.dart';
 import 'model_incorrect.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
 
@@ -70,27 +70,28 @@ class _Results extends State<ResultsWidget> {
                   style: mainTextStyle,
                   children: <TextSpan>[
                     if (isCorrect) ...[
-                      const TextSpan(text: "You said this plant is a\n"),
+                      // Correct guess
+                      TextSpan(text: "You said this plant is a\n", style: TextStyle(color: Theme.of(context).textTheme.displayMedium!.color)),
                       TextSpan(
                         text: userPickedName,
                         style: plantNameStyle.copyWith(color: correctColor),
                       ),
-                      const TextSpan(text: "\nand were correct!"),
+                      TextSpan(text: "\nand were correct!", style: TextStyle(color: Theme.of(context).textTheme.displayMedium!.color)),
                     ] else if (widget.userChoiceIndex != -1) ...[
                       // Incorrect guess
-                      const TextSpan(text: "You said this plant is a\n"),
+                      TextSpan(text: "You said this plant is a\n", style: TextStyle(color: Theme.of(context).textTheme.displayMedium!.color)),
                       TextSpan(
                         text: "$userPickedName...\n",
                         style: plantNameStyle.copyWith(color: incorrectColor),
                       ),
-                      const TextSpan(text: "but it is actually a\n"),
+                      TextSpan(text: "but it is actually a\n", style: TextStyle(color: Theme.of(context).textTheme.displayMedium!.color)),
                       TextSpan(
                         text: modelTopName,
                         style: plantNameStyle.copyWith(color: correctColor),
                       ),
                     ] else ...[
                       // Skipped Guess
-                      const TextSpan(text: "This plant is a\n"),
+                      TextSpan(text: "This plant is a\n", style: TextStyle(color: Theme.of(context).textTheme.displayMedium!.color)),
                       TextSpan(
                         text: modelTopName,
                         style: plantNameStyle.copyWith(color: correctColor),
@@ -168,9 +169,20 @@ class _Results extends State<ResultsWidget> {
                         // Navigation and Points
                         if (isCorrect && context.mounted) {
                           // Award points only if the original guess was right
-                          Navigator.push(context, MaterialPageRoute(
-                            builder: (context) => UserPointsLoadingScreen(newPoints: addPoints),
-                          ));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LoadingScreen<bool>.withPop(
+                                loadingMsg: "Please wait while we update your points...", 
+                                foundMsg: "Points updated! One moment...", 
+                                errorMsg: "We could not find your account to update points for. Please check that you are logged in and try again.", 
+                                futureFunction: submitUserGlobalPoints(addPoints: addPoints), 
+                                postLoadingPop: ModalRoute.withName("/"),
+                                popErrorScreenButton: "Return to Homepage",
+                                valueEqualCheck: true,
+                              )
+                            ),
+                          );
                         } else if (context.mounted) {
                           // If they were wrong but clicked Yes (confirming the correct one), just go home
                           Navigator.popUntil(context, ModalRoute.withName("/"));

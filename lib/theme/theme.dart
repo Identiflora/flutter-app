@@ -10,6 +10,11 @@ ThemeData lightMode = ThemeData(
     primary: const Color.fromARGB(255, 0, 153, 10),
     secondary: const Color.fromARGB(255, 0, 119, 4),
   ),
+
+  textTheme: ThemeData.light().textTheme.apply(
+    bodyColor: Colors.black,
+    displayColor: Colors.black,
+  )
 );
 
 const primaryNeonGreen = Color.fromARGB(255, 0, 177, 9);
