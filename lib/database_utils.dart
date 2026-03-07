@@ -1216,6 +1216,47 @@ Future<bool> submitPasswordChange({required String newPasswordHash}) async {
   }
 }
 
+Future<bool> savePlantSubmission({
+  required List<Map<String, dynamic>> allPredictions,
+  required String userGuess,
+  required double latitude,
+  required double longitude,
+  String imgUrl = "",
+}) async {
+  String apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/submissions');
+
+  final authToken = await getAuthToken();
+  if (authToken == null) return false;
+
+  // Extracts the class_index IDs from the model's output.
+  // The order of this list will represent the Rank (1-5) in the database.
+  final List<int> predictionIds = allPredictions.map((p) => p['class_index'] as int).toList();
+
+  final payload = jsonEncode({
+    'prediction_ids': predictionIds, 
+    'user_guess': userGuess,
+    'latitude': latitude,
+    'longitude': longitude,
+    'timestamp': DateTime.now().toIso8601String(),
+    'img_url': imgUrl,
+  });
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+      body: payload,
+    );
+    return response.statusCode >= 200 && response.statusCode < 300;
+  } finally {
+    httpClient.close();
+  }
+}
 // Permanently deletes the currently logged in user's account.
 Future<bool> submitDeleteAccount() async {
   final authToken = await getAuthToken();
@@ -1234,6 +1275,33 @@ Future<bool> submitDeleteAccount() async {
     );
 
     return response.statusCode >= 200 && response.statusCode < 300;
+  } finally {
+    httpClient.close();
+  }
+}
+
+// Fetches the user's plant submission history, needs to be updated to new
+// History format
+Future<List<Map<String, dynamic>>> fetchSubmissionHistory() async {
+  String apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/user/history');
+
+  final authToken = await getAuthToken();
+  if (authToken == null) throw AuthException('User not authenticated');
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.get(
+      uri,
+      headers: {'Authorization': 'Bearer $authToken'},
+    ).timeout(const Duration(seconds: 30));
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final List<dynamic> jsonList = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(jsonList);
+    } else {
+      throw HttpException('Failed to load history: ${response.statusCode}');
+    }
   } finally {
     httpClient.close();
   }

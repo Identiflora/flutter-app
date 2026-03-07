@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/environment.dart';
 import 'package:identiflora/theme/general_utils.dart';
+import 'package:identiflora/view_account/view_account_utils.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
 import 'dart:math';
@@ -37,34 +38,39 @@ class _Login extends State<LoginWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GestureDetector(
             onTap: () async {
-              bool tokenSuccess = false;
               try {
-                tokenSuccess = await authenticateToken();
-                if (!(tokenSuccess)) {
-                  //if token is not valid, go to login screen
-                  if (context.mounted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                    );
-                  }
-                } else {
-                  //if token is valid, go to view account screen
-                  if (context.mounted) {
-                    Navigator.pushNamed(context, '/view_account_screen');
-                  }
-                }
+                Navigator.push(
+                  context, 
+                  MaterialPageRoute(
+                    builder: (context) => LoadingScreen<bool>.withNav(
+                      loadingMsg: "Loading account information...", 
+                      foundMsg: "Account found! One moment...", 
+                      errorMsg: "Unable to find account information. Returning...", 
+                      futureFunction: authenticateToken(),
+                      postLoadingBuilder: (context, success) {
+                        if(success == null || !success) {
+                          return const LoginScreen();
+                        }
+                        return ViewAccountScreen();
+                      },
+                      navigateOnError: true,
+                    )
+                  )
+                );
               } on RateLimitException catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(e.message),
-                      backgroundColor: Colors.red,
-                    ),
+                  errorPopupMessage(
+                    context, 
+                    e.message, 
+                    null
                   );
                 }
+              } catch (error) {
+                errorPopupMessage(
+                  context, 
+                  "$error", 
+                  null
+                );
               }
             },
             child: Icon(
@@ -161,28 +167,40 @@ class _LoginFormState extends State<LoginForm> {
       return;
     } //END FUNCT
 
-    final int otpResult = await submitUserOTPVerify(
-      unhashedPassword: password,
-      email: email,
-    );
-    debugPrint("$otpResult");
-    bool hasOTP = false;
+    bool hasOTP = false, hasOTPError = false;
 
-    // Result = 1 means OTP is valid and user needs new password, result = 0 means OTP is expired, but exists, result = -1 means there is not OTP
-    if (otpResult == 1 && mounted) {
-      // Get new password instead of OTP
-      password = await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => NewPasswordForm()),
+    try {
+      final int otpResult = await submitUserOTPVerify(
+        unhashedPassword: password,
+        email: email,
       );
-      hasOTP = true;
-    } else if (otpResult == 0 && mounted) {
-      errorPopupMessage(
-        context, 
-        "This one time password has expired! Please press 'Forgot password?' again for a new one time password.", 
-        Duration(seconds: 15)
-      );
-      return;
+      debugPrint("$otpResult");
+
+      // Result = 1 means OTP is valid and user needs new password, result = 0 means OTP is expired, but exists, result = -1 means there is not OTP
+      if (otpResult == 1 && mounted) {
+        // Get new password instead of OTP
+        password = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => NewPasswordForm()),
+        );
+        hasOTP = true;
+      } else if (otpResult == 0 && mounted) {
+        errorPopupMessage(
+          context, 
+          "This one time password has expired! Please press 'Forgot password?' again for a new one time password.", 
+          Duration(seconds: 15)
+        );
+        return;
+      }
+    } catch (error) {
+      hasOTPError = true;
+      if(mounted) {
+        errorPopupMessage(
+          context, 
+          "$error", 
+          null
+        );
+      }
     }
 
     //ADDED FOR PASS HASHING - USE CREATED FUNCT ABOVE
@@ -208,7 +226,7 @@ class _LoginFormState extends State<LoginForm> {
         Navigator.popUntil(context, ModalRoute.withName("/"));
       }
     } catch (err) {
-      if (mounted) {
+      if (mounted && !hasOTPError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("Login failed: $err"),
@@ -219,6 +237,29 @@ class _LoginFormState extends State<LoginForm> {
       return;
     }
   } //END LOGINPRESSED FUNCT
+
+  Future<bool> loginAndStore(String googleToken, BuildContext context) async {
+    try {
+      final AuthToken token = await submitUserGoogleLogin(
+        token: googleToken,
+        context: context,
+      );
+
+      await saveAuthToken(token.accessToken);
+
+      return true;
+    } catch (error) {
+      if (context.mounted) {
+        errorPopupMessage(
+          context, 
+          "Login failed: $error", 
+          null
+        );
+      }
+    }
+
+    return false;
+  }
 
   Future<void> _handleGoogleSignIn(BuildContext context) async {
     try {
@@ -234,8 +275,15 @@ class _LoginFormState extends State<LoginForm> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                GoogleLoginLoadingScreen(googleToken: googleToken),
+            builder: (context) => LoadingScreen<bool>.withPop(
+              loadingMsg: "Please wait while we log you in...", 
+              foundMsg: "Login complete! One moment...", 
+              errorMsg: "Sorry! We can't seem to log you in. Please check your internet connection then try again.", 
+              futureFunction: loginAndStore(googleToken, context),
+              postLoadingPop: ModalRoute.withName("/"),
+              popErrorScreenButton: "Return to Homepage",
+              successMsg: "Successfully logged in",
+            )
           ),
         );
       }
@@ -490,147 +538,6 @@ class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class GoogleLoginLoadingScreen extends StatelessWidget {
-  final String googleToken;
-
-  const GoogleLoginLoadingScreen({super.key, required this.googleToken});
-
-  Future<bool> loginAndStore(String googleToken, BuildContext context) async {
-    try {
-      final AuthToken token = await submitUserGoogleLogin(
-        token: googleToken,
-        context: context,
-      );
-
-      await saveAuthToken(token.accessToken);
-
-      return true;
-    } catch (error) {
-      if (context.mounted) {
-        errorPopupMessage(
-          context, 
-          "Login failed: $error", 
-          null
-        );
-      }
-    }
-
-    return false;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Loading...'), centerTitle: true),
-      body: SafeArea(
-        child: FutureBuilder<bool>(
-          future: loginAndStore(googleToken, context),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        "Please wait while we log you in...",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            } else if (snapshot.hasData && snapshot.data == true) {
-              // Run navigation after next frame
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Successfully logged in"),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-
-                  Navigator.popUntil(context, ModalRoute.withName("/"));
-                }
-              });
-
-              // Return a found message for current frame
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        "Login complete! One moment...",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            } else {
-              if (snapshot.hasError) {
-                errorPopupMessage(
-                  context, 
-                  "Login failed: ${snapshot.error}", 
-                  null
-                );
-              }
-
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      "Sorry! We can't seem to log you in. Please check your internet connection then try again.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 20),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.popUntil(context, ModalRoute.withName("/"));
-                    },
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      textStyle: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    child: const Text("Return to Homepage"),
-                  ),
-                ],
-              );
-            }
-          },
         ),
       ),
     );
