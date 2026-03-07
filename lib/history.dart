@@ -19,22 +19,24 @@ class HistoryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Positioned(
-      // bottom: 100,
-      // right: 20,
-      right: 10,
-      bottom: 10,
-      child: GestureDetector(
-        onTap: () => Navigator.push(
-            context, MaterialPageRoute(
-              builder: (context) => HistoryPage()
-            )
-          ), 
-        child: Icon(
-          Icons.history, 
-          size: 100.0,
-          color: Theme.of(context).colorScheme.surface,
-          shadows: [BoxShadow(color: Colors.white, blurRadius: 12)], // SHOULD CHANGE TO BE SET BY THEME
+    return SafeArea(
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: GestureDetector(
+            onTap: () => Navigator.push(
+                context, MaterialPageRoute(
+                  builder: (context) => HistoryPage()
+                )
+              ), 
+            child: Icon(
+              Icons.history, 
+              size: 90.0,
+              color: Theme.of(context).colorScheme.surface,
+              shadows: [BoxShadow(color: Colors.white, blurRadius: 12)], // SHOULD CHANGE TO BE SET BY THEME
+            ),
+          ),
         ),
       ),
     );
