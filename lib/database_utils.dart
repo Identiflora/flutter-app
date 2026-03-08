@@ -1225,20 +1225,15 @@ Future<bool> savePlantSubmission({
 }) async {
   String apiBaseUrl = Environment.apiUrl;
   final uri = Uri.parse(apiBaseUrl).resolve('/user/submissions');
-
   final authToken = await getAuthToken();
-  if (authToken == null) return false;
+  if (authToken == null) throw AuthException('User not authenticated');
 
-  // Extracts the class_index IDs from the model's output.
-  // The order of this list will represent the Rank (1-5) in the database.
   final List<int> predictionIds = allPredictions.map((p) => p['class_index'] as int).toList();
-
   final payload = jsonEncode({
     'prediction_ids': predictionIds, 
     'user_guess': userGuess,
     'latitude': latitude,
     'longitude': longitude,
-    'timestamp': DateTime.now().toIso8601String(),
     'img_url': imgUrl,
   });
 
@@ -1252,7 +1247,20 @@ Future<bool> savePlantSubmission({
       },
       body: payload,
     );
-    return response.statusCode >= 200 && response.statusCode < 300;
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return true;
+    } else if (response.statusCode == 400 || response.statusCode == 404) {
+      throw AuthException(
+        'Submission failed (referenced data not found): ${response.body}',
+        statusCode: response.statusCode,
+      );
+    } else {
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
   } finally {
     httpClient.close();
   }
@@ -1285,7 +1293,6 @@ Future<bool> submitDeleteAccount() async {
 Future<List<Map<String, dynamic>>> fetchSubmissionHistory() async {
   String apiBaseUrl = Environment.apiUrl;
   final uri = Uri.parse(apiBaseUrl).resolve('/user/history');
-
   final authToken = await getAuthToken();
   if (authToken == null) throw AuthException('User not authenticated');
 
@@ -1294,13 +1301,21 @@ Future<List<Map<String, dynamic>>> fetchSubmissionHistory() async {
     final response = await httpClient.get(
       uri,
       headers: {'Authorization': 'Bearer $authToken'},
-    ).timeout(const Duration(seconds: 30));
+    );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final List<dynamic> jsonList = jsonDecode(response.body);
       return List<Map<String, dynamic>>.from(jsonList);
+    } else if (response.statusCode == 404) {
+      throw AuthException(
+        'No submission history found: ${response.body}',
+        statusCode: 404,
+      );
     } else {
-      throw HttpException('Failed to load history: ${response.statusCode}');
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
     }
   } finally {
     httpClient.close();
