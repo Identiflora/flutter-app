@@ -162,7 +162,7 @@ class _Results extends State<ResultsWidget> {
                         // Send results to the database
                         await savePlantSubmission(
                           allPredictions: widget.orderedPredictions,
-                          userGuess: modelTopName, 
+                          userGuess: userPickedName, 
                           latitude: lat, 
                           longitude: lng,
                           imgUrl: widget.imgURL,
