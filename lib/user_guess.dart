@@ -18,6 +18,7 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
   late String imgURL;
   int? userChoice; // do need this though
   late final String correctChoice;
+  late final List<Map<String, dynamic>> orderedPredictions;
 
   void selectOption(int index) {
     setState(() {
@@ -27,6 +28,7 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
 
   @override
   void initState() {
+    orderedPredictions = List.from(widget.predictions);
     correctChoice = widget.predictions.first['label'];
     widget.predictions.shuffle();
     super.initState();
@@ -152,6 +154,7 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
                                 userChoiceIndex: userChoice!,
                                 correctIndex: correctIndex,
                                 allPredictions: widget.predictions,
+                                orderedPredictions: orderedPredictions,
                                 imgURL: imgURL ?? "",
                               ),
                               navigateOnError: true,
@@ -180,6 +183,7 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
                                 userChoiceIndex: -1,
                                 correctIndex: correctIndex,
                                 allPredictions: widget.predictions,
+                                orderedPredictions: orderedPredictions,
                                 imgURL: imgURL ?? "",
                               ), 
                               navigateOnError: true,

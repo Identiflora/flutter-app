@@ -10,12 +10,14 @@ class ResultsWidget extends StatefulWidget {
   final int userChoiceIndex;
   final int correctIndex;
   final List<Map<String, dynamic>> allPredictions;
+  final List<Map<String, dynamic>> orderedPredictions;
   final String imgURL;
 
   const ResultsWidget({
     required this.userChoiceIndex,
     required this.correctIndex,
     required this.allPredictions,
+    required this.orderedPredictions,
     required this.imgURL,
     super.key,
   });
@@ -159,7 +161,7 @@ class _Results extends State<ResultsWidget> {
 
                         // Send results to the database
                         await savePlantSubmission(
-                          allPredictions: widget.allPredictions,
+                          allPredictions: widget.orderedPredictions,
                           userGuess: modelTopName, 
                           latitude: lat, 
                           longitude: lng,
