@@ -97,6 +97,9 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                             ),
                           );
                         } else if (snapshot.hasData && snapshot.data != null) {
+                          final String imageUrl = snapshot.data!;
+                          final bool isPlaceholder = imageUrl.isEmpty || imageUrl.startsWith("https://placeholder");
+
                           return NeonContainer(
                             borderRadius: BorderRadius.all(
                               Radius.elliptical(15, 15),
@@ -121,21 +124,15 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                 children: [
                                   Expanded(
                                     child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        8.0,
-                                        8.0,
-                                        8.0,
-                                        0,
-                                      ),
+                                      padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0,),
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(
                                           12.0,
                                         ),
                                         // Plant image, might need to be reformatted if we are pulling from database
-                                        child: Image.network(
-                                          snapshot.data!,
-                                          fit: BoxFit.cover,
-                                        ),
+                                        child: isPlaceholder
+                                            ? const Placeholder(color: Colors.grey, strokeWidth: 1.0)
+                                            : Image.network(imageUrl, fit: BoxFit.cover)
                                       ),
                                     ),
                                   ),
@@ -398,7 +395,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
                     const SizedBox(height: 24.0),
                     ClipRRect(
                       borderRadius: BorderRadius.all(Radius.elliptical(10, 10)),
-                      child: imgPath == ""
+                      child: (imgPath == "" || imgPath.startsWith("https://placeholder"))
                           ? const Placeholder(
                               color: Colors.grey,
                               strokeWidth: 1.0,

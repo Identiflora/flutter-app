@@ -108,9 +108,9 @@ class _Results extends State<ResultsWidget> {
                 child: NeonContainer(
                   borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.elliptical(15, 15)),
-                    child: widget.imgURL == ""
-                        ? Placeholder()
+                    borderRadius: const BorderRadius.all(Radius.elliptical(15, 15)),
+                    child: (widget.imgURL == "" || widget.imgURL.startsWith("https://placeholder"))
+                        ? const Placeholder() 
                         : Image.network(widget.imgURL, fit: BoxFit.cover),
                   ),
                 ),
