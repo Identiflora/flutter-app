@@ -66,4 +66,6 @@ Database/aws_password.txt
 /.env.development
 /.env.production
 /key_store_password.txt
+/pubspec.lock
+/gemini
 /gemini

@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/theme/general_utils.dart';
+import 'package:identiflora/view_account/view_alternate_account_screen.dart';
 import 'package:identiflora/widgets/leaderboard_widgets.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 
@@ -11,12 +12,14 @@ class LeaderboardUser {
   String? displayedBadgeFilePath;
   final int userId;
   int userScore;
+  final int numFriends;
 
   LeaderboardUser({
     required this.userName,
     this.userScore = 0,
     this.displayedBadgeFilePath,
     this.userId = 0,
+    this.numFriends = 0,
   });
 
   set setDisplayedBadgeFilePath(String badgeFilePath) {
@@ -271,9 +274,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                   const SizedBox(width: 8.0),
                                   GestureDetector(
                                     onTap: () {
-                                      debugPrint(
-                                        "Tapped user with ID: ${user.userId}",
-                                      ); // REMOVE AND ADD VIEW USER PROFILE HERE
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) =>
+                                                  ViewAlternateAccountScreen(
+                                                    username: user.userName,
+                                                    points: user.userScore,
+                                                    numFriends: user.numFriends,
+                                                    displayedBadgeFilePath:
+                                                        user.displayedBadgeFilePath ??
+                                                        'assets/brand/Identiflora_logo.png',
+                                                  ),
+                                        ),
+                                      );
                                     },
                                     child: LeaderboardUserDisplay(
                                       screenWidth: screenWidth,

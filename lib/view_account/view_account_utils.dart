@@ -199,12 +199,16 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
 class BadgesDisplay extends StatefulWidget {
   final List<LevelBadge> badges;
   final int playerLevel;
+  final bool isReadOnly;
+  final String? selectedBadge;
 
   /// Creates a [BadgesDisplay] that generates a grid of badge images.
   const BadgesDisplay({
     super.key,
     required this.badges,
     required this.playerLevel,
+    this.isReadOnly = false,
+    this.selectedBadge,
   });
 
   @override
@@ -222,11 +226,15 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
   void initState() {
     super.initState();
 
-    _getPlayerSelectedBadge().then((response) {
-      setState(() {
-        selectedBadgeFilePath = response;
+    if (widget.selectedBadge != null) {
+      selectedBadgeFilePath = widget.selectedBadge!;
+    } else {
+      _getPlayerSelectedBadge().then((response) {
+        setState(() {
+          selectedBadgeFilePath = response;
+        });
       });
-    });
+    }
   }
 
   @override
@@ -245,6 +253,7 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
 
         return GestureDetector(
           onTap: () async {
+            if (widget.isReadOnly) return;
             if (badge.isUnlocked(widget.playerLevel)) {
               // Run API based selection logic here
               try {
