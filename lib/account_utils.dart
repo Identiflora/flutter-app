@@ -11,7 +11,6 @@ import 'package:identiflora/view_account/view_account_utils.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
 import 'dart:math';
-import 'package:identiflora/theme/glowing_text_theme.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 
 class LoginWidget extends StatefulWidget {

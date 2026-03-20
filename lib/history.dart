@@ -18,7 +18,6 @@ class HistoryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return SafeArea(
       child: Align(
         alignment: Alignment.bottomRight,

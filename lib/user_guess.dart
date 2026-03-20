@@ -40,8 +40,6 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
   // i hope we keep the selection styling i spent way too much time on it
   @override
   Widget build(BuildContext context) {
-    // colors based on the geen theme i put in main
-    final colorScheme = Theme.of(context).colorScheme;
     // final primaryColor = colorScheme.primary;
     // final inversePrimaryColor = colorScheme.inversePrimary;
     // final outlineColor = colorScheme.outline;
