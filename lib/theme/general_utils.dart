@@ -155,9 +155,29 @@ class LoadingScreen<T> extends StatelessWidget {
   final RoutePredicate? postLoadingPop;
   final String? popErrorScreenButton, successMsg;
   final Widget Function(BuildContext, T?)? postLoadingBuilder;
-  final bool? navigateOnError; 
+  final bool? navigateOnError, errorPopup; 
   final T? valueEqualCheck;
 
+  /// General use loading screen for easy implementation that requires end action among other required fields.
+  /// 
+  /// 
+  /// <br>Example pop use case:
+  /// ```dart
+  /// Navigator.push(
+  ///   context,
+  ///   MaterialPageRoute(
+  ///     builder: (context) => LoadingScreen<bool>.withPop(
+  ///       loadingMsg: "Please wait while we update your points...", 
+  ///       foundMsg: "Points updated! One moment...", 
+  ///       errorMsg: "We could not find your account to update points for.", 
+  ///       futureFunction: submitUserGlobalPoints(addPoints: addPoints), 
+  ///       postLoadingPop: ModalRoute.withName("/"),
+  ///       popErrorScreenButton: "Return to Homepage",
+  ///       valueEqualCheck: true,
+  ///     )
+  ///   ),
+  /// );
+  /// ```
   const LoadingScreen.withPop({
     super.key,
     required this.loadingMsg,
@@ -169,10 +189,37 @@ class LoadingScreen<T> extends StatelessWidget {
     this.valueEqualCheck,
     this.successMsg,
     this.postLoadingBuilder,
-    this.navigateOnError
+    this.navigateOnError,
+    this.errorPopup = true
   });
 
-   const LoadingScreen.withNav({
+  /// General use loading screen for easy implementation that requires end action among other required fields. 
+  /// 
+  /// 
+  /// <br>Example navigation use case:
+  /// ```dart
+  /// Navigator.push(
+  ///   context,
+  ///   MaterialPageRoute(
+  ///     builder: (context) => LoadingScreen<String>.withNav(
+  ///       loadingMsg: "Retrieving this identification information...", 
+  ///       foundMsg: "Identification information found! One moment...", 
+  ///       errorMsg: "Unable to find identification information. One moment...", 
+  ///       futureFunction: getPlantSpeciesUrl(
+  ///          scientificName: widget.predictions[correctIndex]['label']
+  ///       ),
+  ///       postLoadingBuilder: (context, imgURL) => ResultsWidget(
+  ///         userChoiceIndex: userChoice!,
+  ///         correctIndex: correctIndex,
+  ///         allPredictions: widget.predictions,
+  ///          imgURL: imgURL ?? "",
+  ///       ),
+  ///       navigateOnError: true,
+  ///      )
+  ///   ),
+  /// );
+  /// ```
+  const LoadingScreen.withNav({
     super.key,
     required this.loadingMsg,
     required this.foundMsg,
@@ -183,7 +230,8 @@ class LoadingScreen<T> extends StatelessWidget {
     this.valueEqualCheck,
     this.successMsg,
     this.postLoadingPop,
-    this.popErrorScreenButton
+    this.popErrorScreenButton,
+    this.errorPopup = true
   });
 
   final String exceptionMsg = "Loading screen must have loading builder or pop route and pop error screen message! Please declare these.";
@@ -236,7 +284,7 @@ class LoadingScreen<T> extends StatelessWidget {
                   ],
                 ),
               );
-            } else if (snapshot.hasData && snapshot.data != null && checkValueEqual(snapshot.data!)) {
+            } else if (snapshot.hasData && snapshot.data != null && checkValueEqual(snapshot.data as T)) {
               // Run after next frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if(successMsg != null) {
@@ -260,7 +308,7 @@ class LoadingScreen<T> extends StatelessWidget {
                     ),
                   );
                 }
-                else if(postLoadingPop != null && popErrorScreenButton != null) {
+                else if(postLoadingPop != null) {
                   Navigator.popUntil(context, postLoadingPop!);
                 }
                 else {
@@ -287,7 +335,7 @@ class LoadingScreen<T> extends StatelessWidget {
                 );
               }
 
-              if(postLoadingPop == null || popErrorScreenButton == null) {
+              if(popErrorScreenButton == null && postLoadingPop == null) {
                 // Run after next frame
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if(postLoadingBuilder != null) {
@@ -309,7 +357,7 @@ class LoadingScreen<T> extends StatelessWidget {
                   }
                 });
 
-                // Return a found message for current frame
+                // Return an error message for current frame
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -320,7 +368,7 @@ class LoadingScreen<T> extends StatelessWidget {
                   ),
                 );
               }
-              else if(postLoadingPop != null && popErrorScreenButton != null) {
+              else if(popErrorScreenButton != null && postLoadingPop != null) {
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -349,6 +397,30 @@ class LoadingScreen<T> extends StatelessWidget {
                       child: Text(popErrorScreenButton!)
                     )
                   ],
+                );
+              }
+              else if(postLoadingPop != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Navigator.popUntil(context, postLoadingPop!);
+
+                  if(errorPopup != null && errorPopup! && errorMsg.isNotEmpty) {
+                    errorPopupMessage(
+                      context, 
+                      errorMsg, 
+                      Duration(seconds: 7)
+                    );
+                  }
+                });
+
+                // Return a error message for current frame
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      getMessage(context, errorMsg),
+                      getCircleIndicator(context)
+                    ],
+                  ),
                 );
               }
               else {
