@@ -79,8 +79,14 @@ bool hasBlacklistedChar(String stringToCheck, bool? emailString) {
 bool validEmail(String emailString) {
   List<String> emailCharReq = ['@', '.'];
   return !hasBlacklistedChar(emailString, true) 
-          && emailCharReq.any((char) => emailString.contains(char)) 
+          && emailCharReq.every((char) => emailString.contains(char)) 
           && emailString.length >= 5;
+}
+
+/// Returns max length of usernames as an int<br><br>
+/// **This should be the ONLY place max username length is changed** 
+int getMaxUsernameLength() {
+  return 20;
 }
 
 /// Returns if username string is valid.<br>
@@ -91,7 +97,7 @@ bool validEmail(String emailString) {
 bool validUsername(String usernameString) {
   return !hasBlacklistedChar(usernameString, null) 
           && usernameString.isNotEmpty 
-          && usernameString.length <= 20;
+          && usernameString.length <= getMaxUsernameLength();
 }
 
 /// Returns if password is valid.<br>

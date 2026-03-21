@@ -157,15 +157,32 @@ class _LoginFormState extends State<LoginForm> {
     String password = passwordControl.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please complete all fields"),
-          backgroundColor: Colors.red,
-        ),
+      errorPopupMessage(
+        context, 
+        "Please complete all fields!", 
+        null
       );
-      //CHECKS FOR EMPTY FIELDS
+      
       return;
-    } //END FUNCT
+    }
+    else if(!validEmail(email)) {
+      errorPopupMessage(
+        context, 
+        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}", 
+        Duration(seconds: 8)
+      );
+
+      return;
+    }
+    else if(!validPassword(password)) {
+      errorPopupMessage(
+        context, 
+        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}", 
+        Duration(seconds: 8)
+      );
+
+      return;
+    }
 
     bool hasOTP = false, hasOTPError = false;
 
@@ -227,11 +244,10 @@ class _LoginFormState extends State<LoginForm> {
       }
     } catch (err) {
       if (mounted && !hasOTPError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Login failed: $err"),
-            backgroundColor: Colors.red,
-          ),
+        errorPopupMessage(
+          context, 
+          "Login failed: $err", 
+          null
         );
       }
       return;
@@ -363,26 +379,70 @@ class _SignUpFormState extends State<SignUpForm> {
   String? userRegion;
   bool passIsObscured = true;
 
+  bool validateFields(String email, String username, String password, String passwordConfirm, String? region) {
+    if(email.isEmpty || username.isEmpty || password.isEmpty || region == null) {
+      errorPopupMessage(
+        context, 
+        "Please complete all fields!", 
+        null
+      );
+
+      return false;
+    }
+    else if (password != passwordConfirm) {
+      errorPopupMessage(
+        context, 
+        "Password confirm does not match!", 
+        null
+      );
+      
+      return false;
+    }
+    else if(!validEmail(email)) {
+      errorPopupMessage(
+        context, 
+        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}", 
+        Duration(seconds: 8)
+      );
+
+      return false;
+    }
+    else if(!validUsername(username)) {
+      errorPopupMessage(
+        context, 
+        "Username field must not be empty and have less than ${getMaxUsernameLength()} characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
+        null
+      );
+
+      return false;
+    }
+    else if(!validPassword(password)) {
+      errorPopupMessage(
+        context, 
+        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}", 
+        Duration(seconds: 8)
+      );
+
+      return false;
+    }
+
+    return true;
+  }
+
   void signUp() async {
     final email = emailControl.text.trim();
     final username = usernameControl.text.trim();
     final password = passwordControl.text.trim();
-    final confirm = confirmControl.text.trim();
+    final passwordConfirm = confirmControl.text.trim();
     final region = userRegion;
 
-    //CHECK IF PASSWORDS MATCH
-    if (password != confirm) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Password do not match, please correct"),
-          backgroundColor: Colors.red,
-        ),
-      );
+    if(!validateFields(email, username, password, passwordConfirm, region)) {
       return;
-    } //END SIGNUP
-    debugPrint("Region: $region");
+    }
+
     //ONLY AFTER CONFIRMING PASSWORDS - HASH
     final hashedPassword = hashPassword(password);
+
     try {
       final AuthToken token = await submitUserRegistration(
         email: email,
@@ -406,11 +466,10 @@ class _SignUpFormState extends State<SignUpForm> {
       }
     } catch (err) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Login failed: $err"),
-            backgroundColor: Colors.red,
-          ),
+        errorPopupMessage(
+          context, 
+          "Login failed: $err", 
+          null
         );
       }
       return;
@@ -498,14 +557,14 @@ class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
     });
   }
 
-  void externalUserInputHandler() {
+  void handleExternalUserInput() {
     if (validUsername(usernameControl.text.trim()) && userRegion != null) {
       List<String> userInfo = [usernameControl.text.trim(), userRegion!];
       Navigator.pop(context, userInfo);
     } else if (!validUsername(usernameControl.text.trim())) {
       errorPopupMessage(
         context, 
-        "Username field must not be empty and have less than 20 characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
+        "Username field must not be empty and have less than ${getMaxUsernameLength()} characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
         null
       );
     }
@@ -558,7 +617,7 @@ class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
               ),
               const SizedBox(height: 16),
               NeonOutlinedButton(
-                onPressed: externalUserInputHandler,
+                onPressed: handleExternalUserInput,
                 labelText: "Confirm",
               ),
             ],
@@ -575,7 +634,7 @@ class PasswordResetForm extends StatelessWidget {
 
   PasswordResetForm({super.key});
 
-  void passwordResetHandler(BuildContext context) async {
+  void handlePasswordReset(BuildContext context) async {
     if (validEmail(emailControl.text.trim())) {
       try {
         bool success = await submitUserPasswordReset(
@@ -655,7 +714,7 @@ class PasswordResetForm extends StatelessWidget {
               const SizedBox(height: 16),
 
               NeonOutlinedButton(
-                onPressed: () => passwordResetHandler(context),
+                onPressed: () => handlePasswordReset(context),
                 labelText: "Confirm",
               ),
             ],
