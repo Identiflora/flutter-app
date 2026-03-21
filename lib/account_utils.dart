@@ -498,6 +498,26 @@ class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
     });
   }
 
+  void externalUserInputHandler() {
+    if (validUsername(usernameControl.text.trim()) && userRegion != null) {
+      List<String> userInfo = [usernameControl.text.trim(), userRegion!];
+      Navigator.pop(context, userInfo);
+    } else if (!validUsername(usernameControl.text.trim())) {
+      errorPopupMessage(
+        context, 
+        "Username field must not be empty and have less than 20 characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
+        null
+      );
+    }
+    else {
+      errorPopupMessage(
+        context, 
+        "Please make sure a region is selected then try again.",
+        null
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -509,7 +529,6 @@ class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 "Please enter a username and region so others know how to identify you!",
@@ -521,7 +540,7 @@ class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
                 textAlign: TextAlign.center,
               ),
               Padding(
-                padding: const EdgeInsets.only(top: 16.0),
+                padding: const EdgeInsets.only(top: 32.0),
                 child: Column(
                   children: [
                     NeonInputField(
@@ -538,27 +557,9 @@ class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
                 ),
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  if (validUsername(usernameControl.text.trim()) && userRegion != null) {
-                    List<String> userInfo = [usernameControl.text.trim(), userRegion!];
-                    Navigator.pop(context, userInfo);
-                  } else if (!validUsername(usernameControl.text.trim())) {
-                    errorPopupMessage(
-                      context, 
-                      "Username field must not be empty and have less than 20 characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
-                      null
-                    );
-                  }
-                  else {
-                    errorPopupMessage(
-                      context, 
-                      "Please make sure a region is selected then try again.",
-                      null
-                    );
-                  }
-                },
-                child: const Text("Confirm"),
+              NeonOutlinedButton(
+                onPressed: externalUserInputHandler,
+                labelText: "Confirm",
               ),
             ],
           ),
