@@ -311,7 +311,7 @@ class _LoginFormState extends State<LoginForm> {
                   obscureText: passIsObscured,
                   suffixIcon: IconButton(
                     onPressed: () => setState(() => passIsObscured = !passIsObscured), 
-                    icon: Icon(passIsObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined)
+                    icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
                   ),
                 ),
                 NeonOutlinedButton(onPressed: loginPressed, labelText: "Login"),
@@ -450,7 +450,7 @@ class _SignUpFormState extends State<SignUpForm> {
                   obscureText: passIsObscured,
                   suffixIcon: IconButton(
                     onPressed: () => setState(() => passIsObscured = !passIsObscured), 
-                    icon: Icon(passIsObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined)
+                    icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
                   ),
                 ),
 
@@ -460,7 +460,7 @@ class _SignUpFormState extends State<SignUpForm> {
                   obscureText: passIsObscured,
                   suffixIcon: IconButton(
                     onPressed: () => setState(() => passIsObscured = !passIsObscured), 
-                    icon: Icon(passIsObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined)
+                    icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
                   ),
                 ),
 

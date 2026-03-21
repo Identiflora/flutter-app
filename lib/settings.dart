@@ -386,7 +386,10 @@ class _ChangeEmailState extends State<ChangeEmail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Change Email")),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("Change Email")
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -394,9 +397,9 @@ class _ChangeEmailState extends State<ChangeEmail> {
             NeonInputField(controller: newEmailControl, labelText: "New Email"),
             const SizedBox(height: 16),
             SizedBox(
-              child: ElevatedButton(
+              child: NeonOutlinedButton(
                 onPressed: confirmPressed,
-                child: const Text("Confirm"),
+                labelText: "Confirm",
               ),
             ),
           ],
@@ -419,6 +422,7 @@ class ChangePassword extends StatefulWidget {
 class _ChangePasswordState extends State<ChangePassword> {
   final newPasswordControl = TextEditingController();
   final confirmPasswordControl = TextEditingController();
+  bool passIsObscured = true;
 
   void confirmPressed() async {
 
@@ -456,16 +460,40 @@ class _ChangePasswordState extends State<ChangePassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Change Password")),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("Change Password")
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            NeonInputField(controller: newPasswordControl, labelText: "New Password"),
+            NeonInputField(
+              controller: newPasswordControl, 
+              labelText: "New Password",
+              obscureText: passIsObscured,
+              suffixIcon: IconButton(
+                onPressed: () => setState(() => passIsObscured = !passIsObscured), 
+                icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
+              ),
+            ),
             const SizedBox(height: 12),
-            NeonInputField(controller: confirmPasswordControl, labelText: "Confirm New Password"),
+            
+            NeonInputField(
+              controller: confirmPasswordControl, 
+              labelText: "Confirm New Password",
+              obscureText: passIsObscured,
+              suffixIcon: IconButton(
+                onPressed: () => setState(() => passIsObscured = !passIsObscured), 
+                icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
+              ),
+            ),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: confirmPressed, child: const Text("Confirm")),
+            
+            NeonOutlinedButton(
+              onPressed: confirmPressed, 
+              labelText: "Confirm"
+            ),
           ],
         ),
       ),
