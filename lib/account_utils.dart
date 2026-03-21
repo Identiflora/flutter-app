@@ -574,6 +574,54 @@ class PasswordResetForm extends StatelessWidget {
 
   PasswordResetForm({super.key});
 
+  void passwordResetHandler(BuildContext context) async {
+    if (validEmail(emailControl.text.trim())) {
+      try {
+        bool success = await submitUserPasswordReset(
+          email: emailControl.text.trim(),
+          otpLength: Random().nextInt(8) + 8, // OTP can be between 8 and 16
+        );
+
+        if (success && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Password reset request sent. It might take a moment. Please check your email for more instructions.",
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 15),
+            ),
+          );
+          Navigator.pop(context);
+        } else if (context.mounted) {
+          errorPopupMessage(
+            context, 
+            "Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password.", 
+            Duration(seconds: 15)
+          );
+          
+          Navigator.pop(context);
+        }
+      } catch (err) {
+        if (context.mounted) {
+          errorPopupMessage(
+            context, 
+            "Password reset failed: $err", 
+            null
+          );
+          
+          Navigator.pop(context);
+        }
+      }
+    } else {
+      errorPopupMessage(
+        context, 
+        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}", 
+        Duration(seconds: 8)
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -585,7 +633,6 @@ class PasswordResetForm extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 "Please enter the email associated with your account.",
@@ -596,64 +643,19 @@ class PasswordResetForm extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.only(top: 16.0),
-                child: TextField(
+                child: NeonInputField(
                   controller: emailControl,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  labelText: 'Email',
                 ),
               ),
               const SizedBox(height: 16),
 
-              ElevatedButton(
-                onPressed: () async {
-                  if (validEmail(emailControl.text.trim())) {
-                    try {
-                      bool success = await submitUserPasswordReset(
-                        email: emailControl.text.trim(),
-                        otpLength: Random().nextInt(8) + 8,
-                      );
-
-                      if (success && context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              "Password reset request sent. It might take a moment. Please check your email for more instructions.",
-                            ),
-                            backgroundColor: Colors.green,
-                            duration: Duration(seconds: 15),
-                          ),
-                        );
-                        Navigator.pop(context);
-                      } else if (context.mounted) {
-                        errorPopupMessage(
-                          context, 
-                          "Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password.", 
-                          Duration(seconds: 15)
-                        );
-                        
-                        Navigator.pop(context);
-                      }
-                    } catch (err) {
-                      if (context.mounted) {
-                        errorPopupMessage(
-                          context, 
-                          "Password reset failed: $err", 
-                          null
-                        );
-                        
-                        Navigator.pop(context);
-                      }
-                    }
-                  } else {
-                    errorPopupMessage(
-                      context, 
-                      "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}", 
-                      Duration(seconds: 8)
-                    );
-                  }
-                },
-                child: const Text("Confirm"),
+              NeonOutlinedButton(
+                onPressed: () => passwordResetHandler(context),
+                labelText: "Confirm",
               ),
             ],
           ),
@@ -663,61 +665,81 @@ class PasswordResetForm extends StatelessWidget {
   }
 }
 
-// Form for password reset
-class NewPasswordForm extends StatelessWidget {
-  final passwordControl = TextEditingController();
+class NewPasswordForm extends StatefulWidget {
+  const NewPasswordForm({super.key});
 
-  NewPasswordForm({super.key});
+  @override
+  State<NewPasswordForm> createState() => _NewPasswordFormState();
+}
+
+// Form for password reset
+class _NewPasswordFormState extends State<NewPasswordForm> {
+  final newPasswordControl = TextEditingController(), confirmPasswordControl = TextEditingController();
+  bool passIsObscured = true;
+
+  void handlePasswordChange() {
+    if(newPasswordControl.text.trim() != confirmPasswordControl.text.trim()) {
+      errorPopupMessage(
+        context, 
+        "Password confirm does not match!",
+        null
+      );
+    }
+    else if (!validPassword(newPasswordControl.text.trim())) {
+      errorPopupMessage(
+        context, 
+        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}", 
+        Duration(seconds: 8)
+      );
+    } else {
+      Navigator.pop(context, newPasswordControl.text.trim());
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Success! Your password has been reset."),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Reset Password'), centerTitle: true),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text('Reset Password')
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                "Please enter a new password to be associated with your account.",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
+              NeonInputField(
+                controller: newPasswordControl, 
+                labelText: "New Password",
+                obscureText: passIsObscured,
+                suffixIcon: IconButton(
+                  onPressed: () => setState(() => passIsObscured = !passIsObscured), 
+                  icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
                 ),
-                textAlign: TextAlign.center,
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 16.0),
-                child: TextField(
-                  controller: passwordControl,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password'),
+              const SizedBox(height: 12),
+              
+              NeonInputField(
+                controller: confirmPasswordControl, 
+                labelText: "Confirm New Password",
+                obscureText: passIsObscured,
+                suffixIcon: IconButton(
+                  onPressed: () => setState(() => passIsObscured = !passIsObscured), 
+                  icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
                 ),
               ),
               const SizedBox(height: 16),
-
-              ElevatedButton(
-                onPressed: () {
-                  if (!validPassword(passwordControl.text.trim())) {
-                    errorPopupMessage(
-                      context, 
-                      "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}", 
-                      Duration(seconds: 8)
-                    );
-                  } else {
-                    Navigator.pop(context, passwordControl.text.trim());
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("Success! Your password has been reset."),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                },
-                child: const Text("Confirm"),
+              
+              NeonOutlinedButton(
+                onPressed: handlePasswordChange, 
+                labelText: "Confirm"
               ),
             ],
           ),
