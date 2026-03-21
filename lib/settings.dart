@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/account_utils.dart';
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/theme/general_utils.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'cache_utils.dart';
 import 'package:provider/provider.dart';
@@ -256,11 +257,10 @@ class _SettingsScreen extends State<SettingsScreen> {
                                 }
                               } catch (e) {
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text("Error: $e"),
-                                      backgroundColor: Colors.red,
-                                    ),
+                                  errorPopupMessage(
+                                    context, 
+                                    "Error: $e", 
+                                    null
                                   );
                                 }
                               }
@@ -339,48 +339,46 @@ class _ChangeEmailState extends State<ChangeEmail> {
   void confirmPressed() async {
     final newEmail = newEmailControl.text.trim();
 
-    // still needs more validity/injection checks
-
     if (newEmail.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please complete email field"),
-          backgroundColor: Colors.red,
-        ),
+      errorPopupMessage(
+        context, 
+        "Please complete all fields!", 
+        null
       );
-      return;
-    }
-    if (!newEmail.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Invalid email entered"),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-    try {
-    bool success = await submitEmailChange(newEmail: newEmail);
 
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Successfully updated email!"),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pop(context);
+      return;
     }
-  } catch (err) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to update email: $err"),
-          backgroundColor: Colors.red,
-        ),
+    else if (!validEmail(newEmail)) {
+      errorPopupMessage(
+        context, 
+        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}", 
+        Duration(seconds: 8)
       );
+
+      return;
     }
-  }
+
+    try {
+      bool success = await submitEmailChange(newEmail: newEmail);
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Successfully updated email!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (err) {
+      if (mounted) {
+        errorPopupMessage(
+          context, 
+          "Failed to update email: $err", 
+          null
+        );
+      }
+    }
 }
 
   @override
@@ -425,15 +423,34 @@ class _ChangePasswordState extends State<ChangePassword> {
   bool passIsObscured = true;
 
   void confirmPressed() async {
-
-    //Needs symbol enforcement and injection protections still
     final password = newPasswordControl.text.trim();
     final confirm = confirmPasswordControl.text.trim();
 
-    if (password != confirm) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords do not match"), backgroundColor: Colors.red),
+    if(password.isEmpty) {
+      errorPopupMessage(
+        context, 
+        "Please complete all fields!", 
+        null
       );
+
+      return;
+    }
+    else if (password != confirm) {
+      errorPopupMessage(
+        context, 
+        "Password confirm does not match!", 
+        null
+      );
+      
+      return;
+    }
+    else if(!validPassword(password)) {
+      errorPopupMessage(
+        context, 
+        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}", 
+        Duration(seconds: 8)
+      );
+
       return;
     }
 
@@ -450,8 +467,10 @@ class _ChangePasswordState extends State<ChangePassword> {
       }
     } catch (err) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $err"), backgroundColor: Colors.red),
+        errorPopupMessage(
+          context, 
+          "Error: $err", 
+          null
         );
       }
     }
