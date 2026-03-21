@@ -150,6 +150,7 @@ class LoginForm extends StatefulWidget {
 class _LoginFormState extends State<LoginForm> {
   final emailControl = TextEditingController();
   final passwordControl = TextEditingController();
+  bool passIsObscured = true;
 
   void loginPressed() async {
     final email = emailControl.text.trim();
@@ -307,6 +308,11 @@ class _LoginFormState extends State<LoginForm> {
                 NeonInputField(
                   controller: passwordControl,
                   labelText: "Password",
+                  obscureText: passIsObscured,
+                  suffixIcon: IconButton(
+                    onPressed: () => setState(() => passIsObscured = !passIsObscured), 
+                    icon: Icon(passIsObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined)
+                  ),
                 ),
                 NeonOutlinedButton(onPressed: loginPressed, labelText: "Login"),
                 NeonOutlinedButton(
@@ -355,6 +361,7 @@ class _SignUpFormState extends State<SignUpForm> {
   final passwordControl = TextEditingController();
   final confirmControl = TextEditingController();
   String? userRegion;
+  bool passIsObscured = true;
 
   void signUp() async {
     final email = emailControl.text.trim();
@@ -421,7 +428,10 @@ class _SignUpFormState extends State<SignUpForm> {
     return Column(
       children:
           [
-                NeonInputField(controller: emailControl, labelText: "Email"),
+                NeonInputField(
+                  controller: emailControl, 
+                  labelText: "Email"
+                ),
 
                 NeonInputField(
                   controller: usernameControl,
@@ -437,12 +447,27 @@ class _SignUpFormState extends State<SignUpForm> {
                 NeonInputField(
                   controller: passwordControl,
                   labelText: "Password",
+                  obscureText: passIsObscured,
+                  suffixIcon: IconButton(
+                    onPressed: () => setState(() => passIsObscured = !passIsObscured), 
+                    icon: Icon(passIsObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined)
+                  ),
                 ),
+
                 NeonInputField(
                   controller: confirmControl,
                   labelText: "Confirm Password",
+                  obscureText: passIsObscured,
+                  suffixIcon: IconButton(
+                    onPressed: () => setState(() => passIsObscured = !passIsObscured), 
+                    icon: Icon(passIsObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined)
+                  ),
                 ),
-                NeonOutlinedButton(onPressed: signUp, labelText: "Sign Up"),
+
+                NeonOutlinedButton(
+                  onPressed: signUp, 
+                  labelText: "Sign Up"
+                ),
               ]
               .map(
                 (childWidget) => Padding(
