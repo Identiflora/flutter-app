@@ -33,6 +33,7 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   ]; //this is the list thats passed to the gridview to display the badges
 
   String username = " ";
+  String selectedBadgeFilePath = 'assets/brand/Identiflora_logo.png';
 
   int numFriends = 15; //need to calculate number of friends in initState
 
@@ -58,6 +59,14 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
         username = response;
       });
     });
+
+    _getPlayerSelectedBadge().then((response) {
+      setState(() {
+        if (response.isNotEmpty) {
+          selectedBadgeFilePath = response;
+        }
+      });
+    });
   }
 
   Future<int> _getPlayerPoints() async {
@@ -66,6 +75,10 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
 
   Future<String> _getPlayerUsername() async {
     return await getUsername();
+  }
+
+  Future<String> _getPlayerSelectedBadge() async {
+    return await fetchUserBadge();
   }
 
   @override
@@ -90,7 +103,10 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ProgressAvatar(normalizedPlayerPoints: normalizedPlayerPoints),
+            ProgressAvatar(
+              normalizedPlayerPoints: normalizedPlayerPoints,
+              imagePath: selectedBadgeFilePath,
+            ),
 
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
@@ -187,7 +203,16 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
             ),
 
             Expanded(
-              child: BadgesDisplay(badges: badges, playerLevel: playerLevel),
+              child: BadgesDisplay(
+                badges: badges,
+                playerLevel: playerLevel,
+                selectedBadge: selectedBadgeFilePath,
+                onBadgeSelected: (badgePath) {
+                  setState(() {
+                    selectedBadgeFilePath = badgePath;
+                  });
+                },
+              ),
             ),
           ],
         ),
@@ -201,6 +226,7 @@ class BadgesDisplay extends StatefulWidget {
   final int playerLevel;
   final bool isReadOnly;
   final String? selectedBadge;
+  final Function(String)? onBadgeSelected;
 
   /// Creates a [BadgesDisplay] that generates a grid of badge images.
   const BadgesDisplay({
@@ -209,6 +235,7 @@ class BadgesDisplay extends StatefulWidget {
     required this.playerLevel,
     this.isReadOnly = false,
     this.selectedBadge,
+    this.onBadgeSelected,
   });
 
   @override
@@ -238,6 +265,17 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
   }
 
   @override
+  void didUpdateWidget(covariant BadgesDisplay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedBadge != null &&
+        widget.selectedBadge != oldWidget.selectedBadge) {
+      setState(() {
+        selectedBadgeFilePath = widget.selectedBadge!;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GridView.builder(
       padding: const EdgeInsets.all(16.0),
@@ -262,6 +300,10 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
                 setState(() {
                   selectedBadgeFilePath = badge.imagePath;
                 });
+
+                if (widget.onBadgeSelected != null) {
+                  widget.onBadgeSelected!(badge.imagePath);
+                }
 
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -330,9 +372,7 @@ class ProgressAvatar extends StatelessWidget {
             backgroundColor: Theme.of(context)
                 .colorScheme
                 .surface, //eventually make this a profile picture or let them choose color
-            foregroundImage: const AssetImage(
-              'assets/brand/Identiflora_logo.png',
-            ),
+            foregroundImage: AssetImage(imagePath),
             radius: 50.0, // changes the size of profile picture display
           ),
           //begin progress indicator
