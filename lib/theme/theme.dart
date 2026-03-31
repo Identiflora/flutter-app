@@ -14,7 +14,19 @@ ThemeData lightMode = ThemeData(
   textTheme: ThemeData.light().textTheme.apply(
     bodyColor: Colors.black,
     displayColor: Colors.black,
-  )
+  ),
+
+  // Custom shadows for neon effects
+  extensions: const <ThemeExtension<dynamic>>[
+    NeonTheme(
+      iconGlow: identifloraIconGlow,
+      containerGlow: identifloraContainerGlow,
+      buttonGlow: identifloraButtonGlow,
+      dropdownGlow: identifloraDropdownGlow,
+      popupGlow: identifloraIconGlow,
+      homeIconShadow: identifloraLightHomebuttonShadow,
+    ),
+  ],
 );
 
 const primaryNeonGreen = Color.fromARGB(255, 0, 177, 9);
@@ -73,6 +85,7 @@ ThemeData darkMode = ThemeData(
       buttonGlow: identifloraButtonGlow,
       dropdownGlow: identifloraDropdownGlow,
       popupGlow: identifloraIconGlow,
+      homeIconShadow: identifloraDarkHomebuttonShadow,
     ),
   ],
 

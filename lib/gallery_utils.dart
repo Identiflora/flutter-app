@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/camera_utils.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:identiflora/theme/neon_theme.dart';
 
 // Stable caller for the state of photo gallery
 class GalleryWidget extends StatefulWidget {
@@ -40,7 +41,9 @@ class _GalleryWidgetState extends State<GalleryWidget> {
               Icons.photo_library_outlined,
               size: 80.0,
               color: Theme.of(context).colorScheme.surface,
-              shadows: [BoxShadow(color: Colors.white, blurRadius: 15)], // SHOULD CHANGE TO BE SET BY THEME
+              shadows: Theme.of(context)
+                  .extension<NeonTheme>()
+                  ?.homeIconShadow, 
             ),
           ),
         ),

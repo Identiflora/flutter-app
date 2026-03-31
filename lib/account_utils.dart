@@ -12,6 +12,7 @@ import 'auth_objects.dart';
 import 'cache_utils.dart';
 import 'dart:math';
 import 'package:identiflora/widgets/neon_widgets.dart';
+import 'package:identiflora/theme/neon_theme.dart';
 
 class LoginWidget extends StatefulWidget {
   const LoginWidget({super.key});
@@ -39,44 +40,37 @@ class _Login extends State<LoginWidget> {
             onTap: () async {
               try {
                 Navigator.push(
-                  context, 
+                  context,
                   MaterialPageRoute(
                     builder: (context) => LoadingScreen<bool>.withNav(
-                      loadingMsg: "Loading account information...", 
-                      foundMsg: "Account found! One moment...", 
-                      errorMsg: "Unable to find account information. Returning...", 
+                      loadingMsg: "Loading account information...",
+                      foundMsg: "Account found! One moment...",
+                      errorMsg:
+                          "Unable to find account information. Returning...",
                       futureFunction: authenticateToken(),
                       postLoadingBuilder: (context, success) {
-                        if(success == null || !success) {
+                        if (success == null || !success) {
                           return const LoginScreen();
                         }
                         return ViewAccountScreen();
                       },
                       navigateOnError: true,
-                    )
-                  )
+                    ),
+                  ),
                 );
               } on RateLimitException catch (e) {
                 if (context.mounted) {
-                  errorPopupMessage(
-                    context, 
-                    e.message, 
-                    null
-                  );
+                  errorPopupMessage(context, e.message, null);
                 }
               } catch (error) {
-                errorPopupMessage(
-                  context, 
-                  "$error", 
-                  null
-                );
+                errorPopupMessage(context, "$error", null);
               }
             },
             child: Icon(
               Icons.account_circle_outlined,
               size: 80.0,
               color: Theme.of(context).colorScheme.surface,
-              shadows: [BoxShadow(color: Colors.white, blurRadius: 12)], // SHOULD CHANGE TO BE SET BY THEME
+              shadows: Theme.of(context).extension<NeonTheme>()?.homeIconShadow,
             ),
           ),
         ),
@@ -157,28 +151,22 @@ class _LoginFormState extends State<LoginForm> {
     String password = passwordControl.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      errorPopupMessage(
-        context, 
-        "Please complete all fields!", 
-        null
-      );
-      
+      errorPopupMessage(context, "Please complete all fields!", null);
+
       return;
-    }
-    else if(!validEmail(email)) {
+    } else if (!validEmail(email)) {
       errorPopupMessage(
-        context, 
-        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}", 
-        Duration(seconds: 8)
+        context,
+        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}",
+        Duration(seconds: 8),
       );
 
       return;
-    }
-    else if(!validPassword(password)) {
+    } else if (!validPassword(password)) {
       errorPopupMessage(
-        context, 
-        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}", 
-        Duration(seconds: 8)
+        context,
+        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}",
+        Duration(seconds: 8),
       );
 
       return;
@@ -203,20 +191,16 @@ class _LoginFormState extends State<LoginForm> {
         hasOTP = true;
       } else if (otpResult == 0 && mounted) {
         errorPopupMessage(
-          context, 
-          "This one time password has expired! Please press 'Forgot password?' again for a new one time password.", 
-          Duration(seconds: 15)
+          context,
+          "This one time password has expired! Please press 'Forgot password?' again for a new one time password.",
+          Duration(seconds: 15),
         );
         return;
       }
     } catch (error) {
       hasOTPError = true;
-      if(mounted) {
-        errorPopupMessage(
-          context, 
-          "$error", 
-          null
-        );
+      if (mounted) {
+        errorPopupMessage(context, "$error", null);
       }
     }
 
@@ -244,11 +228,7 @@ class _LoginFormState extends State<LoginForm> {
       }
     } catch (err) {
       if (mounted && !hasOTPError) {
-        errorPopupMessage(
-          context, 
-          "Login failed: $err", 
-          null
-        );
+        errorPopupMessage(context, "Login failed: $err", null);
       }
       return;
     }
@@ -266,11 +246,7 @@ class _LoginFormState extends State<LoginForm> {
       return true;
     } catch (error) {
       if (context.mounted) {
-        errorPopupMessage(
-          context, 
-          "Login failed: $error", 
-          null
-        );
+        errorPopupMessage(context, "Login failed: $error", null);
       }
     }
 
@@ -292,24 +268,21 @@ class _LoginFormState extends State<LoginForm> {
           context,
           MaterialPageRoute(
             builder: (context) => LoadingScreen<bool>.withPop(
-              loadingMsg: "Please wait while we log you in...", 
-              foundMsg: "Login complete! One moment...", 
-              errorMsg: "Sorry! We can't seem to log you in. Please check your internet connection then try again.", 
+              loadingMsg: "Please wait while we log you in...",
+              foundMsg: "Login complete! One moment...",
+              errorMsg:
+                  "Sorry! We can't seem to log you in. Please check your internet connection then try again.",
               futureFunction: loginAndStore(googleToken, context),
               postLoadingPop: ModalRoute.withName("/"),
               popErrorScreenButton: "Return to Homepage",
               successMsg: "Successfully logged in",
-            )
+            ),
           ),
         );
       }
     } catch (err) {
       if (context.mounted) {
-        errorPopupMessage(
-          context, 
-          "Login failed: $err", 
-          null
-        );
+        errorPopupMessage(context, "Login failed: $err", null);
       }
       return;
     }
@@ -326,8 +299,13 @@ class _LoginFormState extends State<LoginForm> {
                   labelText: "Password",
                   obscureText: passIsObscured,
                   suffixIcon: IconButton(
-                    onPressed: () => setState(() => passIsObscured = !passIsObscured), 
-                    icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
+                    onPressed: () =>
+                        setState(() => passIsObscured = !passIsObscured),
+                    icon: Icon(
+                      passIsObscured
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
                   ),
                 ),
                 NeonOutlinedButton(onPressed: loginPressed, labelText: "Login"),
@@ -354,12 +332,7 @@ class _LoginFormState extends State<LoginForm> {
 } //END LOGINFORMSTATE CLASS
 
 List<String> getRegions() {
-  return [
-    'Northeast US',
-    'Midwest US',
-    'Southern US',
-    'Western US',
-  ];
+  return ['Northeast US', 'Midwest US', 'Southern US', 'Western US'];
 }
 
 //USER SIGNUP CLASS
@@ -379,48 +352,45 @@ class _SignUpFormState extends State<SignUpForm> {
   String? userRegion;
   bool passIsObscured = true;
 
-  bool validateFields(String email, String username, String password, String passwordConfirm, String? region) {
-    if(email.isEmpty || username.isEmpty || password.isEmpty || region == null) {
+  bool validateFields(
+    String email,
+    String username,
+    String password,
+    String passwordConfirm,
+    String? region,
+  ) {
+    if (email.isEmpty ||
+        username.isEmpty ||
+        password.isEmpty ||
+        region == null) {
+      errorPopupMessage(context, "Please complete all fields!", null);
+
+      return false;
+    } else if (password != passwordConfirm) {
+      errorPopupMessage(context, "Password confirm does not match!", null);
+
+      return false;
+    } else if (!validEmail(email)) {
       errorPopupMessage(
-        context, 
-        "Please complete all fields!", 
-        null
+        context,
+        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}",
+        Duration(seconds: 8),
       );
 
       return false;
-    }
-    else if (password != passwordConfirm) {
+    } else if (!validUsername(username)) {
       errorPopupMessage(
-        context, 
-        "Password confirm does not match!", 
-        null
-      );
-      
-      return false;
-    }
-    else if(!validEmail(email)) {
-      errorPopupMessage(
-        context, 
-        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}", 
-        Duration(seconds: 8)
-      );
-
-      return false;
-    }
-    else if(!validUsername(username)) {
-      errorPopupMessage(
-        context, 
+        context,
         "Username field must not be empty and have less than ${getMaxUsernameLength()} characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
-        null
+        null,
       );
 
       return false;
-    }
-    else if(!validPassword(password)) {
+    } else if (!validPassword(password)) {
       errorPopupMessage(
-        context, 
-        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}", 
-        Duration(seconds: 8)
+        context,
+        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}",
+        Duration(seconds: 8),
       );
 
       return false;
@@ -436,7 +406,7 @@ class _SignUpFormState extends State<SignUpForm> {
     final passwordConfirm = confirmControl.text.trim();
     final region = userRegion;
 
-    if(!validateFields(email, username, password, passwordConfirm, region)) {
+    if (!validateFields(email, username, password, passwordConfirm, region)) {
       return;
     }
 
@@ -466,11 +436,7 @@ class _SignUpFormState extends State<SignUpForm> {
       }
     } catch (err) {
       if (mounted) {
-        errorPopupMessage(
-          context, 
-          "Login failed: $err", 
-          null
-        );
+        errorPopupMessage(context, "Login failed: $err", null);
       }
       return;
     }
@@ -487,10 +453,7 @@ class _SignUpFormState extends State<SignUpForm> {
     return Column(
       children:
           [
-                NeonInputField(
-                  controller: emailControl, 
-                  labelText: "Email"
-                ),
+                NeonInputField(controller: emailControl, labelText: "Email"),
 
                 NeonInputField(
                   controller: usernameControl,
@@ -508,8 +471,13 @@ class _SignUpFormState extends State<SignUpForm> {
                   labelText: "Password",
                   obscureText: passIsObscured,
                   suffixIcon: IconButton(
-                    onPressed: () => setState(() => passIsObscured = !passIsObscured), 
-                    icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
+                    onPressed: () =>
+                        setState(() => passIsObscured = !passIsObscured),
+                    icon: Icon(
+                      passIsObscured
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
                   ),
                 ),
 
@@ -518,15 +486,17 @@ class _SignUpFormState extends State<SignUpForm> {
                   labelText: "Confirm Password",
                   obscureText: passIsObscured,
                   suffixIcon: IconButton(
-                    onPressed: () => setState(() => passIsObscured = !passIsObscured), 
-                    icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
+                    onPressed: () =>
+                        setState(() => passIsObscured = !passIsObscured),
+                    icon: Icon(
+                      passIsObscured
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                    ),
                   ),
                 ),
 
-                NeonOutlinedButton(
-                  onPressed: signUp, 
-                  labelText: "Sign Up"
-                ),
+                NeonOutlinedButton(onPressed: signUp, labelText: "Sign Up"),
               ]
               .map(
                 (childWidget) => Padding(
@@ -563,16 +533,15 @@ class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
       Navigator.pop(context, userInfo);
     } else if (!validUsername(usernameControl.text.trim())) {
       errorPopupMessage(
-        context, 
+        context,
         "Username field must not be empty and have less than ${getMaxUsernameLength()} characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
-        null
+        null,
       );
-    }
-    else {
+    } else {
       errorPopupMessage(
-        context, 
+        context,
         "Please make sure a region is selected then try again.",
-        null
+        null,
       );
     }
   }
@@ -604,7 +573,7 @@ class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
                   children: [
                     NeonInputField(
                       controller: usernameControl,
-                      labelText: 'Username'
+                      labelText: 'Username',
                     ),
                     const SizedBox(height: 16.0),
                     NeonDropdownMenu(
@@ -655,29 +624,25 @@ class PasswordResetForm extends StatelessWidget {
           Navigator.pop(context);
         } else if (context.mounted) {
           errorPopupMessage(
-            context, 
-            "Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password.", 
-            Duration(seconds: 15)
+            context,
+            "Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password.",
+            Duration(seconds: 15),
           );
-          
+
           Navigator.pop(context);
         }
       } catch (err) {
         if (context.mounted) {
-          errorPopupMessage(
-            context, 
-            "Password reset failed: $err", 
-            null
-          );
-          
+          errorPopupMessage(context, "Password reset failed: $err", null);
+
           Navigator.pop(context);
         }
       }
     } else {
       errorPopupMessage(
-        context, 
-        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}", 
-        Duration(seconds: 8)
+        context,
+        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}",
+        Duration(seconds: 8),
       );
     }
   }
@@ -734,22 +699,18 @@ class NewPasswordForm extends StatefulWidget {
 
 // Form for password reset
 class _NewPasswordFormState extends State<NewPasswordForm> {
-  final newPasswordControl = TextEditingController(), confirmPasswordControl = TextEditingController();
+  final newPasswordControl = TextEditingController(),
+      confirmPasswordControl = TextEditingController();
   bool passIsObscured = true;
 
   void handlePasswordChange() {
-    if(newPasswordControl.text.trim() != confirmPasswordControl.text.trim()) {
+    if (newPasswordControl.text.trim() != confirmPasswordControl.text.trim()) {
+      errorPopupMessage(context, "Password confirm does not match!", null);
+    } else if (!validPassword(newPasswordControl.text.trim())) {
       errorPopupMessage(
-        context, 
-        "Password confirm does not match!",
-        null
-      );
-    }
-    else if (!validPassword(newPasswordControl.text.trim())) {
-      errorPopupMessage(
-        context, 
-        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}", 
-        Duration(seconds: 8)
+        context,
+        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}",
+        Duration(seconds: 8),
       );
     } else {
       Navigator.pop(context, newPasswordControl.text.trim());
@@ -766,40 +727,47 @@ class _NewPasswordFormState extends State<NewPasswordForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('Reset Password')
-      ),
+      appBar: AppBar(centerTitle: true, title: const Text('Reset Password')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
               NeonInputField(
-                controller: newPasswordControl, 
+                controller: newPasswordControl,
                 labelText: "New Password",
                 obscureText: passIsObscured,
                 suffixIcon: IconButton(
-                  onPressed: () => setState(() => passIsObscured = !passIsObscured), 
-                  icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
+                  onPressed: () =>
+                      setState(() => passIsObscured = !passIsObscured),
+                  icon: Icon(
+                    passIsObscured
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               NeonInputField(
-                controller: confirmPasswordControl, 
+                controller: confirmPasswordControl,
                 labelText: "Confirm New Password",
                 obscureText: passIsObscured,
                 suffixIcon: IconButton(
-                  onPressed: () => setState(() => passIsObscured = !passIsObscured), 
-                  icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
+                  onPressed: () =>
+                      setState(() => passIsObscured = !passIsObscured),
+                  icon: Icon(
+                    passIsObscured
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               NeonOutlinedButton(
-                onPressed: handlePasswordChange, 
-                labelText: "Confirm"
+                onPressed: handlePasswordChange,
+                labelText: "Confirm",
               ),
             ],
           ),

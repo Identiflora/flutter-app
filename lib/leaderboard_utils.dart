@@ -6,6 +6,7 @@ import 'package:identiflora/theme/general_utils.dart';
 import 'package:identiflora/view_account/view_alternate_account_screen.dart';
 import 'package:identiflora/widgets/leaderboard_widgets.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
+import 'package:identiflora/theme/neon_theme.dart';
 
 class LeaderboardUser {
   final String userName;
@@ -60,7 +61,7 @@ class _Leaderboard extends State<LeaderboardWidget> {
               Icons.leaderboard_outlined,
               size: 80.0,
               color: Theme.of(context).colorScheme.surface,
-              shadows: [BoxShadow(color: Colors.white, blurRadius: 12)], // SHOULD CHANGE TO BE SET BY THEME
+              shadows: Theme.of(context).extension<NeonTheme>()?.homeIconShadow,
             ),
           ),
         ),
@@ -182,6 +183,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         title: Text("$leaderboardType Leaderboard"),
         actions: [
           PopupMenuButton<String>(
+            iconColor: Theme.of(context).colorScheme.secondary,
             itemBuilder: (BuildContext context) =>
                 getPopupOptions(leaderboardType),
             onSelected: (String value) {
@@ -277,16 +279,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder:
-                                              (context) =>
-                                                  ViewAlternateAccountScreen(
-                                                    username: user.userName,
-                                                    points: user.userScore,
-                                                    numFriends: user.numFriends,
-                                                    displayedBadgeFilePath:
-                                                        user.displayedBadgeFilePath ??
-                                                        'assets/brand/Identiflora_logo.png',
-                                                  ),
+                                          builder: (context) =>
+                                              ViewAlternateAccountScreen(
+                                                username: user.userName,
+                                                points: user.userScore,
+                                                numFriends: user.numFriends,
+                                                displayedBadgeFilePath:
+                                                    user.displayedBadgeFilePath ??
+                                                    'assets/brand/Identiflora_logo.png',
+                                              ),
                                         ),
                                       );
                                     },
