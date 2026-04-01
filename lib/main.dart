@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:identiflora/view_account/view_account_utils.dart';
 import 'package:provider/provider.dart';
 import 'camera_utils.dart';
-import 'account_utils.dart';
+import 'user_credentials/account_utils.dart';
 import 'environment.dart';
 import 'package:identiflora/theme/theme.dart';
 import 'package:identiflora/theme/theme_provider.dart';
@@ -54,7 +54,7 @@ class HomeScreen extends StatelessWidget {
       body: Stack(
         children: [
           getCameraWidget(),
-          LoginWidget(),
+          AccountWidget(),
           GalleryWidget(),
           LeaderboardWidget(),
           HistoryWidget()

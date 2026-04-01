@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:identiflora/account_utils.dart';
 import 'package:identiflora/cache_utils.dart';
 import 'package:identiflora/leaderboard_utils.dart';
+import 'package:identiflora/user_credentials/sign_up.dart';
 import 'auth_objects.dart';
 import 'environment.dart';
 

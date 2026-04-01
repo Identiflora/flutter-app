@@ -6,7 +6,7 @@ import 'package:identiflora/friends_utils.dart';
 import 'package:identiflora/user_data/badge_utils.dart';
 import 'package:identiflora/user_data/point_utils.dart';
 import 'level_bottom_sheet.dart';
-import 'package:identiflora/settings.dart';
+import 'package:identiflora/user_credentials/settings.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 
 double normalize(double value, double min, double max) {
