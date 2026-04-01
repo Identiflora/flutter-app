@@ -28,6 +28,10 @@ String hashPassword(String password) {
   return digest.toString(); //RETURN HASHED STRING
 }
 
+String getLoginSuccessMsg() {
+  return "Successfully logged in";
+}
+
 class _Login extends State<LoginWidget> {
   @override
   Widget build(BuildContext context) {
@@ -243,7 +247,7 @@ class _LoginFormState extends State<LoginForm> {
           postLoadingPop: ModalRoute.withName("/"),
           popErrorScreenButton: null,
           popOnError: false,
-          successMsg: "Successfully logged in",
+          successMsg: getLoginSuccessMsg(),
           valueEqualCheck: true
         )
       )
@@ -291,7 +295,7 @@ class _LoginFormState extends State<LoginForm> {
               postLoadingPop: ModalRoute.withName("/"),
               popErrorScreenButton: null,
               popOnError: true,
-              successMsg: "Successfully logged in",
+              successMsg: getLoginSuccessMsg(),
               valueEqualCheck: true,
             ),
           ),
@@ -469,7 +473,7 @@ class _SignUpFormState extends State<SignUpForm> {
           postLoadingPop: ModalRoute.withName("/"), 
           popErrorScreenButton: null, 
           popOnError: false,
-          successMsg: "Successfully logged in",
+          successMsg: getLoginSuccessMsg(),
           valueEqualCheck: true
         )
       )
