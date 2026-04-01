@@ -216,6 +216,7 @@ class _Results extends State<ResultsWidget> {
                                 ), 
                                 postLoadingPop: ModalRoute.withName("/"),
                                 popErrorScreenButton: null,
+                                popOnError: true,
                                 // If points returns false, make sure error is surfaced
                                 valueEqualCheck: true,
                               ),

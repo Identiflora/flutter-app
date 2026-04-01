@@ -161,7 +161,7 @@ class LoadingScreen<T> extends StatelessWidget {
   final RoutePredicate? postLoadingPop;
   final String? popErrorScreenButton, successMsg;
   final Widget Function(BuildContext, T?)? postLoadingBuilder;
-  final bool? navigateOnError, errorPopup;
+  final bool? navigateOnError, popOnError, errorPopup;
   final Duration? successMsgDuration;
   final T? valueEqualCheck;
 
@@ -193,6 +193,7 @@ class LoadingScreen<T> extends StatelessWidget {
     required this.futureFunction,
     required this.postLoadingPop,
     required this.popErrorScreenButton,
+    required this.popOnError,
     this.valueEqualCheck,
     this.successMsg,
     this.successMsgDuration,
@@ -239,6 +240,7 @@ class LoadingScreen<T> extends StatelessWidget {
     this.successMsg,
     this.successMsgDuration,
     this.postLoadingPop,
+    this.popOnError,
     this.popErrorScreenButton,
     this.errorPopup = true
   });
@@ -420,7 +422,13 @@ class LoadingScreen<T> extends StatelessWidget {
               }
               else if(postLoadingPop != null) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  Navigator.popUntil(context, postLoadingPop!);
+                  if(popOnError != null && popOnError!) {
+                    Navigator.popUntil(context, postLoadingPop!);
+                  }
+                  else {
+                    // Just pop loading screen off
+                    Navigator.pop(context);
+                  }
 
                   if(errorPopup != null && errorPopup! && errorMsg.isNotEmpty && !snapshot.hasError) {
                     errorPopupMessage(

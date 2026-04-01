@@ -115,18 +115,18 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            TextButton(
+            isLoginView ? TextButton(
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => PasswordResetForm()),
               ),
               child: Text(
-                isLoginView ? 'Forgot Password?' : '',
+                'Forgot Password?',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
-            ),
+            ) : Container(),
           ],
         ),
       ),
@@ -145,6 +145,65 @@ class _LoginFormState extends State<LoginForm> {
   final emailControl = TextEditingController();
   final passwordControl = TextEditingController();
   bool passIsObscured = true;
+
+  Future<bool> handleLogin(String email, String password) async {
+    bool hasOTP = false, hasOTPError = false;
+
+    try {
+      final int otpResult = await submitUserOTPVerify(
+        unhashedPassword: password,
+        email: email,
+      );
+
+      // Result = 1 means OTP is valid and user needs new password, result = 0 means OTP is expired, but exists, result = -1 means there is not OTP
+      if (otpResult == 1 && mounted) {
+        // Get new password instead of OTP
+        password = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => NewPasswordForm()),
+        );
+        hasOTP = true;
+      } else if (otpResult == 0 && mounted) {
+        errorPopupMessage(
+          context,
+          "This one time password has expired! Please press 'Forgot password?' again for a new one time password.",
+          Duration(seconds: 15),
+        );
+        return false;
+      }
+    } catch (error) {
+      hasOTPError = true;
+      if (mounted) {
+        errorPopupMessage(context, "$error", null);
+      }
+    }
+
+    final hashedPassword = hashPassword(password);
+    try {
+      final AuthToken token = await submitUserLogin(
+        email: email,
+        passwordHash: hashedPassword,
+        hasOTP: hasOTP,
+      );
+
+      //SAVE AUTHTOKEN TO DEVICE
+      await saveAuthToken(token.accessToken);
+    } catch (err) {
+      if (mounted && !hasOTPError && !err.toString().contains("401")) {
+        errorPopupMessage(context, "Login failed: $err", null);
+      }
+      else if(mounted && !hasOTPError) {
+        errorPopupMessage(
+          context, 
+          "Login failed due to invalid email or password. Please verify email or password are correct and try again.", 
+          Duration(seconds: 7)
+        );
+      }
+      return false;
+    }
+
+    return true;
+  }
 
   void loginPressed() async {
     final email = emailControl.text.trim();
@@ -172,66 +231,23 @@ class _LoginFormState extends State<LoginForm> {
       return;
     }
 
-    bool hasOTP = false, hasOTPError = false;
-
-    try {
-      final int otpResult = await submitUserOTPVerify(
-        unhashedPassword: password,
-        email: email,
-      );
-      debugPrint("$otpResult");
-
-      // Result = 1 means OTP is valid and user needs new password, result = 0 means OTP is expired, but exists, result = -1 means there is not OTP
-      if (otpResult == 1 && mounted) {
-        // Get new password instead of OTP
-        password = await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => NewPasswordForm()),
-        );
-        hasOTP = true;
-      } else if (otpResult == 0 && mounted) {
-        errorPopupMessage(
-          context,
-          "This one time password has expired! Please press 'Forgot password?' again for a new one time password.",
-          Duration(seconds: 15),
-        );
-        return;
-      }
-    } catch (error) {
-      hasOTPError = true;
-      if (mounted) {
-        errorPopupMessage(context, "$error", null);
-      }
-    }
-
-    //ADDED FOR PASS HASHING - USE CREATED FUNCT ABOVE
-    final hashedPassword = hashPassword(password);
-    try {
-      final AuthToken token = await submitUserLogin(
-        email: email,
-        passwordHash: hashedPassword,
-        hasOTP: hasOTP,
-      );
-      debugPrint("Received token for $email: ${token.accessToken}");
-      //SAVE AUTHTOKEN TO DEVICE
-      await saveAuthToken(token.accessToken);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Successfully logged in"),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        Navigator.popUntil(context, ModalRoute.withName("/"));
-      }
-    } catch (err) {
-      if (mounted && !hasOTPError) {
-        errorPopupMessage(context, "Login failed: $err", null);
-      }
-      return;
-    }
+    Navigator.push(
+      context, 
+      MaterialPageRoute(
+        builder: (context) => LoadingScreen.withPop(
+          loadingMsg: "Please wait while we log you in...",
+          foundMsg: "Login complete! One moment...",
+          errorMsg: "Sorry! We can't seem to log you in. Please check your internet connection then try again.",
+          errorPopup: false,
+          futureFunction: handleLogin(email, password),
+          postLoadingPop: ModalRoute.withName("/"),
+          popErrorScreenButton: null,
+          popOnError: false,
+          successMsg: "Successfully logged in",
+          valueEqualCheck: true
+        )
+      )
+    );
   } //END LOGINPRESSED FUNCT
 
   Future<bool> loginAndStore(String googleToken, BuildContext context) async {
@@ -270,12 +286,13 @@ class _LoginFormState extends State<LoginForm> {
             builder: (context) => LoadingScreen<bool>.withPop(
               loadingMsg: "Please wait while we log you in...",
               foundMsg: "Login complete! One moment...",
-              errorMsg:
-                  "Sorry! We can't seem to log you in. Please check your internet connection then try again.",
+              errorMsg: "Sorry! We can't seem to log you in. Please check your internet connection then try again.",
               futureFunction: loginAndStore(googleToken, context),
               postLoadingPop: ModalRoute.withName("/"),
-              popErrorScreenButton: "Return to Homepage",
+              popErrorScreenButton: null,
+              popOnError: true,
               successMsg: "Successfully logged in",
+              valueEqualCheck: true,
             ),
           ),
         );
@@ -399,6 +416,36 @@ class _SignUpFormState extends State<SignUpForm> {
     return true;
   }
 
+  Future<bool> handleSignUp(
+    String email, 
+    String username, 
+    String password, 
+    String passwordConfirm, 
+    String region
+  ) async {
+    //ONLY AFTER CONFIRMING PASSWORDS - HASH
+    final hashedPassword = hashPassword(password);
+
+    try {
+      final AuthToken token = await submitUserRegistration(
+        email: email,
+        username: username,
+        passwordHash: hashedPassword,
+        region: region,
+      );
+      
+      //SAVE AUTHTOKEN TO DEVICE
+      await saveAuthToken(token.accessToken);
+
+      return true;
+    } catch (err) {
+      if (mounted) {
+        errorPopupMessage(context, "Login failed: $err", null);
+      }
+      return false;
+    }
+  }
+
   void signUp() async {
     final email = emailControl.text.trim();
     final username = usernameControl.text.trim();
@@ -410,37 +457,24 @@ class _SignUpFormState extends State<SignUpForm> {
       return;
     }
 
-    //ONLY AFTER CONFIRMING PASSWORDS - HASH
-    final hashedPassword = hashPassword(password);
-
-    try {
-      final AuthToken token = await submitUserRegistration(
-        email: email,
-        username: username,
-        passwordHash: hashedPassword,
-        region: region as String,
-      );
-      debugPrint("Received token for $email: ${token.accessToken}");
-      //SAVE AUTHTOKEN TO DEVICE
-      await saveAuthToken(token.accessToken);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Successfully logged in"),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        Navigator.popUntil(context, ModalRoute.withName("/"));
-      }
-    } catch (err) {
-      if (mounted) {
-        errorPopupMessage(context, "Login failed: $err", null);
-      }
-      return;
-    }
-  } //end sign up
+    Navigator.push(
+      context, 
+      MaterialPageRoute(
+        builder: (context) => LoadingScreen.withPop(
+          loadingMsg: "Please wait while we sign you up...",
+          foundMsg: "Sign up complete! Logging in...",
+          errorMsg: "Sorry! We can't seem to sign you up. Please check your internet connection then try again.",
+          errorPopup: false,
+          futureFunction: handleSignUp(email, username, password, passwordConfirm, region!), 
+          postLoadingPop: ModalRoute.withName("/"), 
+          popErrorScreenButton: null, 
+          popOnError: false,
+          successMsg: "Successfully logged in",
+          valueEqualCheck: true
+        )
+      )
+    );
+  }
 
   void _setDropdown(String value) {
     setState(() {
@@ -624,6 +658,7 @@ class PasswordResetForm extends StatelessWidget {
                 return removedScreenCount++ >= 2;
               }, 
               popErrorScreenButton: null,
+              popOnError: true,
               errorPopup: true,
               valueEqualCheck: true,
             )
@@ -774,79 +809,3 @@ class _NewPasswordFormState extends State<NewPasswordForm> {
     );
   }
 }
-
-// class DecoratedDropdownMenu extends StatelessWidget {
-//   final void Function(String selection)? onSelected;
-//   final String labelText;
-//   final List<String> options;
-
-//   /// Creates a [DecoratedDropdownMenu]
-//   ///
-//   /// Standard dropdown menu decorated to match Identiflora theme.
-//   /// * [onSelected] is the function to be executed upon selection. The input to this function is the string associated with the selection.
-//   /// * [labelText] is the text displayed indicating what the dropdown menu is for.
-//   /// * [options] are the options for the dropdown menu.
-//   const DecoratedDropdownMenu({
-//     super.key,
-//     required this.onSelected,
-//     required this.labelText,
-//     required this.options,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//       padding: const EdgeInsets.all(16.0),
-//       child: LayoutBuilder(
-//         builder: (context, constraints) {
-//           // Sort the list alphabetically
-//           options.sort();
-
-//           return Container(
-//             // 1. Add the glowing shadow behind the widget
-//             decoration: BoxDecoration(
-//               borderRadius: BorderRadius.circular(
-//                 4.0,
-//               ), // Matches default OutlineInputBorder radius
-//               boxShadow: [
-//                 BoxShadow(
-//                   color: Theme.of(context).colorScheme.primary,
-//                   blurRadius: 12.0,
-//                   spreadRadius: 1.0,
-//                 ),
-//               ],
-//             ),
-
-//             child: DropdownMenu<String>(
-//               width: constraints.maxWidth,
-//               label: Text(labelText),
-
-//               // 2. Style the internal text field and mask the shadow
-//               inputDecorationTheme: InputDecorationTheme(
-//                 filled: true,
-//                 fillColor: Theme.of(context).colorScheme.surface,
-
-//                 // Set the border colors to match the glow
-//                 enabledBorder: OutlineInputBorder(
-//                   borderSide: BorderSide(
-//                     color: Theme.of(context).colorScheme.secondary,
-//                     width: 1.5,
-//                   ),
-//                 ),
-//               ),
-
-//               onSelected: (String? value) {
-//                 onSelected?.call(value as String);
-//               },
-//               dropdownMenuEntries: options.map<DropdownMenuEntry<String>>((
-//                 String option,
-//               ) {
-//                 return DropdownMenuEntry<String>(value: option, label: option);
-//               }).toList(),
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
