@@ -161,7 +161,8 @@ class LoadingScreen<T> extends StatelessWidget {
   final RoutePredicate? postLoadingPop;
   final String? popErrorScreenButton, successMsg;
   final Widget Function(BuildContext, T?)? postLoadingBuilder;
-  final bool? navigateOnError, errorPopup; 
+  final bool? navigateOnError, errorPopup;
+  final Duration? successMsgDuration;
   final T? valueEqualCheck;
 
   /// General use loading screen for easy implementation that requires end action among other required fields.
@@ -194,6 +195,7 @@ class LoadingScreen<T> extends StatelessWidget {
     required this.popErrorScreenButton,
     this.valueEqualCheck,
     this.successMsg,
+    this.successMsgDuration,
     this.postLoadingBuilder,
     this.navigateOnError,
     this.errorPopup = true
@@ -235,6 +237,7 @@ class LoadingScreen<T> extends StatelessWidget {
     this.navigateOnError,
     this.valueEqualCheck,
     this.successMsg,
+    this.successMsgDuration,
     this.postLoadingPop,
     this.popErrorScreenButton,
     this.errorPopup = true
@@ -293,11 +296,20 @@ class LoadingScreen<T> extends StatelessWidget {
             } else if (snapshot.hasData && snapshot.data != null && checkValueEqual(snapshot.data as T)) {
               // Run after next frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if(successMsg != null) {
+                if(successMsg != null && successMsgDuration == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(successMsg!),
                       backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+                else if(successMsg != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(successMsg!),
+                      backgroundColor: Colors.green,
+                      duration: successMsgDuration!,
                     ),
                   );
                 }
@@ -332,21 +344,22 @@ class LoadingScreen<T> extends StatelessWidget {
                   ],
                 ),
               );
-            } else {
-              if (snapshot.hasError) {
-                errorPopupMessage(
-                  context, 
-                  "Error: ${snapshot.error}", 
-                  null
-                );
-              }
-
+            } 
+            else {
               if(popErrorScreenButton == null && postLoadingPop == null) {
                 // Run after next frame
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if(postLoadingBuilder != null) {
                     // Remove loading screen from stack
                     Navigator.pop(context);
+
+                    if(snapshot.hasError) {
+                      errorPopupMessage(
+                        context, 
+                        "Error: ${snapshot.error}", 
+                        null
+                      );
+                    }
 
                     if(navigateOnError != null && navigateOnError!) {
                       // Navigate to new screen
@@ -409,11 +422,18 @@ class LoadingScreen<T> extends StatelessWidget {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   Navigator.popUntil(context, postLoadingPop!);
 
-                  if(errorPopup != null && errorPopup! && errorMsg.isNotEmpty) {
+                  if(errorPopup != null && errorPopup! && errorMsg.isNotEmpty && !snapshot.hasError) {
                     errorPopupMessage(
                       context, 
                       errorMsg, 
                       Duration(seconds: 7)
+                    );
+                  }
+                  else if(snapshot.hasError) {
+                    errorPopupMessage(
+                      context, 
+                      "Error: ${snapshot.error}", 
+                      null
                     );
                   }
                 });

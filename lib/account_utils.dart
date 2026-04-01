@@ -606,31 +606,29 @@ class PasswordResetForm extends StatelessWidget {
   void handlePasswordReset(BuildContext context) async {
     if (validEmail(emailControl.text.trim())) {
       try {
-        bool success = await submitUserPasswordReset(
-          email: emailControl.text.trim(),
-          otpLength: Random().nextInt(8) + 8, // OTP can be between 8 and 16
+        int removedScreenCount = 0;
+        Navigator.push(
+          context, 
+          MaterialPageRoute(
+            builder: (context) => LoadingScreen.withPop(
+              loadingMsg: "Submitting password reset request... Please wait.", 
+              foundMsg: "Submitted! One moment.", 
+              errorMsg: "Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password.", 
+              successMsg: "Password reset request sent. It might take a moment. Please check your email for more instructions.",
+              successMsgDuration: Duration(seconds: 15),
+              futureFunction: submitUserPasswordReset(
+                email: emailControl.text.trim(),
+                otpLength: Random().nextInt(8) + 8, // OTP can be between 8 and 16
+              ), 
+              postLoadingPop: (route) {
+                return removedScreenCount++ >= 2;
+              }, 
+              popErrorScreenButton: null,
+              errorPopup: true,
+              valueEqualCheck: true,
+            )
+          )
         );
-
-        if (success && context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                "Password reset request sent. It might take a moment. Please check your email for more instructions.",
-              ),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 15),
-            ),
-          );
-          Navigator.pop(context);
-        } else if (context.mounted) {
-          errorPopupMessage(
-            context,
-            "Password reset failed due to email being tied to external user (such as through Google). Please sign in with Google instead of resetting your password.",
-            Duration(seconds: 15),
-          );
-
-          Navigator.pop(context);
-        }
       } catch (err) {
         if (context.mounted) {
           errorPopupMessage(context, "Password reset failed: $err", null);
