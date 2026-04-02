@@ -86,7 +86,7 @@ bool validEmail(String emailString) {
 /// Returns max length of usernames as an int<br><br>
 /// **This should be the ONLY place max username length is changed** 
 int getMaxUsernameLength() {
-  return 20;
+  return 16;
 }
 
 /// Returns if username string is valid.<br>

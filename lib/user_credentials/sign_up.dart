@@ -58,7 +58,7 @@ class _SignUpFormState extends State<SignUpForm> {
     } else if (!validUsername(username)) {
       errorPopupMessage(
         context,
-        "Username field must not be empty and have less than ${getMaxUsernameLength()} characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
+        "Username field must not be empty and have no more than ${getMaxUsernameLength()} characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
         null,
       );
 
@@ -228,7 +228,7 @@ class _ExternalSignUpFormState extends State<ExternalSignUpForm> {
     } else if (!validUsername(usernameControl.text.trim())) {
       errorPopupMessage(
         context,
-        "Username field must not be empty and have less than ${getMaxUsernameLength()} characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
+        "Username field must not be empty and have no more than ${getMaxUsernameLength()} characters.\n\nAdditionally, usernames cannot contain any of the following:\n${printBlacklistedChars()}",
         null,
       );
     } else {
