@@ -7,8 +7,8 @@ import 'package:identiflora/environment.dart';
 import 'package:identiflora/theme/general_utils.dart';
 import 'package:identiflora/user_credentials/account_utils.dart';
 import 'package:identiflora/user_credentials/sign_up.dart';
-import '../auth_objects.dart';
-import '../cache_utils.dart';
+import 'auth_objects.dart';
+import '../user_data/cache_utils.dart';
 import 'dart:math';
 import 'package:identiflora/widgets/neon_widgets.dart';
 

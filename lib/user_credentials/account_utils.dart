@@ -5,7 +5,7 @@ import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/theme/general_utils.dart';
 import 'package:identiflora/user_credentials/login.dart';
 import 'package:identiflora/view_account/view_account_utils.dart';
-import '../auth_objects.dart';
+import 'auth_objects.dart';
 import 'package:identiflora/theme/neon_theme.dart';
 
 class AccountWidget extends StatefulWidget {

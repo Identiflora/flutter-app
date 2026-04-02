@@ -3,7 +3,7 @@ import 'package:identiflora/user_credentials/account_utils.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/theme/general_utils.dart';
 import 'package:settings_ui/settings_ui.dart';
-import '../cache_utils.dart';
+import '../user_data/cache_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:identiflora/theme/theme_provider.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';

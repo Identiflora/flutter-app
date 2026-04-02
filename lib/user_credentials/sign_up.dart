@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/theme/general_utils.dart';
 import 'package:identiflora/user_credentials/account_utils.dart';
-import '../auth_objects.dart';
-import '../cache_utils.dart';
+import 'auth_objects.dart';
+import '../user_data/cache_utils.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 
 List<String> getRegions() {

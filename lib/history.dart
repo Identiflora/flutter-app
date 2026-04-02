@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:identiflora/database_utils.dart';
-import 'package:identiflora/auth_objects.dart';
+import 'package:identiflora/user_credentials/auth_objects.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'package:identiflora/theme/neon_theme.dart';
 
