@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:identiflora/gallery_utils.dart';
 import 'package:identiflora/history.dart';
 import 'package:identiflora/leaderboard_utils.dart';
@@ -14,6 +15,13 @@ import 'package:identiflora/theme/theme_provider.dart';
 Future<void> main() async {
   await dotenv.load(fileName: Environment.fileName);
   debugPrint('Using environment file: ${Environment.fileName}');
+  
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
