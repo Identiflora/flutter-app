@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:identiflora/model.dart';
 import 'package:identiflora/user_guess.dart';
+import 'package:identiflora/theme/neon_theme.dart';
 
 /// Get camera info from phone
 Future<CameraDescription> getCamera() async {
@@ -187,25 +188,21 @@ class _CameraWidgetState extends State<CameraWidget> {
 }
 
 /// Get the picture taking button that is aligned correctly. This button takes a picture then passes it into a screen object to display the picture.
-SafeArea getCameraButton(
-  CameraController controller,
-  BuildContext pastContext,
-) {
+SafeArea getCameraButton(CameraController controller, BuildContext context) {
   return SafeArea(
     child: Align(
       alignment: Alignment.bottomCenter,
       child: GestureDetector(
         onTap: () async {
           if (controller.value.isTakingPicture) return;
-      
+
           final image = await controller.takePicture();
-      
-          if (pastContext.mounted) {
+
+          if (context.mounted) {
             Navigator.push(
-              pastContext,
+              context,
               MaterialPageRoute<void>(
-                builder: (context) =>
-                    DisplayPictureScreen(imgPath: image.path),
+                builder: (context) => DisplayPictureScreen(imgPath: image.path),
               ),
             );
           }
@@ -213,8 +210,8 @@ SafeArea getCameraButton(
         child: Icon(
           Icons.lens_outlined,
           size: 100.0,
-          color: Theme.of(pastContext).colorScheme.surface,
-          shadows: [BoxShadow(color: Colors.white, blurRadius: 12)], // SHOULD CHANGE TO BE SET BY THEME
+          color: Theme.of(context).colorScheme.surface,
+          shadows: Theme.of(context).extension<NeonTheme>()?.homeIconShadow,
         ),
       ),
     ),

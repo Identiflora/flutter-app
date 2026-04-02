@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:identiflora/database_utils.dart';
-import 'package:identiflora/auth_objects.dart';
+import 'package:identiflora/user_credentials/auth_objects.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
+import 'package:identiflora/theme/neon_theme.dart';
 
 // NOTE: I used neonIcon for the icons on this page but I have no idea if thats right way to do this,
 // I just couldnt find another standard themeing for icons besides the one thats just neon green
@@ -18,7 +19,6 @@ class HistoryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return SafeArea(
       child: Align(
         alignment: Alignment.bottomRight,
@@ -34,7 +34,7 @@ class HistoryWidget extends StatelessWidget {
               Icons.history, 
               size: 90.0,
               color: Theme.of(context).colorScheme.surface,
-              shadows: [BoxShadow(color: Colors.white, blurRadius: 12)], // SHOULD CHANGE TO BE SET BY THEME
+              shadows: Theme.of(context).extension<NeonTheme>()?.homeIconShadow,
             ),
           ),
         ),

@@ -52,7 +52,10 @@ class ViewAlternateAccountScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ProgressAvatar(normalizedPlayerPoints: normalizedPlayerPoints),
+            ProgressAvatar(
+              normalizedPlayerPoints: normalizedPlayerPoints,
+              imagePath: displayedBadgeFilePath,
+            ),
 
             Padding(
               padding: const EdgeInsets.only(top: 8.0),

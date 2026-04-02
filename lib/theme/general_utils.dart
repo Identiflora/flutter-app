@@ -79,8 +79,14 @@ bool hasBlacklistedChar(String stringToCheck, bool? emailString) {
 bool validEmail(String emailString) {
   List<String> emailCharReq = ['@', '.'];
   return !hasBlacklistedChar(emailString, true) 
-          && emailCharReq.any((char) => emailString.contains(char)) 
+          && emailCharReq.every((char) => emailString.contains(char)) 
           && emailString.length >= 5;
+}
+
+/// Returns max length of usernames as an int<br><br>
+/// **This should be the ONLY place max username length is changed** 
+int getMaxUsernameLength() {
+  return 16;
 }
 
 /// Returns if username string is valid.<br>
@@ -91,7 +97,7 @@ bool validEmail(String emailString) {
 bool validUsername(String usernameString) {
   return !hasBlacklistedChar(usernameString, null) 
           && usernameString.isNotEmpty 
-          && usernameString.length <= 20;
+          && usernameString.length <= getMaxUsernameLength();
 }
 
 /// Returns if password is valid.<br>
@@ -155,9 +161,30 @@ class LoadingScreen<T> extends StatelessWidget {
   final RoutePredicate? postLoadingPop;
   final String? popErrorScreenButton, successMsg;
   final Widget Function(BuildContext, T?)? postLoadingBuilder;
-  final bool? navigateOnError; 
+  final bool? navigateOnError, popOnError, errorPopup;
+  final Duration? successMsgDuration;
   final T? valueEqualCheck;
 
+  /// General use loading screen for easy implementation that requires end action among other required fields.
+  /// 
+  /// 
+  /// <br>Example pop use case:
+  /// ```dart
+  /// Navigator.push(
+  ///   context,
+  ///   MaterialPageRoute(
+  ///     builder: (context) => LoadingScreen<bool>.withPop(
+  ///       loadingMsg: "Please wait while we update your points...", 
+  ///       foundMsg: "Points updated! One moment...", 
+  ///       errorMsg: "We could not find your account to update points for.", 
+  ///       futureFunction: submitUserGlobalPoints(addPoints: addPoints), 
+  ///       postLoadingPop: ModalRoute.withName("/"),
+  ///       popErrorScreenButton: "Return to Homepage",
+  ///       valueEqualCheck: true,
+  ///     )
+  ///   ),
+  /// );
+  /// ```
   const LoadingScreen.withPop({
     super.key,
     required this.loadingMsg,
@@ -166,13 +193,42 @@ class LoadingScreen<T> extends StatelessWidget {
     required this.futureFunction,
     required this.postLoadingPop,
     required this.popErrorScreenButton,
+    required this.popOnError,
     this.valueEqualCheck,
     this.successMsg,
+    this.successMsgDuration,
     this.postLoadingBuilder,
-    this.navigateOnError
+    this.navigateOnError,
+    this.errorPopup = true
   });
 
-   const LoadingScreen.withNav({
+  /// General use loading screen for easy implementation that requires end action among other required fields. 
+  /// 
+  /// 
+  /// <br>Example navigation use case:
+  /// ```dart
+  /// Navigator.push(
+  ///   context,
+  ///   MaterialPageRoute(
+  ///     builder: (context) => LoadingScreen<String>.withNav(
+  ///       loadingMsg: "Retrieving this identification information...", 
+  ///       foundMsg: "Identification information found! One moment...", 
+  ///       errorMsg: "Unable to find identification information. One moment...", 
+  ///       futureFunction: getPlantSpeciesUrl(
+  ///          scientificName: widget.predictions[correctIndex]['label']
+  ///       ),
+  ///       postLoadingBuilder: (context, imgURL) => ResultsWidget(
+  ///         userChoiceIndex: userChoice!,
+  ///         correctIndex: correctIndex,
+  ///         allPredictions: widget.predictions,
+  ///          imgURL: imgURL ?? "",
+  ///       ),
+  ///       navigateOnError: true,
+  ///      )
+  ///   ),
+  /// );
+  /// ```
+  const LoadingScreen.withNav({
     super.key,
     required this.loadingMsg,
     required this.foundMsg,
@@ -182,8 +238,11 @@ class LoadingScreen<T> extends StatelessWidget {
     this.navigateOnError,
     this.valueEqualCheck,
     this.successMsg,
+    this.successMsgDuration,
     this.postLoadingPop,
-    this.popErrorScreenButton
+    this.popOnError,
+    this.popErrorScreenButton,
+    this.errorPopup = true
   });
 
   final String exceptionMsg = "Loading screen must have loading builder or pop route and pop error screen message! Please declare these.";
@@ -236,14 +295,23 @@ class LoadingScreen<T> extends StatelessWidget {
                   ],
                 ),
               );
-            } else if (snapshot.hasData && snapshot.data != null && checkValueEqual(snapshot.data!)) {
+            } else if (snapshot.hasData && snapshot.data != null && checkValueEqual(snapshot.data as T)) {
               // Run after next frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if(successMsg != null) {
+                if(successMsg != null && successMsgDuration == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(successMsg!),
                       backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+                else if(successMsg != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(successMsg!),
+                      backgroundColor: Colors.green,
+                      duration: successMsgDuration!,
                     ),
                   );
                 }
@@ -260,7 +328,7 @@ class LoadingScreen<T> extends StatelessWidget {
                     ),
                   );
                 }
-                else if(postLoadingPop != null && popErrorScreenButton != null) {
+                else if(postLoadingPop != null) {
                   Navigator.popUntil(context, postLoadingPop!);
                 }
                 else {
@@ -278,21 +346,22 @@ class LoadingScreen<T> extends StatelessWidget {
                   ],
                 ),
               );
-            } else {
-              if (snapshot.hasError) {
-                errorPopupMessage(
-                  context, 
-                  "Error: ${snapshot.error}", 
-                  null
-                );
-              }
-
-              if(postLoadingPop == null || popErrorScreenButton == null) {
+            } 
+            else {
+              if(popErrorScreenButton == null && postLoadingPop == null) {
                 // Run after next frame
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if(postLoadingBuilder != null) {
                     // Remove loading screen from stack
                     Navigator.pop(context);
+
+                    if(snapshot.hasError) {
+                      errorPopupMessage(
+                        context, 
+                        "Error: ${snapshot.error}", 
+                        null
+                      );
+                    }
 
                     if(navigateOnError != null && navigateOnError!) {
                       // Navigate to new screen
@@ -309,7 +378,7 @@ class LoadingScreen<T> extends StatelessWidget {
                   }
                 });
 
-                // Return a found message for current frame
+                // Return an error message for current frame
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -320,7 +389,7 @@ class LoadingScreen<T> extends StatelessWidget {
                   ),
                 );
               }
-              else if(postLoadingPop != null && popErrorScreenButton != null) {
+              else if(popErrorScreenButton != null && postLoadingPop != null) {
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -349,6 +418,43 @@ class LoadingScreen<T> extends StatelessWidget {
                       child: Text(popErrorScreenButton!)
                     )
                   ],
+                );
+              }
+              else if(postLoadingPop != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if(popOnError != null && popOnError!) {
+                    Navigator.popUntil(context, postLoadingPop!);
+                  }
+                  else {
+                    // Just pop loading screen off
+                    Navigator.pop(context);
+                  }
+
+                  if(errorPopup != null && errorPopup! && errorMsg.isNotEmpty && !snapshot.hasError) {
+                    errorPopupMessage(
+                      context, 
+                      errorMsg, 
+                      Duration(seconds: 7)
+                    );
+                  }
+                  else if(snapshot.hasError) {
+                    errorPopupMessage(
+                      context, 
+                      "Error: ${snapshot.error}", 
+                      null
+                    );
+                  }
+                });
+
+                // Return a error message for current frame
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      getMessage(context, errorMsg),
+                      getCircleIndicator(context)
+                    ],
+                  ),
                 );
               }
               else {

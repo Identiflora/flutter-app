@@ -27,6 +27,69 @@ class ResultsWidget extends StatefulWidget {
 }
 
 class _Results extends State<ResultsWidget> {
+  
+  /// Helper function for save plant history logic so it can all be placed in a loading screen.
+  Future<String> saveHistory(String userPickedName) async {
+    try {
+      double lat = 0.0, lng = 0.0;  
+                        
+      // Location service check
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (serviceEnabled) {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+        
+        if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+          try {
+            Position position = await Geolocator.getCurrentPosition(
+              locationSettings: LocationSettings(
+                accuracy: LocationAccuracy.high
+              )
+            );
+            lat = position.latitude;
+            lng = position.longitude;
+          } catch (e) {
+            if(mounted) {
+              errorPopupMessage(
+                context, 
+                "Error getting location: $e", 
+                null
+              );
+            }
+          }
+        }
+      }
+
+      // Send results to the database
+      await savePlantSubmission(
+        allPredictions: widget.orderedPredictions,
+        userGuess: userPickedName, 
+        latitude: lat, 
+        longitude: lng,
+        imgUrl: widget.imgURL,
+      );
+
+      return "success"; 
+    } catch (error) {
+      // Error is surfaced to loading screen
+      return error.toString();
+    }
+  }
+
+  /// Formats an error string for both history and saving points
+  String formatCombinedErrorString(String? historyError) {
+    if(historyError != null && historyError.contains("not authenticated")) {
+      return "Please log in then try again to save plant history and update earned points.";
+    }
+    else if(historyError != null) {
+      return "History had error meaning points were not added: $historyError";
+    }
+    
+    return "History had unexpected non-fatal error.";
+  }
+
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> topMatch =
@@ -133,62 +196,34 @@ class _Results extends State<ResultsWidget> {
                       labelText: 'Yes',
                       textColor: correctColor,
                       onPressed: () async {
-                        double lat = 0.0, lng = 0.0;  
-                        
-                        // Location service check
-                        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-                        if (serviceEnabled) {
-                          LocationPermission permission = await Geolocator.checkPermission();
-                          if (permission == LocationPermission.denied) {
-                            permission = await Geolocator.requestPermission();
-                          }
-                          
-                          if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-                            try {
-                              Position position = await Geolocator.getCurrentPosition(
-                                locationSettings: LocationSettings(
-                                  accuracy: LocationAccuracy.high
-                                )
-                              );
-                              lat = position.latitude;
-                              lng = position.longitude;
-                            } catch (e) {
-                              // we should probably do something in this error
-                              debugPrint("Error getting location: $e");
-                            }
-                          }
-                        }
-
-                        // Send results to the database
-                        await savePlantSubmission(
-                          allPredictions: widget.orderedPredictions,
-                          userGuess: userPickedName, 
-                          latitude: lat, 
-                          longitude: lng,
-                          imgUrl: widget.imgURL,
-                        );
-
-                        // Navigation and Points
-                        if (isCorrect && context.mounted) {
-                          // Award points only if the original guess was right
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LoadingScreen<bool>.withPop(
+                        // Nested loading screens to handle saving plant history and adding points
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => LoadingScreen.withNav(
+                              loadingMsg: "Please wait while we save your latest identification...", 
+                              foundMsg: "Identification saved! One moment...", 
+                              errorMsg: "We could not find your account to save plant history. Please check that you are logged in.", 
+                              futureFunction: saveHistory(userPickedName), 
+                              postLoadingBuilder: (context, historyResult) => LoadingScreen<bool>.withPop(
                                 loadingMsg: "Please wait while we update your points...", 
                                 foundMsg: "Points updated! One moment...", 
-                                errorMsg: "We could not find your account to update points for. Please check that you are logged in and try again.", 
-                                futureFunction: submitUserGlobalPoints(addPoints: addPoints), 
+                                errorMsg: historyResult == "success" ? 
+                                  isCorrect ? "Sorry, we couldn't update your points! Please try again later." : ""
+                                  : formatCombinedErrorString(historyResult!), 
+                                futureFunction: submitUserGlobalPoints(
+                                  addPoints: isCorrect && historyResult == "success" ? addPoints : 0  // Enforce errors and incorrect case
+                                ), 
                                 postLoadingPop: ModalRoute.withName("/"),
-                                popErrorScreenButton: "Return to Homepage",
+                                popErrorScreenButton: null,
+                                popOnError: true,
+                                // If points returns false, make sure error is surfaced
                                 valueEqualCheck: true,
-                              )
-                            ),
-                          );
-                        } else if (context.mounted) {
-                          // If they were wrong but clicked Yes (confirming the correct one), just go home
-                          Navigator.popUntil(context, ModalRoute.withName("/"));
-                        }
+                              ),
+                              navigateOnError: true
+                            )
+                          )
+                        );
                       },
                     ),
                   ),

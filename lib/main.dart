@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:identiflora/gallery_utils.dart';
 import 'package:identiflora/history.dart';
 import 'package:identiflora/leaderboard_utils.dart';
@@ -6,7 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:identiflora/view_account/view_account_utils.dart';
 import 'package:provider/provider.dart';
 import 'camera_utils.dart';
-import 'account_utils.dart';
+import 'user_credentials/account_utils.dart';
 import 'environment.dart';
 import 'package:identiflora/theme/theme.dart';
 import 'package:identiflora/theme/theme_provider.dart';
@@ -14,6 +15,13 @@ import 'package:identiflora/theme/theme_provider.dart';
 Future<void> main() async {
   await dotenv.load(fileName: Environment.fileName);
   debugPrint('Using environment file: ${Environment.fileName}');
+  
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
@@ -54,7 +62,7 @@ class HomeScreen extends StatelessWidget {
       body: Stack(
         children: [
           getCameraWidget(),
-          LoginWidget(),
+          AccountWidget(),
           GalleryWidget(),
           LeaderboardWidget(),
           HistoryWidget()

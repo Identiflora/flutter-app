@@ -56,3 +56,11 @@ const List<BoxShadow> identifloraDropdownGlow = [
   BoxShadow(color: secondaryNeonGreenA100, blurRadius: 1.0, spreadRadius: 1.0),
   BoxShadow(color: primaryNeonGreenA100, blurRadius: 2.0, spreadRadius: 1.0),
 ];
+
+const List<BoxShadow> identifloraDarkHomebuttonShadow = [
+  BoxShadow(color: Colors.black, blurRadius: 12),
+];
+
+const List<BoxShadow> identifloraLightHomebuttonShadow = [
+  BoxShadow(color: Colors.white, blurRadius: 12),
+];

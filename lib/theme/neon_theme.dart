@@ -6,6 +6,7 @@ class NeonTheme extends ThemeExtension<NeonTheme> {
   final List<BoxShadow>? buttonGlow;
   final List<BoxShadow>? dropdownGlow;
   final List<BoxShadow>? popupGlow;
+  final List<BoxShadow>? homeIconShadow;
 
   const NeonTheme({
     this.iconGlow,
@@ -13,6 +14,7 @@ class NeonTheme extends ThemeExtension<NeonTheme> {
     this.buttonGlow,
     this.dropdownGlow,
     this.popupGlow,
+    this.homeIconShadow,
   });
 
   @override
@@ -22,6 +24,7 @@ class NeonTheme extends ThemeExtension<NeonTheme> {
     List<BoxShadow>? buttonGlow,
     List<BoxShadow>? dropdownGlow,
     List<BoxShadow>? popupGlow,
+    List<BoxShadow>? homeIconShadow,
   }) {
     return NeonTheme(
       iconGlow: iconGlow ?? this.iconGlow,
@@ -29,6 +32,7 @@ class NeonTheme extends ThemeExtension<NeonTheme> {
       buttonGlow: buttonGlow ?? this.buttonGlow,
       dropdownGlow: dropdownGlow ?? this.dropdownGlow,
       popupGlow: popupGlow ?? this.popupGlow,
+      homeIconShadow: homeIconShadow ?? this.homeIconShadow,
     );
   }
 
@@ -40,7 +44,8 @@ class NeonTheme extends ThemeExtension<NeonTheme> {
       containerGlow: BoxShadow.lerpList(containerGlow, other.containerGlow, t),
       buttonGlow: BoxShadow.lerpList(buttonGlow, other.buttonGlow, t),
       dropdownGlow: BoxShadow.lerpList(dropdownGlow, other.dropdownGlow, t),
-      popupGlow: BoxShadow.lerpList(popupGlow, other.popupGlow, t)
+      popupGlow: BoxShadow.lerpList(popupGlow, other.popupGlow, t),
+      homeIconShadow: BoxShadow.lerpList(homeIconShadow, other.homeIconShadow, t)
     );
   }
 }

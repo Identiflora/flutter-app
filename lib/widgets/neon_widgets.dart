@@ -71,6 +71,8 @@ class NeonContainer extends StatelessWidget {
 class NeonInputField extends StatelessWidget {
   final TextEditingController controller;
   final String labelText;
+  final bool? obscureText;
+  final Widget? suffixIcon;
 
   /// Creates a [NeonInputField]
   ///
@@ -81,6 +83,8 @@ class NeonInputField extends StatelessWidget {
     super.key,
     required this.controller,
     required this.labelText,
+    this.obscureText,
+    this.suffixIcon
   });
 
   @override
@@ -93,8 +97,12 @@ class NeonInputField extends StatelessWidget {
         boxShadow: neonTheme?.containerGlow,
       ),
       child: TextField(
+        obscureText: obscureText != null ? obscureText! : false,
         controller: controller,
-        decoration: InputDecoration(labelText: labelText),
+        decoration: InputDecoration(
+          labelText: labelText,
+          suffixIcon: suffixIcon
+        ),
       ),
     );
   }
