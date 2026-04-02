@@ -4,6 +4,7 @@ import 'package:identiflora/gallery_utils.dart';
 import 'package:identiflora/history.dart';
 import 'package:identiflora/leaderboard_utils.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:identiflora/user_data/offline_utils.dart';
 import 'package:identiflora/view_account/view_account_utils.dart';
 import 'package:provider/provider.dart';
 import 'camera_utils.dart';
@@ -31,8 +32,28 @@ Future<void> main() async {
 }
 
 // Camera startup logic
-class AppSetup extends StatelessWidget {
+
+class AppSetup extends StatefulWidget {
   const AppSetup({super.key});
+
+  @override
+  State<StatefulWidget> createState() => _AppState();
+}
+
+class _AppState extends State<AppSetup> {
+  final ConnService _connService = ConnService();
+
+  @override
+  void initState() {
+    _connService.init();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _connService.dispose();
+    super.dispose();
+  }
 
   // Determine if camera is accessible
   @override
