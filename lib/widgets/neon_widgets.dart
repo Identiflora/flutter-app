@@ -246,18 +246,24 @@ class NeonSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NeonContainer(
-      backgroundColor: Colors.transparent,
-      border: Border.all(color: Colors.transparent, width: 0),
-      borderRadius: BorderRadius.circular(30.0),
-      child: Switch(
-        value: value,
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        activeThumbColor: Theme.of(context).colorScheme.primary,
-        activeTrackColor: Theme.of(context).colorScheme.secondary,
-        onChanged: (value) {
-          onChanged?.call(value);
-        },
+    final neonTheme = Theme.of(context).extension<NeonTheme>();
+    final double padding = neonTheme?.containerPadding?.toDouble() ?? 3.0;
+
+    return Padding(
+      padding: EdgeInsets.all(padding),
+      child: NeonContainer(
+        backgroundColor: Colors.transparent,
+        border: Border.all(color: Colors.transparent, width: 0),
+        borderRadius: BorderRadius.circular(30.0),
+        child: Switch(
+          value: value,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          activeThumbColor: Theme.of(context).colorScheme.primary,
+          activeTrackColor: Theme.of(context).colorScheme.secondary,
+          onChanged: (value) {
+            onChanged?.call(value);
+          },
+        ),
       ),
     );
   }

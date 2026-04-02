@@ -21,6 +21,7 @@ ThemeData lightMode = ThemeData(
     NeonTheme(
       iconGlow: identifloraIconGlow,
       containerGlow: identifloraContainerGlow,
+      containerPadding: identifloraContainerPadding,
       buttonGlow: identifloraButtonGlow,
       dropdownGlow: identifloraDropdownGlow,
       popupGlow: identifloraIconGlow,

@@ -23,6 +23,7 @@ dependencies:
   http: ^1.0.0
   flutter_dotenv: ^6.0.0
   settings_ui: 2.0.2
+  cupertino_icons: ^1.0.9
   geolocator: ^14.0.2
   provider: ^6.1.5+1
   intl: ^0.20.2
