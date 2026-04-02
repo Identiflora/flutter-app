@@ -11,6 +11,7 @@ import 'package:identiflora/view_account/view_account_utils.dart';
 import 'auth_objects.dart';
 import 'cache_utils.dart';
 import 'dart:math';
+import 'dart:io' show Platform;
 import 'package:identiflora/theme/glowing_text_theme.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 
@@ -264,7 +265,7 @@ class _LoginFormState extends State<LoginForm> {
   Future<void> _handleGoogleSignIn(BuildContext context) async {
     try {
       GoogleSignIn.instance.initialize(
-        clientId: Environment.googleClientID,
+        clientId: getClientId(),
         serverClientId: Environment.googleServerID,
       );
       final GoogleSignInAccount user = await GoogleSignIn.instance
@@ -703,6 +704,15 @@ class NewPasswordForm extends StatelessWidget {
   }
 }
 
+String getClientId() {
+  if (Platform.isIOS) {
+    return Environment.googleClientIDIOS; // iOS environment variable
+  } else if (Platform.isAndroid) {
+    return Environment.googleClientID; // Android variable
+  }
+  
+  return Environment.googleClientID; // Fallback
+}
 // class DecoratedDropdownMenu extends StatelessWidget {
 //   final void Function(String selection)? onSelected;
 //   final String labelText;
