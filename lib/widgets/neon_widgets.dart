@@ -97,6 +97,7 @@ class NeonInputField extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(4.0),
         boxShadow: neonTheme?.containerGlow,
       ),

@@ -7,13 +7,41 @@ ThemeData lightMode = ThemeData(
   colorScheme: ColorScheme.light(
     surface: Colors.white,
     surfaceBright: Colors.grey.shade300,
-    primary: const Color.fromARGB(255, 0, 153, 10),
-    secondary: const Color.fromARGB(255, 0, 119, 4),
+    primary: const Color.fromARGB(255, 0, 214, 14),
+    secondary: const Color.fromARGB(255, 0, 184, 6),
+    onSurface: Colors.black,
+    error: Color.fromARGB(255, 255, 16, 16),
   ),
 
   textTheme: ThemeData.light().textTheme.apply(
     bodyColor: Colors.black,
     displayColor: Colors.black,
+  ),
+
+  // Automatically applied to all TextFields and Dropdowns
+  inputDecorationTheme: InputDecorationTheme(
+    filled: true,
+    fillColor: Colors.white,
+    enabledBorder: identifloraEnabledBorder,
+    focusedBorder: identifloraFocusedBorder,
+    border: identifloraDefaultBorder,
+  ),
+
+  iconTheme: IconThemeData(
+    color: secondaryNeonGreen,
+    shadows: identifloraBackButtonGlow, //reusing same glow for back button
+  ),
+
+  // Automatically applied to all outlined buttons
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      backgroundColor: Colors.grey.shade800, // surface color
+      foregroundColor: Colors.grey.shade300, // onSurface color
+      side: const BorderSide(color: secondaryNeonGreen, width: 1.5),
+      shape: const RoundedRectangleBorder(
+        borderRadius: identifloraButtonRadius,
+      ),
+    ),
   ),
 
   // Custom shadows for neon effects
@@ -28,6 +56,18 @@ ThemeData lightMode = ThemeData(
       homeIconShadow: identifloraLightHomebuttonShadow,
     ),
   ],
+
+  actionIconTheme: ActionIconThemeData(
+    // Makes all back buttons neon
+    backButtonIconBuilder: (BuildContext context) {
+      return Icon(
+        Icons.arrow_back,
+        size: 35.0,
+        color: Theme.of(context).colorScheme.secondary,
+        shadows: identifloraBackButtonGlow,
+      );
+    },
+  ),
 );
 
 const primaryNeonGreen = Color.fromARGB(255, 0, 177, 9);
