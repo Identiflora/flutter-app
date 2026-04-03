@@ -180,6 +180,11 @@ class LeaderboardUserDisplay extends StatelessWidget {
   }
 }
 
+/// Returns max points displayable by leaderboard
+int getMaxDisplayPoints() {
+  return 9999;
+}
+
 /// Widget for leaderboard user points display
 class LeaderboardUserPointDisplay extends StatelessWidget {
   final double screenWidth;
@@ -209,7 +214,7 @@ class LeaderboardUserPointDisplay extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Text(
-          "$userPoints pts.",
+          userPoints <= getMaxDisplayPoints() ? "$userPoints pts." : "9999+ pts.",
           style: TextStyle(fontSize: 12.0, color: Theme.of(context).colorScheme.surface),
           textAlign: TextAlign.right,
         ),
