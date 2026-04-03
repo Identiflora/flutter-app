@@ -111,13 +111,18 @@ class _CameraWidgetState extends State<CameraWidget> {
   }
 
   /// Logic to display camera
-  OverflowBox getCameraPreview(CameraController controller, Size size) {
-    return OverflowBox(
-      minHeight: size.height,
-      minWidth: size.width,
-      maxHeight: size.height * controller.value.aspectRatio,
-      maxWidth: size.width * controller.value.aspectRatio,
-      child: CameraPreview(controller),
+  Widget getCameraPreview(CameraController controller, Size size) {
+    return SizedBox(
+      width: size.width,
+      height: size.height,
+      child: FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: controller.value.previewSize?.height,
+          height: controller.value.previewSize?.width,
+          child: CameraPreview(controller)
+        ),
+      ),
     );
   }
 
