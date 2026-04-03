@@ -31,6 +31,8 @@ class NeonContainer extends StatelessWidget {
   final Color? backgroundColor;
   final BorderRadiusGeometry? borderRadius;
   final BoxBorder? border;
+  final bool isGlowing;
+  final List<BoxShadow>? boxShadow;
 
   const NeonContainer({
     super.key,
@@ -42,6 +44,8 @@ class NeonContainer extends StatelessWidget {
     this.backgroundColor,
     this.borderRadius,
     this.border,
+    this.isGlowing = true,
+    this.boxShadow,
   });
 
   @override
@@ -61,7 +65,7 @@ class NeonContainer extends StatelessWidget {
               color: Theme.of(context).colorScheme.secondary,
               width: 1.5,
             ),
-        boxShadow: neonTheme?.containerGlow,
+        boxShadow: isGlowing ? (boxShadow ?? neonTheme?.containerGlow) : null,
       ),
       child: child,
     );
@@ -84,7 +88,7 @@ class NeonInputField extends StatelessWidget {
     required this.controller,
     required this.labelText,
     this.obscureText,
-    this.suffixIcon
+    this.suffixIcon,
   });
 
   @override
@@ -93,6 +97,7 @@ class NeonInputField extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(4.0),
         boxShadow: neonTheme?.containerGlow,
       ),
@@ -101,7 +106,7 @@ class NeonInputField extends StatelessWidget {
         controller: controller,
         decoration: InputDecoration(
           labelText: labelText,
-          suffixIcon: suffixIcon
+          suffixIcon: suffixIcon,
         ),
       ),
     );
@@ -246,18 +251,54 @@ class NeonSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NeonContainer(
-      backgroundColor: Colors.transparent,
-      border: Border.all(color: Colors.transparent, width: 0),
-      borderRadius: BorderRadius.circular(30.0),
-      child: Switch(
-        value: value,
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        activeThumbColor: Theme.of(context).colorScheme.primary,
-        activeTrackColor: Theme.of(context).colorScheme.secondary,
-        onChanged: (value) {
-          onChanged?.call(value);
-        },
+    final neonTheme = Theme.of(context).extension<NeonTheme>();
+    final double padding = neonTheme?.containerPadding?.toDouble() ?? 3.0;
+
+    final List<BoxShadow>? switchGlow =
+        neonTheme?.containerGlow != null &&
+            neonTheme!.containerGlow!.length >= 2
+        ? [
+            // Secondary color shadow
+            BoxShadow(
+              color: neonTheme.containerGlow![0].color,
+              offset: neonTheme.containerGlow![0].offset,
+              blurRadius: neonTheme.containerGlow![0].blurRadius * 5,
+              spreadRadius: neonTheme.containerGlow![0].spreadRadius * 12,
+            ),
+            // Primary color shadow
+            BoxShadow(
+              color: neonTheme.containerGlow![1].color,
+              offset: neonTheme.containerGlow![1].offset,
+              blurRadius: neonTheme.containerGlow![1].blurRadius * 4,
+              spreadRadius: neonTheme.containerGlow![1].spreadRadius * 10,
+            ),
+          ]
+        : neonTheme?.containerGlow;
+
+    return Padding(
+      padding: EdgeInsets.all(padding),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          NeonContainer(
+            isGlowing: value,
+            boxShadow: switchGlow,
+            width: 30,
+            height: 12,
+            backgroundColor: Colors.transparent,
+            border: Border.all(color: Colors.transparent, width: 0),
+            borderRadius: BorderRadius.circular(30.0),
+          ),
+          Switch(
+            value: value,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            activeThumbColor: Theme.of(context).colorScheme.primary,
+            activeTrackColor: Theme.of(context).colorScheme.secondary,
+            onChanged: (value) {
+              onChanged?.call(value);
+            },
+          ),
+        ],
       ),
     );
   }

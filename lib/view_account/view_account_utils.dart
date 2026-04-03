@@ -84,29 +84,32 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Account'),
-        actions: [
-          IconButton(
-            icon: NeonIcon(Icons.settings, size: 40.0),
-            iconSize: 45.0,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
+      body: Column(
+        children: [
+          AppBar(
+            title: const Text('Account'),
+            actions: [
+              IconButton(
+                icon: const NeonIcon(Icons.settings, size: 40.0),
+                iconSize: 45.0,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                  );
+                },
+              ),
+            ],
           ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            ProgressAvatar(
-              normalizedPlayerPoints: normalizedPlayerPoints,
-              imagePath: selectedBadgeFilePath,
-            ),
+          Expanded(
+            child: Center(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ProgressAvatar(
+                    normalizedPlayerPoints: normalizedPlayerPoints,
+                    imagePath: selectedBadgeFilePath,
+                  ),
 
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
@@ -216,6 +219,9 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
             ),
           ],
         ),
+      ),
+    ),
+        ],
       ),
     );
   }

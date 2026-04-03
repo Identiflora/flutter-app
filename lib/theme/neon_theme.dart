@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class NeonTheme extends ThemeExtension<NeonTheme> {
   final List<BoxShadow>? iconGlow;
   final List<BoxShadow>? containerGlow;
+  final int? containerPadding;
   final List<BoxShadow>? buttonGlow;
   final List<BoxShadow>? dropdownGlow;
   final List<BoxShadow>? popupGlow;
@@ -11,6 +12,7 @@ class NeonTheme extends ThemeExtension<NeonTheme> {
   const NeonTheme({
     this.iconGlow,
     this.containerGlow,
+    this.containerPadding,
     this.buttonGlow,
     this.dropdownGlow,
     this.popupGlow,
@@ -21,6 +23,7 @@ class NeonTheme extends ThemeExtension<NeonTheme> {
   NeonTheme copyWith({
     List<BoxShadow>? iconGlow,
     List<BoxShadow>? containerGlow,
+    int? containerPadding,
     List<BoxShadow>? buttonGlow,
     List<BoxShadow>? dropdownGlow,
     List<BoxShadow>? popupGlow,
@@ -29,6 +32,7 @@ class NeonTheme extends ThemeExtension<NeonTheme> {
     return NeonTheme(
       iconGlow: iconGlow ?? this.iconGlow,
       containerGlow: containerGlow ?? this.containerGlow,
+      containerPadding: containerPadding ?? this.containerPadding,
       buttonGlow: buttonGlow ?? this.buttonGlow,
       dropdownGlow: dropdownGlow ?? this.dropdownGlow,
       popupGlow: popupGlow ?? this.popupGlow,

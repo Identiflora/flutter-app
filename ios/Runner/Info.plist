@@ -2,6 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Google Sign-in Section -->
+	<key>GIDClientID</key>
+	<string>1054463005691-id8m9f3niic2gpu4cmkuh6kfti2ia68o.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.1054463005691-id8m9f3niic2gpu4cmkuh6kfti2ia68o</string>
+			</array>
+		</dict>
+	</array>
+	<!-- End Google Sign-in Section -->
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -24,6 +41,39 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Our app needs live camera access to take photos of your plant.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone will not be used and this request is to simply to ensure stable camera support. If you are getting this message, please let us know.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Our app needs photo library support for the uploading of plant photos for identification.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Our app needs your location to record the location of your identifications.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Our app needs your location to record the location of your identifications.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FlutterSceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -31,25 +81,13 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<key>UIRequiresFullScreen</key>
 	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>Our app needs live camera access to take photos of your plant.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Microphone will not be used and this request is to simply to ensure stable camera support. If you are getting this message, please let us know.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Our app needs photo library support for the uploading of plant photos for identification.</string>
 </dict>
 </plist>

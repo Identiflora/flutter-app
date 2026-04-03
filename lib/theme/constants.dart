@@ -35,6 +35,8 @@ const List<BoxShadow> identifloraContainerGlow = [
   BoxShadow(color: primaryNeonGreenA100, blurRadius: 2.0, spreadRadius: 1.0),
 ];
 
+const int identifloraContainerPadding = 2;
+
 // --- APPBAR GLOW ---
 const List<Shadow> identifloraBackButtonGlow = [
   BoxShadow(color: secondaryNeonGreenA100, blurRadius: 4.0, spreadRadius: 1.0),

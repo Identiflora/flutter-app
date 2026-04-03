@@ -11,6 +11,7 @@ import 'auth_objects.dart';
 import '../user_data/cache_utils.dart';
 import 'dart:math';
 import 'package:identiflora/widgets/neon_widgets.dart';
+import 'dart:io' show Platform;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -205,7 +206,7 @@ class _LoginFormState extends State<LoginForm> {
   Future<void> _handleGoogleSignIn(BuildContext context) async {
     try {
       GoogleSignIn.instance.initialize(
-        clientId: Environment.googleClientID,
+        clientId: getClientId(),
         serverClientId: Environment.googleServerID,
       );
       final GoogleSignInAccount user = await GoogleSignIn.instance
@@ -458,4 +459,14 @@ class _NewPasswordFormState extends State<NewPasswordForm> {
       ),
     );
   }
+}
+
+String getClientId() {
+  if (Platform.isIOS) {
+    return Environment.googleClientIDIOS; // iOS environment variable
+  } else if (Platform.isAndroid) {
+    return Environment.googleClientID; // Android variable
+  }
+  
+  return Environment.googleClientID; // Fallback
 }

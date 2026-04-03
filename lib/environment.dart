@@ -17,6 +17,10 @@ class Environment {
     return dotenv.env['GOOGLE_CLIENT_ID'] ?? 'GOOGLE_CLIENT_ID not found';
   }
 
+  static String get googleClientIDIOS {
+    return dotenv.env['GOOGLE_CLIENT_ID_IOS'] ?? 'GOOGLE_CLIENT_ID not found';
+  }
+
   static String get googleServerID {
     return dotenv.env['GOOGLE_SERVER_ID'] ?? 'GOOGLE_SERVER_ID not found';
   }
