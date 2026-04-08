@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:identiflora/user_data/history_utils.dart';
 
@@ -87,43 +86,62 @@ Future<void> deleteUserNumFriends() async {
 }
 
 /// Store the user history on the device for later use
-Future<void> saveUserHistory(HistoryData history) async {
-  List<HistoryData>? currentHistoryList = await getUserHistory();
-  currentHistoryList ??= List<HistoryData>.empty(growable: true);
-  currentHistoryList.add(history);
-  debugPrint("Save History: ${jsonEncode(currentHistoryList)}");
-  await storage.write(key: 'history', value: jsonEncode(currentHistoryList));
+Future<void> saveUserHistory(HistoryData identification) async {
+  int? offlineHistoryID = await getOfflineUserHistoryCount();
+
+  if(offlineHistoryID == null) {
+    offlineHistoryID = 1;
+  }
+  else {
+    offlineHistoryID = offlineHistoryID + 1;
+  }
+
+  await storage.write(key: 'history_$offlineHistoryID', value: jsonEncode(identification.toJson()));
+  await saveOfflineUserHistoryCount(offlineHistoryID);
 }
 
 /// Get the user history found on the device
 Future<List<HistoryData>?> getUserHistory() async {
-  String? jsonHistoryStr = await storage.read(key: 'history');
-  if (jsonHistoryStr == null) return null;
-  debugPrint("Save History: ${jsonDecode(jsonHistoryStr)}");
+  final int? offlineHistoryCount = await getOfflineUserHistoryCount();
+  if(offlineHistoryCount == null) return null;
 
-  List<HistoryData> returnResult = List<HistoryData>.empty(growable: true);
-  List<Map<String, dynamic>> predictions = List<Map<String, dynamic>>.empty(growable: true);
-  for (Map data in jsonDecode(jsonHistoryStr)) {
-    debugPrint(data["predictions"][0].runtimeType.toString());
-    for (Map<String, dynamic> predictionData in data["predictions"]) {
-      predictions.add(predictionData);
-    }
+  List<HistoryData> userHistory = List.empty(growable: true);
+  String? historyJson;
+  HistoryData currentHistory;
 
-    HistoryData historyItem = HistoryData(
-      allPredictions: predictions,  
-      userGuess: data['user_guess'], 
-      latitude: data['latitude'], 
-      longitude: data['longitude'], 
-      imgUrl: data['img_url']
-    );
-    
-    returnResult.add(historyItem);
-
+  for(int i = 1; i <= offlineHistoryCount; i++) {
+    historyJson = await storage.read(key: 'history_$i');
+    if(historyJson == null) throw FormatException("Unable to get offline history for index $i");
+  
+    currentHistory = HistoryData.fromJson(jsonDecode(historyJson));
+    userHistory.add(currentHistory);
   }
-  return returnResult;
+
+  return userHistory;
 }
 
 /// Delete the user history off of their device
 Future<void> deleteUserHistory() async {
-  await storage.delete(key: 'history');
+  final int? count = await getOfflineUserHistoryCount();
+  if(count == null) return;
+  for(int i = count; i > 0; i--) {
+    await storage.delete(key: 'history_$i');
+  }
+  await deleteOfflineUserHistoryCount();
+}
+
+/// Store the user's offline history count on the device for later use
+Future<void> saveOfflineUserHistoryCount(int count) async {
+  await storage.write(key: 'history_count', value: count.toString());
+}
+
+/// Get the user's offline history count found on the device
+Future<int?> getOfflineUserHistoryCount() async {
+  String? historyCountStr = await storage.read(key: 'history_count');
+  return historyCountStr != null ? int.tryParse(historyCountStr) : null;
+}
+
+/// Delete the user's offline history count off of their device
+Future<void> deleteOfflineUserHistoryCount() async {
+  await storage.delete(key: 'history_count');
 }

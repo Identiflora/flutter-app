@@ -555,7 +555,6 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
   }
 
   final bool isOffline = await ConnService().getIsOffline;
-  debugPrint("Offline? $isOffline");
   if(isOffline) {
     final curPts = await getUserPts();
 
@@ -566,8 +565,6 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
       await saveUserPts(addPoints);
     }
 
-    final newPts = await getUserPts();
-    debugPrint("Queue pts: $newPts");
     return true;
   }
 
@@ -1248,7 +1245,6 @@ Future<bool> savePlantSubmission({
   if (authToken == null) throw AuthException('User not authenticated');
   
   final bool isOffline = await ConnService().getIsOffline;
-  debugPrint("Offline? $isOffline");
   if(isOffline) {
     HistoryData newHistory = HistoryData(
       allPredictions: allPredictions, 

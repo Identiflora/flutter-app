@@ -14,7 +14,7 @@ class ConnService {
   ConnService._internal();
 
   StreamSubscription<List<ConnectivityResult>>? _subscription;
-  bool _processing = false, isOffline = false;
+  bool _processing = false, _isOffline = false;
 
   void init() async {
     _subscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) async { 
@@ -39,15 +39,15 @@ class ConnService {
         // Prod identiflora website to ensure connection is actually obtained
         final bool prodSuccess = await _tryProd();
         if (!prodSuccess) {
-          isOffline = true;
+          _isOffline = true;
         }
       }
     });
 
-    // Set isOffline
+    // Set _isOffline
     await getIsOffline;
 
-    if (!isOffline) {
+    if (!_isOffline) {
       await _sendDataQueue();
     }
   }
@@ -56,13 +56,13 @@ class ConnService {
     final bool prodSuccess = await _tryProd();
     
     if (prodSuccess) {
-      isOffline = false;
+      _isOffline = false;
     }
     else {
-      isOffline = true;
+      _isOffline = true;
     }
 
-    return isOffline;
+    return _isOffline;
   }
 
   Future<bool> _tryProd() async {
@@ -92,6 +92,7 @@ class ConnService {
       if (userPts != null) {
         try {
           await submitUserGlobalPoints(addPoints: userPts);
+          await deleteUserPts();
         }
         catch (error) {
           debugPrint("Error submitting cached points: $error");
@@ -102,6 +103,7 @@ class ConnService {
       if (userHistory != null) {
         try {
           for (HistoryData history in userHistory) {
+            await history.updateImgUrl();
             await savePlantSubmission(
               allPredictions: history.allPredictions, 
               userGuess: history.userGuess, 
@@ -110,6 +112,8 @@ class ConnService {
               imgUrl: history.imgUrl
             );
           }
+
+          await deleteUserHistory();
         }
         catch (error) {
           debugPrint("Error submitting cached history: $error");
