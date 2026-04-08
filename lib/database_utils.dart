@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:identiflora/user_data/cache_utils.dart';
 import 'package:identiflora/leaderboard_utils.dart';
 import 'package:identiflora/user_credentials/sign_up.dart';
+import 'package:identiflora/user_data/history_utils.dart';
+import 'package:identiflora/user_data/offline_utils.dart';
 import 'user_credentials/auth_objects.dart';
 import 'environment.dart';
 
@@ -550,6 +552,23 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
 
   if (addPoints <= 0 || authToken == null) {
     return false;
+  }
+
+  final bool isOffline = await ConnService().getIsOffline;
+  debugPrint("Offline? $isOffline");
+  if(isOffline) {
+    final curPts = await getUserPts();
+
+    if(curPts != null) {
+      await saveUserPts(curPts + addPoints);
+    }
+    else {
+      await saveUserPts(addPoints);
+    }
+
+    final newPts = await getUserPts();
+    debugPrint("Queue pts: $newPts");
+    return true;
   }
 
   String apiBaseUrl = Environment.apiUrl;
@@ -1227,6 +1246,22 @@ Future<bool> savePlantSubmission({
   final uri = Uri.parse(apiBaseUrl).resolve('/user/submissions');
   final authToken = await getAuthToken();
   if (authToken == null) throw AuthException('User not authenticated');
+  
+  final bool isOffline = await ConnService().getIsOffline;
+  debugPrint("Offline? $isOffline");
+  if(isOffline) {
+    HistoryData newHistory = HistoryData(
+      allPredictions: allPredictions, 
+      userGuess: userGuess, 
+      latitude: latitude, 
+      longitude: longitude, 
+      imgUrl: imgUrl
+    );
+
+    await saveUserHistory(newHistory);
+    
+    return true;
+  }
 
   final List<int> predictionIds = allPredictions.map((p) => p['class_index'] as int).toList();
   final payload = jsonEncode({

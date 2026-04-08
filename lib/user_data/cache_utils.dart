@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:identiflora/user_data/history_utils.dart';
 
 final storage = FlutterSecureStorage();
 
@@ -80,4 +84,46 @@ Future<int?> getUserNumFriends() async {
 /// Delete the user's points off of their device
 Future<void> deleteUserNumFriends() async {
   await storage.delete(key: 'num_friends');
+}
+
+/// Store the user history on the device for later use
+Future<void> saveUserHistory(HistoryData history) async {
+  List<HistoryData>? currentHistoryList = await getUserHistory();
+  currentHistoryList ??= List<HistoryData>.empty(growable: true);
+  currentHistoryList.add(history);
+  debugPrint("Save History: ${jsonEncode(currentHistoryList)}");
+  await storage.write(key: 'history', value: jsonEncode(currentHistoryList));
+}
+
+/// Get the user history found on the device
+Future<List<HistoryData>?> getUserHistory() async {
+  String? jsonHistoryStr = await storage.read(key: 'history');
+  if (jsonHistoryStr == null) return null;
+  debugPrint("Save History: ${jsonDecode(jsonHistoryStr)}");
+
+  List<HistoryData> returnResult = List<HistoryData>.empty(growable: true);
+  List<Map<String, dynamic>> predictions = List<Map<String, dynamic>>.empty(growable: true);
+  for (Map data in jsonDecode(jsonHistoryStr)) {
+    debugPrint(data["predictions"][0].runtimeType.toString());
+    for (Map<String, dynamic> predictionData in data["predictions"]) {
+      predictions.add(predictionData);
+    }
+
+    HistoryData historyItem = HistoryData(
+      allPredictions: predictions,  
+      userGuess: data['user_guess'], 
+      latitude: data['latitude'], 
+      longitude: data['longitude'], 
+      imgUrl: data['img_url']
+    );
+    
+    returnResult.add(historyItem);
+
+  }
+  return returnResult;
+}
+
+/// Delete the user history off of their device
+Future<void> deleteUserHistory() async {
+  await storage.delete(key: 'history');
 }
