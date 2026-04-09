@@ -24,4 +24,8 @@ class Environment {
   static String get googleServerID {
     return dotenv.env['GOOGLE_SERVER_ID'] ?? 'GOOGLE_SERVER_ID not found';
   }
+
+  static String get mapsApiKey {
+  return dotenv.env['MAPS_API_KEY'] ?? 'MAPS_API_KEY not found';
+}
 }
