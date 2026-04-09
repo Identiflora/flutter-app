@@ -4,6 +4,7 @@ import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/user_credentials/auth_objects.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'package:identiflora/theme/neon_theme.dart';
+import 'submission_map.dart';
 
 // NOTE: I used neonIcon for the icons on this page but I have no idea if thats right way to do this,
 // I just couldnt find another standard themeing for icons besides the one thats just neon green
@@ -180,8 +181,21 @@ class _HistoryPageState extends State<HistoryPage> {
                         // If location data is not correctly captured during submission both
                         // lat and long are set to 0
                         if ((item['latitude'] != 0) && (item['longitude'] != 0))
-                          // will make this tappable with implementation of geolocation features
-                          const NeonIcon(Icons.location_on, size: 20.0),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SubmissionMapPage(
+                                    latitude: (item['latitude'] as num).toDouble(),
+                                    longitude: (item['longitude'] as num).toDouble(),
+                                    plantName: item['species_name'] ?? 'Unknown Plant',
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const NeonIcon(Icons.location_on, size: 20.0),
+                          ),
                       ],
                     ),
                   ],
