@@ -1,9 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/friends_utils.dart';
 import 'package:identiflora/user_data/badge_utils.dart';
+import 'package:identiflora/user_data/cache_utils.dart';
 import 'package:identiflora/user_data/point_utils.dart';
 import 'level_bottom_sheet.dart';
 import 'package:identiflora/user_credentials/settings.dart';
@@ -43,7 +43,7 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
 
     _getPlayerPoints().then((response) {
       setState(() {
-        playerPoints = response;
+        playerPoints = response ?? 0;
         levelData = calculateAccountLevel(playerPoints);
         normalizedPlayerPoints = normalize(
           levelData.value[1].toDouble(),
@@ -56,29 +56,29 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
 
     _getPlayerUsername().then((response) {
       setState(() {
-        username = response;
+        username = response ?? "";
       });
     });
 
     _getPlayerSelectedBadge().then((response) {
       setState(() {
-        if (response.isNotEmpty) {
+        if (response != null && response.isNotEmpty) {
           selectedBadgeFilePath = response;
         }
       });
     });
   }
 
-  Future<int> _getPlayerPoints() async {
-    return await getUserPoints();
+  Future<int?> _getPlayerPoints() async {
+    return await getUserPts();
   }
 
-  Future<String> _getPlayerUsername() async {
+  Future<String?> _getPlayerUsername() async {
     return await getUsername();
   }
 
-  Future<String> _getPlayerSelectedBadge() async {
-    return await fetchUserBadge();
+  Future<String?> _getPlayerSelectedBadge() async {
+    return await getUserBadge();
   }
 
   @override
@@ -251,10 +251,6 @@ class BadgesDisplay extends StatefulWidget {
 class _BadgesDisplayState extends State<BadgesDisplay> {
   String selectedBadgeFilePath = '';
 
-  Future<String> _getPlayerSelectedBadge() async {
-    return await fetchUserBadge();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -262,11 +258,7 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
     if (widget.selectedBadge != null) {
       selectedBadgeFilePath = widget.selectedBadge!;
     } else {
-      _getPlayerSelectedBadge().then((response) {
-        setState(() {
-          selectedBadgeFilePath = response;
-        });
-      });
+      throw FormatException("Selected badge must be passed for badge display.");
     }
   }
 
@@ -301,7 +293,7 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
             if (badge.isUnlocked(widget.playerLevel)) {
               // Run API based selection logic here
               try {
-                await submitUserBadge(badgeFilePath: badge.imagePath);
+                await saveUserBadge(badge.imagePath);
 
                 setState(() {
                   selectedBadgeFilePath = badge.imagePath;

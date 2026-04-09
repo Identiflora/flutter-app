@@ -88,18 +88,18 @@ class ConnService {
       _processing = true;
 
       // Process data queue here
-      final int? userPts = await getUserPts();
+      final int? userPts = await getUserOfflinePts();
       if (userPts != null) {
         try {
           await submitUserGlobalPoints(addPoints: userPts);
-          await deleteUserPts();
+          await deleteUserOfflinePts();
         }
         catch (error) {
           debugPrint("Error submitting cached points: $error");
         }
       }
 
-      final List<HistoryData>? userHistory = await getUserHistory();
+      final List<HistoryData>? userHistory = await getUserOfflineHistory();
       if (userHistory != null) {
         try {
           for (HistoryData history in userHistory) {
@@ -113,11 +113,16 @@ class ConnService {
             );
           }
 
-          await deleteUserHistory();
+          await deleteUserOfflineHistory();
         }
         catch (error) {
           debugPrint("Error submitting cached history: $error");
         }
+      }
+
+      String? badgeFilePath = await getUserBadge();
+      if(badgeFilePath != null) {
+        await submitUserBadge(badgeFilePath: badgeFilePath);
       }
 
       _processing = false;

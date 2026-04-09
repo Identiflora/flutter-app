@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/theme/general_utils.dart';
 import 'package:identiflora/user_credentials/login.dart';
+import 'package:identiflora/user_data/offline_utils.dart';
 import 'package:identiflora/view_account/view_account_utils.dart';
 import 'auth_objects.dart';
 import 'package:identiflora/theme/neon_theme.dart';
@@ -27,6 +28,22 @@ String getLoginSuccessMsg() {
 }
 
 class _Account extends State<AccountWidget> {
+  Future<bool> authenticate() async {
+    bool success = false;
+    try {
+      success = await ConnService().getIsOffline;
+      if(success) {
+        return success;
+      }
+
+      success = await authenticateToken();
+      return success;
+    }
+    catch (error) {
+      rethrow;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -44,7 +61,7 @@ class _Account extends State<AccountWidget> {
                       loadingMsg: "Loading account information...",
                       foundMsg: "Account found! One moment...",
                       errorMsg: "Unable to find account information. Returning...",
-                      futureFunction: authenticateToken(),
+                      futureFunction: authenticate(),
                       postLoadingBuilder: (context, success) {
                         if (success == null || !success) {
                           return const LoginScreen();

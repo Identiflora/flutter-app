@@ -556,13 +556,13 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
 
   final bool isOffline = await ConnService().getIsOffline;
   if(isOffline) {
-    final curPts = await getUserPts();
+    final curPts = await getUserOfflinePts();
 
     if(curPts != null) {
-      await saveUserPts(curPts + addPoints);
+      await saveUserOfflinePts(curPts + addPoints);
     }
     else {
-      await saveUserPts(addPoints);
+      await saveUserOfflinePts(addPoints);
     }
 
     return true;
@@ -924,7 +924,7 @@ Future<int> getUserPoints() async {
 }
 
 //get the current users username
-Future<String> getUsername() async {
+Future<String> fetchUsername() async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/username');
@@ -1254,7 +1254,7 @@ Future<bool> savePlantSubmission({
       imgUrl: imgUrl
     );
 
-    await saveUserHistory(newHistory);
+    await saveUserOfflineHistory(newHistory);
     
     return true;
   }

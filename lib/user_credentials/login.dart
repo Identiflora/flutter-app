@@ -120,8 +120,11 @@ class _LoginFormState extends State<LoginForm> {
         hasOTP: hasOTP,
       );
 
-      //SAVE AUTHTOKEN TO DEVICE
+      //SAVE AUTHTOKEN AN OTHER CREDENTIALS TO DEVICE
       await saveAuthToken(token.accessToken);
+      await saveUsername(await fetchUsername());
+      await saveUserPts(await getUserPoints());
+      await saveUserBadge(await fetchUserBadge());
     } catch (err) {
       if (mounted && !hasOTPError && !err.toString().contains("401")) {
         errorPopupMessage(context, "Login failed: $err", null);
@@ -192,6 +195,9 @@ class _LoginFormState extends State<LoginForm> {
       );
 
       await saveAuthToken(token.accessToken);
+      await saveUsername(await fetchUsername());
+      await saveUserPts(await getUserPoints());
+      await saveUserBadge(await fetchUserBadge());
 
       return true;
     } catch (error) {
@@ -244,40 +250,40 @@ class _LoginFormState extends State<LoginForm> {
     return Column(
       children:
           [
-                NeonInputField(controller: emailControl, labelText: "Email"),
-                NeonInputField(
-                  controller: passwordControl,
-                  labelText: "Password",
-                  obscureText: passIsObscured,
-                  suffixIcon: IconButton(
-                    onPressed: () =>
-                        setState(() => passIsObscured = !passIsObscured),
-                    icon: Icon(
-                      passIsObscured
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
-                  ),
+            NeonInputField(controller: emailControl, labelText: "Email"),
+            NeonInputField(
+              controller: passwordControl,
+              labelText: "Password",
+              obscureText: passIsObscured,
+              suffixIcon: IconButton(
+                onPressed: () =>
+                    setState(() => passIsObscured = !passIsObscured),
+                icon: Icon(
+                  passIsObscured
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
                 ),
-                NeonOutlinedButton(onPressed: loginPressed, labelText: "Login"),
-                NeonOutlinedButton(
-                  labelText: 'Sign in with Google',
-                  borderRadius: BorderRadius.circular(38.0),
-                  icon: Image.asset(
-                    'assets/brand/Google_G_logo_500x500.png',
-                    width: 25,
-                    height: 25,
-                  ),
-                  onPressed: () => _handleGoogleSignIn(context),
-                ),
-              ]
-              .map(
-                (childWidget) => Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: childWidget,
-                ),
-              )
-              .toList(),
+              ),
+            ),
+            NeonOutlinedButton(onPressed: loginPressed, labelText: "Login"),
+            NeonOutlinedButton(
+              labelText: 'Sign in with Google',
+              borderRadius: BorderRadius.circular(38.0),
+              icon: Image.asset(
+                'assets/brand/Google_G_logo_500x500.png',
+                width: 25,
+                height: 25,
+              ),
+              onPressed: () => _handleGoogleSignIn(context),
+            ),
+          ]
+          .map(
+            (childWidget) => Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: childWidget,
+            ),
+          )
+          .toList(),
     );
   }
 } //END LOGINFORMSTATE CLASS

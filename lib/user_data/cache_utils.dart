@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/user_data/history_utils.dart';
+import 'package:identiflora/user_data/offline_utils.dart';
 
 final storage = FlutterSecureStorage();
 
@@ -44,8 +46,21 @@ Future<void> saveUserPts(int pts) async {
 
 /// Get the user's points found on the device
 Future<int?> getUserPts() async {
-  String? userPtsStr = await storage.read(key: 'points');
-  return userPtsStr != null ? int.tryParse(userPtsStr) : null;
+  // If not offline get points and update the save store
+  final bool isOffline = await ConnService().getIsOffline;
+  String? userPtsStr;
+  if(!isOffline) {
+    await saveUserPts(await getUserPoints());
+    userPtsStr = await storage.read(key: 'points');
+    return userPtsStr != null ? int.tryParse(userPtsStr) : 0;
+  }
+  else {
+    userPtsStr = await storage.read(key: 'points');
+    String? userOfflinePtsStr = await storage.read(key: 'offline_points');
+    int? pts = userPtsStr != null ? int.tryParse(userPtsStr) : 0, 
+      offlinePts = userOfflinePtsStr != null ? int.tryParse(userOfflinePtsStr) : 0;
+    return pts! + offlinePts!;
+  }
 }
 
 /// Delete the user's points off of their device
@@ -55,16 +70,22 @@ Future<void> deleteUserPts() async {
 
 /// Store the user's badge filepath on the device for later use
 Future<void> saveUserBadge(String badgePath) async {
+  // If not offline update, API with badge selection
+  final bool isOffline = await ConnService().getIsOffline;
+  if(!isOffline) {
+    await submitUserBadge(badgeFilePath: badgePath);
+  }
+    
   await storage.write(key: 'badge_path', value: badgePath);
 }
 
-/// Get the user's username found on the device
+/// Get the user's badge filepath found on the device
 Future<String?> getUserBadge() async {
   String? badgePathStr = await storage.read(key: 'badge_path');
   return badgePathStr;
 }
 
-/// Delete the user's username off of their device
+/// Delete the user's badge filepath off of their device
 Future<void> deleteUserBadge() async {
   await storage.delete(key: 'badge_path');
 }
@@ -85,8 +106,24 @@ Future<void> deleteUserNumFriends() async {
   await storage.delete(key: 'num_friends');
 }
 
-/// Store the user history on the device for later use
-Future<void> saveUserHistory(HistoryData identification) async {
+/// Store the user's offline earned points on the device for later use
+Future<void> saveUserOfflinePts(int pts) async {
+  await storage.write(key: 'offline_points', value: pts.toString());
+}
+
+/// Get the user's offline earned points found on the device
+Future<int?> getUserOfflinePts() async {
+  String? userPtsStr = await storage.read(key: 'offline_points');
+  return userPtsStr != null ? int.tryParse(userPtsStr) : null;
+}
+
+/// Delete the user's offline earned points off of their device
+Future<void> deleteUserOfflinePts() async {
+  await storage.delete(key: 'offline_points');
+}
+
+/// Store the user's offline added history on the device for later use
+Future<void> saveUserOfflineHistory(HistoryData identification) async {
   int? offlineHistoryID = await getOfflineUserHistoryCount();
 
   if(offlineHistoryID == null) {
@@ -100,8 +137,8 @@ Future<void> saveUserHistory(HistoryData identification) async {
   await saveOfflineUserHistoryCount(offlineHistoryID);
 }
 
-/// Get the user history found on the device
-Future<List<HistoryData>?> getUserHistory() async {
+/// Get the user's offline added history found on the device
+Future<List<HistoryData>?> getUserOfflineHistory() async {
   final int? offlineHistoryCount = await getOfflineUserHistoryCount();
   if(offlineHistoryCount == null) return null;
 
@@ -120,8 +157,8 @@ Future<List<HistoryData>?> getUserHistory() async {
   return userHistory;
 }
 
-/// Delete the user history off of their device
-Future<void> deleteUserHistory() async {
+/// Delete the user's offline added history off of their device
+Future<void> deleteUserOfflineHistory() async {
   final int? count = await getOfflineUserHistoryCount();
   if(count == null) return;
   for(int i = count; i > 0; i--) {
