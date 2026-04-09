@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 /// Returns an error popup based on error string and optional duration
@@ -356,11 +358,20 @@ class LoadingScreen<T> extends StatelessWidget {
                     Navigator.pop(context);
 
                     if(snapshot.hasError) {
-                      errorPopupMessage(
-                        context, 
-                        "Error: ${snapshot.error}", 
-                        null
-                      );
+                      if(snapshot.error is SocketException) {
+                        errorPopupMessage(
+                          context,
+                          "Error connecting to the internet. Please check your network connection.",
+                          Duration(seconds: 5),
+                        );
+                      }
+                      else {
+                        errorPopupMessage(
+                          context, 
+                          "Error: ${snapshot.error}", 
+                          null
+                        );
+                      }
                     }
 
                     if(navigateOnError != null && navigateOnError!) {
@@ -438,11 +449,20 @@ class LoadingScreen<T> extends StatelessWidget {
                     );
                   }
                   else if(snapshot.hasError) {
-                    errorPopupMessage(
-                      context, 
-                      "Error: ${snapshot.error}", 
-                      null
-                    );
+                    if(snapshot.error is SocketException) {
+                      errorPopupMessage(
+                        context,
+                        "Error connecting to the internet. Please check your network connection.",
+                        Duration(seconds: 5),
+                      );
+                    }
+                    else {
+                      errorPopupMessage(
+                        context, 
+                        "Error: ${snapshot.error}", 
+                        null
+                      );
+                    }
                   }
                 });
 
