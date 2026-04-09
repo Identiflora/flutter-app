@@ -5,7 +5,6 @@ import 'dart:math';
 
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/theme/general_utils.dart';
-import 'package:identiflora/user_credentials/auth_objects.dart';
 import 'package:identiflora/view_account/view_alternate_account_screen.dart';
 import 'package:identiflora/widgets/leaderboard_widgets.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
