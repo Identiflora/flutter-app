@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'dart:math';
 
@@ -82,6 +84,8 @@ class LeaderboardScreen extends StatefulWidget {
 class _LeaderboardScreenState extends State<LeaderboardScreen> {
   String? leaderboardType = "Global";
   String region = "";
+  late Future<List<LeaderboardUser>> _futureUsers;
+  final int maxUsers = 100;
 
   /// Gets popup options based on current leaderboard type to insure a dynamic popup view when switching types.
   List<PopupMenuEntry<String>> getPopupOptions(String? leaderboardType) {
@@ -150,31 +154,71 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Future<String> _getUserRegion() async {
     try {
       return await getUserRegion();
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error while loading leaaderboard region: $error"),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 8),
-        ),
+    } 
+    on SocketException catch (_) {
+      errorPopupMessage(
+        context, 
+        "Error connecting to the internet. Please check your network connection.",
+        Duration(seconds: 5)
       );
-
+      return "";
+    }
+    catch (error) {
+      errorPopupMessage(
+        context, 
+        "Error while loading leaderboard region: $error",
+        Duration(seconds: 8)
+      );
       return "";
     }
   }
 
   Widget getLeaderboardErrorMessage(String? lowercaseLeaderboardType) {
-    return Center(
-      child: Text(
-        "No $lowercaseLeaderboardType accounts found in database.\nPlease check that you are logged in and connected to the internet.",
-        textAlign: TextAlign.center,
-      ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          "No $lowercaseLeaderboardType accounts found.",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.error,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        const Text(
+          "Please check that you are logged in and connected to the internet.",
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton(
+          onPressed: () => setState(() {
+            _futureUsers = addUsers(leaderboardType, maxUsers);
+            if (leaderboardType == "Regional") {
+              _getUserRegion().then((response) {
+                setState(() {
+                  region = response;
+                });
+              });
+            }
+          }),
+          child: Text(
+            "RETRY",
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   @override
   void initState() {
     super.initState();
+    _futureUsers = addUsers(leaderboardType, maxUsers);
   }
 
   @override
@@ -190,6 +234,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             onSelected: (String value) {
               setState(() {
                 leaderboardType = value;
+                _futureUsers = addUsers(leaderboardType, maxUsers);
               });
 
               if (leaderboardType == "Regional") {
@@ -218,7 +263,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
       // Main leaderboard functionality
       body: FutureBuilder<List<LeaderboardUser>>(
-        future: addUsers(leaderboardType, 100),
+        future: _futureUsers,
         builder: (context, snapshot) {
           String? lowercaseLeaderboardType = leaderboardType?.toLowerCase();
 
@@ -318,17 +363,17 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             );
           } else if (snapshot.hasError) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if(snapshot.error is AuthException && snapshot.error.toString().contains("Network error")) {
+              if(snapshot.error.toString().contains("Network error") && leaderboardType != "Regional") {
                 errorPopupMessage(
                   context,
                   "Error connecting to the internet. Please check your network connection.",
                   Duration(seconds: 5),
                 );
               }
-              else {
+              else if(leaderboardType != "Regional") {
                 errorPopupMessage(
                   context,
-                  "Error while loading leaaderboard: ${snapshot.error}, ${snapshot.error.runtimeType}",
+                  "Error while loading leaderboard: ${snapshot.error}, ${snapshot.error.runtimeType}",
                   Duration(seconds: 8),
                 );
               }
