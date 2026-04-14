@@ -109,14 +109,18 @@ class _Results extends State<ResultsWidget> {
   Widget build(BuildContext context) {
     final Map<String, dynamic> topMatch =
         widget.allPredictions[widget.correctIndex];
-    final String modelTopName = topMatch['label'];
+    final String modelTopName = (topMatch['common_name'] as String).isNotEmpty
+        ? topMatch['common_name'] as String
+        : topMatch['label'] as String;
     final Map<String, dynamic> userPick;
     String userPickedName = "";
 
     // Check for bounds and skip case
     if (widget.userChoiceIndex <= 4 && widget.userChoiceIndex >= 0) {
       userPick = widget.allPredictions[widget.userChoiceIndex];
-      userPickedName = userPick['label'];
+      userPickedName = (userPick['common_name'] as String).isNotEmpty
+          ? userPick['common_name'] as String
+          : userPick['label'] as String;
     }
 
     final bool isCorrect = widget.userChoiceIndex == widget.correctIndex;
