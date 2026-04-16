@@ -116,7 +116,8 @@ Future<int> getPlantSpeciesID({required String scientificName}) async {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       // FastAPI may return a raw string or JSON-string; handle both.
       final jsonResponse = jsonDecode(response.body);
-      final speciesId = jsonResponse['species_id'] as int;
+      debugPrint("Json reponse for species_id: $jsonResponse");
+      final speciesId = jsonResponse as int;
       return speciesId;
     } else {
       throw HttpException(
@@ -334,7 +335,12 @@ Future<List<LeaderboardUser>> submitGlobalLeaderboardRequest({
         if (id == null) return;
         users.insert(
           count,
-          LeaderboardUser(userName: value[0], userScore: value[1], displayedBadgeFilePath: value[2], userId: id!),
+          LeaderboardUser(
+            userName: value[0],
+            userScore: value[1],
+            displayedBadgeFilePath: value[2],
+            userId: id!,
+          ),
         );
         count++;
       });
@@ -404,7 +410,12 @@ Future<List<LeaderboardUser>> submitFriendsLeaderboardRequest({
         if (id == null) return;
         users.insert(
           count,
-          LeaderboardUser(userName: value[0], userScore: value[1], displayedBadgeFilePath: value[2], userId: id!),
+          LeaderboardUser(
+            userName: value[0],
+            userScore: value[1],
+            displayedBadgeFilePath: value[2],
+            userId: id!,
+          ),
         );
         count++;
       });
@@ -474,7 +485,12 @@ Future<List<LeaderboardUser>> submitRegionalLeaderboardRequest({
         if (id == null) return;
         users.insert(
           count,
-          LeaderboardUser(userName: value[0], userScore: value[1], displayedBadgeFilePath: value[2], userId: id!),
+          LeaderboardUser(
+            userName: value[0],
+            userScore: value[1],
+            displayedBadgeFilePath: value[2],
+            userId: id!,
+          ),
         );
         count++;
       });
@@ -555,13 +571,12 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
   }
 
   final bool isOffline = await ConnService().getIsOffline;
-  if(isOffline) {
+  if (isOffline) {
     final curPts = await getUserPts();
 
-    if(curPts != null) {
+    if (curPts != null) {
       await saveUserPts(curPts + addPoints);
-    }
-    else {
+    } else {
       await saveUserPts(addPoints);
     }
 
@@ -573,9 +588,7 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
   final uri = Uri.parse(apiBaseUrl).resolve('/add-global-user-pts');
 
   // Prepare JSON payload expected by the API.
-  final payload = jsonEncode({
-    'add_points': addPoints,
-  });
+  final payload = jsonEncode({'add_points': addPoints});
 
   final httpClient = http.Client();
   try {
@@ -649,15 +662,14 @@ Future<AuthToken> submitUserGoogleLogin({
             context,
             MaterialPageRoute(builder: (context) => ExternalSignUpForm()),
           );
-        } 
-        else {
+        } else {
           userInfo = ["", ""];
         }
 
         return await submitUserGoogleRegistration(
           token: jsonMap['access_token'],
           username: userInfo[0],
-          region: userInfo[1]
+          region: userInfo[1],
         );
       }
 
@@ -693,7 +705,7 @@ Future<AuthToken> submitUserGoogleLogin({
 Future<AuthToken> submitUserGoogleRegistration({
   required String token,
   required String username,
-  required String region
+  required String region,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
 
@@ -900,7 +912,7 @@ Future<int> getUserPoints() async {
       uri,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${await getAuthToken()}'
+        'Authorization': 'Bearer ${await getAuthToken()}',
       },
     );
 
@@ -935,7 +947,7 @@ Future<String> getUsername() async {
       uri,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${await getAuthToken()}'
+        'Authorization': 'Bearer ${await getAuthToken()}',
       },
     );
 
@@ -966,24 +978,25 @@ Future<List<dynamic>> fetchFriendsRaw() async {
   try {
     final request = await client.getUrl(uri);
     request.headers.set(
-    HttpHeaders.authorizationHeader,
-    'Bearer ${await getAuthToken()}',
-); //end 
+      HttpHeaders.authorizationHeader,
+      'Bearer ${await getAuthToken()}',
+    ); //end
 
-final response = await request.close();
-final body = await utf8.decodeStream(response);
+    final response = await request.close();
+    final body = await utf8.decodeStream(response);
 
-if (response.statusCode >= 200 && response.statusCode < 300) {
-  final decoded = jsonDecode(body);
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final decoded = jsonDecode(body);
 
-  // supports either: [ ... ] OR { "friends": [ ... ] }
-  if (decoded is List) return decoded;
-  if (decoded is Map && decoded['friends'] is List) return decoded['friends'] as List;
+      // supports either: [ ... ] OR { "friends": [ ... ] }
+      if (decoded is List) return decoded;
+      if (decoded is Map && decoded['friends'] is List)
+        return decoded['friends'] as List;
 
-    throw FormatException('Unexpected /friends response: $decoded');
-  } else {
-    throw HttpException('API error ${response.statusCode}: $body', uri: uri);
-  }
+      throw FormatException('Unexpected /friends response: $decoded');
+    } else {
+      throw HttpException('API error ${response.statusCode}: $body', uri: uri);
+    }
   } finally {
     client.close(force: true);
   }
@@ -991,32 +1004,31 @@ if (response.statusCode >= 200 && response.statusCode < 300) {
 
 // create new friend row in db
 Future<void> addFriendRaw({required String friendUsername}) async {
-final apiBaseUrl = Environment.apiUrl;
-final uri = Uri.parse(apiBaseUrl).resolve('/friends/add');
+  final apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/friends/add');
 
-final payload = jsonEncode({
-// Most likely field name; if FastAPI complains, we’ll rename to whatever it expects.
-'friend_username': friendUsername,
-});
+  final payload = jsonEncode({
+    // Most likely field name; if FastAPI complains, we’ll rename to whatever it expects.
+    'friend_username': friendUsername,
+  });
 
-final client = HttpClient();
+  final client = HttpClient();
   try {
-  final request = await client.postUrl(uri);
-  request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
-  request.headers.set(
-  HttpHeaders.authorizationHeader,
-  'Bearer ${await getAuthToken()}',
-  );
-  request.add(utf8.encode(payload));
+    final request = await client.postUrl(uri);
+    request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+    request.headers.set(
+      HttpHeaders.authorizationHeader,
+      'Bearer ${await getAuthToken()}',
+    );
+    request.add(utf8.encode(payload));
 
-  final response = await request.close();
-  final body = await utf8.decodeStream(response);
+    final response = await request.close();
+    final body = await utf8.decodeStream(response);
 
-  if (response.statusCode >= 200 && response.statusCode < 300) {
-
-  } else {
-    throw HttpException('API error ${response.statusCode}: $body', uri: uri);
-  }
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+    } else {
+      throw HttpException('API error ${response.statusCode}: $body', uri: uri);
+    }
   } finally {
     client.close(force: true);
   }
@@ -1039,7 +1051,7 @@ Future<String> getUserRegion() async {
       uri,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${await getAuthToken()}'
+        'Authorization': 'Bearer ${await getAuthToken()}',
       },
     );
 
@@ -1067,9 +1079,7 @@ Future<String> getUserRegion() async {
 ///   onPressed: () => submitUserBadge(
 ///     badgeFilePath: selectedBadgeFilePath
 ///   );
-Future<bool> submitUserBadge({
-  required String badgeFilePath
-}) async {
+Future<bool> submitUserBadge({required String badgeFilePath}) async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
   final uri = Uri.parse(apiBaseUrl).resolve('/set-user-badge');
@@ -1084,14 +1094,14 @@ Future<bool> submitUserBadge({
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${await getAuthToken()}',
       },
-      body: jsonEncode({"badge_file_path": badgeFilePath})
+      body: jsonEncode({"badge_file_path": badgeFilePath}),
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final jsonResponse = jsonDecode(response.body);
       final success = jsonResponse as bool;
       return success;
-    } else  if (response.statusCode == 404) {
+    } else if (response.statusCode == 404) {
       throw AuthException(
         'User does not exist: ${response.body}',
         statusCode: 404,
@@ -1113,7 +1123,7 @@ Future<bool> submitUserBadge({
 /// Can be used directly in a Flutter button:
 ///   onPressed: () => async {
 ///      badgeFilePath = await fetchUserBadge();
-///   } 
+///   }
 Future<String> fetchUserBadge() async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
@@ -1131,14 +1141,13 @@ Future<String> fetchUserBadge() async {
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final jsonResponse = jsonDecode(response.body);
-      if(jsonResponse != null) {
+      if (jsonResponse != null) {
         final badgeFilePath = jsonResponse as String;
         return badgeFilePath;
-      }
-      else {
+      } else {
         return 'assets/brand/Identiflora_logo.png';
       }
-    } else  if (response.statusCode == 404) {
+    } else if (response.statusCode == 404) {
       throw AuthException(
         'User does not exist: ${response.body}',
         statusCode: 404,
@@ -1232,7 +1241,7 @@ Future<bool> submitPasswordChange({required String newPasswordHash}) async {
   }
 }
 
-Future<bool> savePlantSubmission({
+Future<int> savePlantSubmission({
   required List<Map<String, dynamic>> allPredictions,
   required String userGuess,
   required double latitude,
@@ -1243,25 +1252,27 @@ Future<bool> savePlantSubmission({
   final uri = Uri.parse(apiBaseUrl).resolve('/user/submissions');
   final authToken = await getAuthToken();
   if (authToken == null) throw AuthException('User not authenticated');
-  
+
   final bool isOffline = await ConnService().getIsOffline;
-  if(isOffline) {
+  if (isOffline) {
     HistoryData newHistory = HistoryData(
-      allPredictions: allPredictions, 
-      userGuess: userGuess, 
-      latitude: latitude, 
-      longitude: longitude, 
-      imgUrl: imgUrl
+      allPredictions: allPredictions,
+      userGuess: userGuess,
+      latitude: latitude,
+      longitude: longitude,
+      imgUrl: imgUrl,
     );
 
     await saveUserHistory(newHistory);
-    
-    return true;
+
+    return -1;//need to figure out what to return for offline
   }
 
-  final List<int> predictionIds = allPredictions.map((p) => p['class_index'] as int).toList();
+  final List<int> predictionIds = allPredictions
+      .map((p) => p['class_index'] as int)
+      .toList();
   final payload = jsonEncode({
-    'prediction_ids': predictionIds, 
+    'prediction_ids': predictionIds,
     'user_guess': userGuess,
     'latitude': latitude,
     'longitude': longitude,
@@ -1280,7 +1291,7 @@ Future<bool> savePlantSubmission({
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return true;
+      return jsonDecode(response.body)["identification_id"];
     } else if (response.statusCode == 400 || response.statusCode == 404) {
       throw AuthException(
         'Submission failed (referenced data not found): ${response.body}',
@@ -1296,6 +1307,7 @@ Future<bool> savePlantSubmission({
     httpClient.close();
   }
 }
+
 // Permanently deletes the currently logged in user's account.
 Future<bool> submitDeleteAccount() async {
   final authToken = await getAuthToken();

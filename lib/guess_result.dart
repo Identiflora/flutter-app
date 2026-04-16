@@ -79,7 +79,7 @@ class _Results extends State<ResultsWidget> {
       }
 
       // Send results to the database
-      await savePlantSubmission(
+      int identification_id = await savePlantSubmission(
         allPredictions: widget.orderedPredictions,
         userGuess: userPickedName,
         latitude: lat,
