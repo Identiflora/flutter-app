@@ -68,8 +68,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *   **License:** CC BY 4.0
 
 ### 3. MobileNet V2 (PyTorch)
-* **Source:** [mobilenet-v2-pytorch]([https://raw.githubusercontent.com/pytorch/vision/master/LICENSE](https://docs.openvino.ai/2023.3/omz_models_model_mobilenet_v2_pytorch.html))
-* **License:** BSD 3-Clause
+* **Source:** [mobilenet-v2-pytorch](https://docs.openvino.ai/2023.3/omz_models_model_mobilenet_v2_pytorch.html)
+* **License:** [BSD 3-Clause](https://raw.githubusercontent.com/pytorch/vision/master/LICENS)
 * **Copyright:** Copyright (c) Soumith Chintala 2016
 
 BSD 3-Clause License
