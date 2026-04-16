@@ -14,6 +14,7 @@ class ResultsWidget extends StatefulWidget {
   final List<Map<String, dynamic>> allPredictions;
   final List<Map<String, dynamic>> orderedPredictions;
   final String imgURL;
+  final String capturedImagePath;
 
   const ResultsWidget({
     required this.userChoiceIndex,
@@ -21,6 +22,7 @@ class ResultsWidget extends StatefulWidget {
     required this.allPredictions,
     required this.orderedPredictions,
     required this.imgURL,
+    required this.capturedImagePath,
     super.key,
   });
 
@@ -327,6 +329,7 @@ class _Results extends State<ResultsWidget> {
                                   builder: (context) => TopMatchesWidget(
                                     predictions: widget.allPredictions,
                                     correctIndex: widget.correctIndex,
+                                    capturedImagePath: widget.capturedImagePath,
                                   ),
                                 ),
                               );

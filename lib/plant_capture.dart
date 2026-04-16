@@ -46,6 +46,7 @@ class _PlantCaptureScreenState extends State<PlantCaptureScreen> {
           MaterialPageRoute(
             builder: (context) => UserChoiceScreen(
               predictions: results,
+              capturedImagePath: photo.path,
             ),
           ),
         );

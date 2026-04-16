@@ -248,7 +248,7 @@ class DisplayPictureScreen extends StatelessWidget {
             context,
             MaterialPageRoute<void>(
               // This is also the location to pass the taken photo to the model and will require rescalling or cropping before this point
-              builder: (context) => UserChoiceScreen(predictions: results),
+              builder: (context) => UserChoiceScreen(predictions: results, capturedImagePath: imgPath),
             ),
           );
         },

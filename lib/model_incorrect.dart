@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/main.dart';
 import 'package:identiflora/theme/general_utils.dart';
@@ -21,11 +23,13 @@ class PlantMatch {
 class TopMatchesWidget extends StatefulWidget {
   final List<Map<String, dynamic>> predictions;
   final int correctIndex;
+  final String capturedImagePath;
 
   const TopMatchesWidget({
     super.key,
     required this.predictions,
     required this.correctIndex,
+    required this.capturedImagePath,
   });
 
   @override
@@ -101,6 +105,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                       ),
                       correctMatch: correctMatch,
                       allPredictions: widget.predictions,
+                      capturedImagePath: widget.capturedImagePath,
                     ),
                     childCount: displayMatches.length,
                   ),
@@ -142,6 +147,7 @@ class _PlantMatchCard extends StatelessWidget {
   final Color confidenceColor;
   final PlantMatch correctMatch;
   final List<Map<String, dynamic>> allPredictions;
+  final String capturedImagePath;
 
   /// A single card in the plant-selection grid.
   ///
@@ -161,11 +167,14 @@ class _PlantMatchCard extends StatelessWidget {
   ///   passed through to [DisplayBigPlantScreen] for comparison
   /// - [allPredictions]: the full raw predictions list; forwarded to
   ///   [DisplayBigPlantScreen] so the submission can be recorded
+  /// - [capturedImagePath]: local file path of the user's captured photo;
+  ///   forwarded to [DisplayBigPlantScreen] for S3 upload on submission
   const _PlantMatchCard({
     required this.match,
     required this.confidenceColor,
     required this.correctMatch,
     required this.allPredictions,
+    required this.capturedImagePath,
   });
 
   /// Pushes [DisplayBigPlantScreen] for [match], passing [imgPath] as the
@@ -180,6 +189,7 @@ class _PlantMatchCard extends StatelessWidget {
           allPredictions: allPredictions,
           imgPath: imgPath,
           confidenceColor: confidenceColor,
+          capturedImagePath: capturedImagePath,
         ),
       ),
     );
@@ -328,6 +338,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
   final List<Map<String, dynamic>> allPredictions;
   final String imgPath;
   final Color confidenceColor;
+  final String capturedImagePath;
 
   const DisplayBigPlantScreen({
     super.key,
@@ -336,6 +347,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
     required this.allPredictions,
     required this.imgPath,
     required this.confidenceColor,
+    required this.capturedImagePath,
   });
 
   /// Performs the full incorrect-identification submission:
@@ -365,14 +377,20 @@ class DisplayBigPlantScreen extends StatelessWidget {
     debugPrint("correct species id: $correctSpeciesId | correct species sci name: ${match.scientificName}");
     debugPrint("incorrect species id: $incorrectSpeciesId | incorrect species sci name: ${modelMatch.scientificName}");
 
-    final bool success = await submitIncorrectIdentification(
+    final String presignedUrl = await submitIncorrectIdentification(
       identificationId: identificationId,
       correctSpeciesId: correctSpeciesId,
       incorrectSpeciesId: incorrectSpeciesId,
     );
 
-    if (!success) {
-      throw Exception("Failed to submit incorrect identification.");
+    final imageBytes = await File(capturedImagePath).readAsBytes();
+    final uploadResponse = await http.put(
+      Uri.parse(presignedUrl),
+      headers: {'Content-Type': 'image/jpeg'},
+      body: imageBytes,
+    );
+    if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
+      throw Exception('Failed to upload image: ${uploadResponse.statusCode}');
     }
   }
 

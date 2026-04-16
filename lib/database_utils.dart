@@ -17,7 +17,7 @@ import 'environment.dart';
 ///     correctSpeciesId: 2,
 ///     incorrectSpeciesId: 3,
 ///   );
-Future<bool> submitIncorrectIdentification({
+Future<String> submitIncorrectIdentification({
   required int identificationId,
   required int correctSpeciesId,
   required int incorrectSpeciesId,
@@ -46,7 +46,8 @@ Future<bool> submitIncorrectIdentification({
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return true;
+      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+      return decoded['url'] as String;
     } else {
       // Surface the response for debugging purposes.
       throw HttpException(

@@ -7,8 +7,9 @@ import 'package:identiflora/widgets/button_widgets.dart';
 
 class UserChoiceScreen extends StatefulWidget {
   final List<Map<String, dynamic>> predictions;
+  final String capturedImagePath;
 
-  const UserChoiceScreen({super.key, required this.predictions});
+  const UserChoiceScreen({super.key, required this.predictions, required this.capturedImagePath});
 
   @override
   State<StatefulWidget> createState() => _UserChoiceScreen();
@@ -154,6 +155,7 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
                                 allPredictions: widget.predictions,
                                 orderedPredictions: orderedPredictions,
                                 imgURL: imgURL ?? "",
+                                capturedImagePath: widget.capturedImagePath,
                               ),
                               navigateOnError: true,
                             )
@@ -183,7 +185,8 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
                                 allPredictions: widget.predictions,
                                 orderedPredictions: orderedPredictions,
                                 imgURL: imgURL ?? "",
-                              ), 
+                                capturedImagePath: widget.capturedImagePath,
+                              ),
                               navigateOnError: true,
                             )
                           ),
