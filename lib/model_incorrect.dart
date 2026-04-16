@@ -19,8 +19,13 @@ class PlantMatch {
 
 class TopMatchesWidget extends StatefulWidget {
   final List<Map<String, dynamic>> predictions;
+  final int correctIndex;
 
-  const TopMatchesWidget({super.key, required this.predictions});
+  const TopMatchesWidget({
+    super.key,
+    required this.predictions,
+    required this.correctIndex,
+  });
 
   @override
   State<TopMatchesWidget> createState() => _TopMatchesWidgetState();
@@ -114,7 +119,8 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                   MaterialPageRoute<void>(
                                     builder: (context) => DisplayBigPlantScreen(
                                       match: match,
-                                      modelMatch: matches[0],
+                                      modelMatch: matches[widget.correctIndex],
+                                      allPredictions: widget.predictions,
                                       imgPath: snapshot.data!,
                                       confidenceColor: confidenceColor,
                                     ),
@@ -226,7 +232,8 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                                   MaterialPageRoute<void>(
                                     builder: (context) => DisplayBigPlantScreen(
                                       match: match,
-                                      modelMatch: matches[0],
+                                      modelMatch: matches[widget.correctIndex],
+                                      allPredictions: widget.predictions,
                                       imgPath: "",
                                       confidenceColor: confidenceColor,
                                     ),
@@ -325,7 +332,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
 class DisplayBigPlantScreen extends StatelessWidget {
   final PlantMatch match;
   final PlantMatch modelMatch;
-  final int identification_id;
+  final List<Map<String, dynamic>> allPredictions;
   final String imgPath;
   final Color confidenceColor;
 
@@ -333,7 +340,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
     super.key,
     required this.match,
     required this.modelMatch,
-    required this.identification_id,
+    required this.allPredictions,
     required this.imgPath,
     required this.confidenceColor,
   });
@@ -361,40 +368,47 @@ class DisplayBigPlantScreen extends StatelessWidget {
         // where database would be sent information on the model being incorrect
 
         // make call to database to get the ids of the plants
-        debugPrint("model pick: ${modelMatch.scientificName}");
-        int incorrectSpeciesId = await getPlantSpeciesID(
+        int correctSpeciesId = await getPlantSpeciesID(
           scientificName: match.scientificName,
         );
-        int correctSpeciesId = await getPlantSpeciesID(
+        int incorrectSpeciesId = await getPlantSpeciesID(
           scientificName: modelMatch.scientificName,
         );
 
-        // Make it so that the function that stores an identification submission
-        // returns the identification_id of the submission, use that here to submit
-        // the incorrect identification
-
-        // need to implement offline functionality for this
-
-        // // submit the incorrect identification to the database
-        // if (!(await submitIncorrectIdentification(
-        //   identificationId: identificationId,
-        //   correctSpeciesId: correctSpeciesId,
-        //   incorrectSpeciesId: incorrectSpeciesId,
-        // ))) {
-        //   ScaffoldMessenger.of(context).showSnackBar(
-        //     const SnackBar(
-        //       content: Text("Please complete all fields"),
-        //       backgroundColor: Colors.red,
-        //     ),
-        //   );
-        // }
-
-        //above cannot be completed until history is implemented.
-
-        Navigator.push(
-          context,
-          MaterialPageRoute<void>(builder: (context) => AppSetup()),
+        // Save the submission and get its id for the incorrect identification report
+        int identificationId = await savePlantSubmission(
+          allPredictions: allPredictions,
+          userGuess: match.scientificName,
+          latitude: 0.0,
+          longitude: 0.0,
         );
+
+        // submit the incorrect identification to the database
+        debugPrint("identificationId: $identificationId");
+        debugPrint("correct species id: $correctSpeciesId | correct species sci name: ${match.scientificName}");
+        debugPrint("incorrect species id: $incorrectSpeciesId | incorrect species sci name: ${modelMatch.scientificName}");
+
+        if (!(await submitIncorrectIdentification(
+          identificationId: identificationId,
+          correctSpeciesId: correctSpeciesId,
+          incorrectSpeciesId: incorrectSpeciesId,
+        ))) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Please complete all fields"),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+        // Go back to homepage
+        if (context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(builder: (context) => AppSetup()),
+          );
+        }
       },
     );
   }

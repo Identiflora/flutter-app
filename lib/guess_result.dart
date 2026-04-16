@@ -79,14 +79,13 @@ class _Results extends State<ResultsWidget> {
       }
 
       // Send results to the database
-      int identification_id = await savePlantSubmission(
+      await savePlantSubmission(
         allPredictions: widget.orderedPredictions,
         userGuess: userPickedName,
         latitude: lat,
         longitude: lng,
         imgUrl: widget.imgURL,
       );
-
       return "success";
     } catch (error) {
       // Error is surfaced to loading screen
@@ -315,6 +314,7 @@ class _Results extends State<ResultsWidget> {
                               MaterialPageRoute(
                                 builder: (context) => TopMatchesWidget(
                                   predictions: widget.allPredictions,
+                                  correctIndex: widget.correctIndex,
                                 ),
                               ),
                             );
