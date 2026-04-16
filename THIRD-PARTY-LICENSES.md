@@ -31,6 +31,7 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+---
 ### 2. Dart SDK
 *   **Source:** [Dart](https://dart.dev/)
 *   **License:** [BSD 3-Clause](https://github.com/dart-lang/sdk/blob/main/LICENSE)
@@ -63,10 +64,12 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+---
 ### 3. GBIF Pl@ntNet Observations Dataset
 *   **Citation:** AFFOUARD A, JOLY A, LOMBARDO J, CHAMP J, GOEAU H, CHOUET M, GRESSE H, BONNET P (2025). Pl@ntNet observations. Version 1.9. Pl@ntNet. Occurrence dataset https://doi.org/10.15468/gtebaa accessed via GBIF.org on 2026-04-16.
 *   **License:** CC BY 4.0
 
+---
 ### 4. MobileNet V2 (PyTorch)
 * **Source:** [mobilenet-v2-pytorch](https://docs.openvino.ai/2023.3/omz_models_model_mobilenet_v2_pytorch.html)
 * **License:** [BSD 3-Clause](https://raw.githubusercontent.com/pytorch/vision/master/LICENS)
@@ -102,6 +105,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+---
 ### 5. LiteRT
 * **Source:** [google-ai-edge/LiteRT](https://github.com/google-ai-edge/LiteRT/)
 * **License:** [Apache License 2.0](https://github.com/google-ai-edge/LiteRT/blob/main/LICENSE)
