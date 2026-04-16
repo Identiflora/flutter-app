@@ -5,6 +5,7 @@ import 'package:identiflora/theme/general_utils.dart';
 import 'model_incorrect.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
+import 'package:identiflora/user_data/offline_utils.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
 
 class ResultsWidget extends StatefulWidget {
@@ -308,16 +309,28 @@ class _Results extends State<ResultsWidget> {
                           enableCondition: true,
                           labelText: 'No',
                           textColor: incorrectColor,
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TopMatchesWidget(
-                                  predictions: widget.allPredictions,
-                                  correctIndex: widget.correctIndex,
+                          onPressed: () async {
+                            if (await ConnService().getIsOffline) {
+                              if (context.mounted) {
+                                errorPopupMessage(
+                                  context,
+                                  "Action not available while offline",
+                                  null,
+                                );
+                              }
+                              return;
+                            }
+                            if (context.mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => TopMatchesWidget(
+                                    predictions: widget.allPredictions,
+                                    correctIndex: widget.correctIndex,
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            }
                           },
                         ),
                       ),
