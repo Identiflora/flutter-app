@@ -103,7 +103,6 @@ class ConnService {
       if (userHistory != null) {
         try {
           for (HistoryData history in userHistory) {
-            await history.updateImgUrl();
             await savePlantSubmission(
               allPredictions: history.allPredictions, 
               userGuess: history.userGuess, 

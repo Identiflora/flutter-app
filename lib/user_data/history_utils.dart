@@ -1,7 +1,4 @@
 
-
-import 'package:identiflora/database_utils.dart';
-
 class HistoryData {
   List<Map<String, dynamic>> allPredictions;
   String userGuess;
@@ -35,11 +32,4 @@ class HistoryData {
     longitude = json['longitude'],
     imgUrl = json['image_url'] ??= "";
 
-  /// Update image URL for proper display after being offline
-  Future<void> updateImgUrl() async {
-    if(imgUrl == "") {
-      String? imgPath = await getPlantSpeciesUrl(scientificName: allPredictions.first['label']);
-      imgUrl = imgPath; 
-    }
-  }
 }

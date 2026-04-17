@@ -13,7 +13,7 @@ class ResultsWidget extends StatefulWidget {
   final int correctIndex;
   final List<Map<String, dynamic>> allPredictions;
   final List<Map<String, dynamic>> orderedPredictions;
-  final String imgURL;
+  final String scientificName;
   final String capturedImagePath;
 
   const ResultsWidget({
@@ -21,7 +21,7 @@ class ResultsWidget extends StatefulWidget {
     required this.correctIndex,
     required this.allPredictions,
     required this.orderedPredictions,
-    required this.imgURL,
+    required this.scientificName,
     required this.capturedImagePath,
     super.key,
   });
@@ -87,7 +87,6 @@ class _Results extends State<ResultsWidget> {
         userGuess: userPickedName,
         latitude: lat,
         longitude: lng,
-        imgUrl: widget.imgURL,
       );
       return "success";
     } catch (error) {
@@ -227,11 +226,11 @@ class _Results extends State<ResultsWidget> {
                         borderRadius: const BorderRadius.all(
                           Radius.elliptical(15, 15),
                         ),
-                        child:
-                            (widget.imgURL == "" ||
-                                widget.imgURL.startsWith("https://placeholder"))
-                            ? const Placeholder()
-                            : Image.network(widget.imgURL, fit: BoxFit.cover),
+                        child: Image.asset(
+                          localPlantAssetPath(widget.scientificName),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Placeholder(),
+                        ),
                       ),
                     ),
                   ),

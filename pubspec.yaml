@@ -41,11 +41,12 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  assets: 
+  assets:
     - assets/brand/
     - assets/homepage/
     - assets/badge/
     - assets/model/
+    - assets/plant_images/identiflora_one_image_per_plant/
     - .env.development
     - .env.production
 

@@ -19,8 +19,8 @@ import 'environment.dart';
 ///   );
 Future<String> submitIncorrectIdentification({
   required int identificationId,
-  required int correctSpeciesId,
-  required int incorrectSpeciesId,
+  required String correctSpeciesSciName,
+  required String incorrectSpeciesSciName,
 }) async {
   String apiBaseUrl = Environment.apiUrl;
   // Build the request URL for the FastAPI endpoint.
@@ -29,8 +29,8 @@ Future<String> submitIncorrectIdentification({
   // Prepare JSON payload expected by the API.
   final payload = jsonEncode({
     'identification_id': identificationId,
-    'correct_species_id': correctSpeciesId,
-    'incorrect_species_id': incorrectSpeciesId,
+    'correct_species': correctSpeciesSciName,
+    'incorrect_species': incorrectSpeciesSciName,
   });
 
   final httpClient = http.Client();

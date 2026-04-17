@@ -177,9 +177,7 @@ class _PlantMatchCard extends StatelessWidget {
     required this.capturedImagePath,
   });
 
-  /// Pushes [DisplayBigPlantScreen] for [match], passing [imgPath] as the
-  /// image to display. Pass an empty string when no image is available.
-  void _navigateToDetail(BuildContext context, String imgPath) {
+  void _navigateToDetail(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute<void>(
@@ -187,7 +185,6 @@ class _PlantMatchCard extends StatelessWidget {
           match: match,
           modelMatch: correctMatch,
           allPredictions: allPredictions,
-          imgPath: imgPath,
           confidenceColor: confidenceColor,
           capturedImagePath: capturedImagePath,
         ),
@@ -197,71 +194,41 @@ class _PlantMatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: getPlantSpeciesUrl(scientificName: match.scientificName),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: CircularProgressIndicator(
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          );
-        }
-
-        final String imgPath =
-            (snapshot.hasData && snapshot.data != null) ? snapshot.data! : "";
-
-        return NeonContainer(
-          borderRadius: const BorderRadius.all(Radius.elliptical(15, 15)),
-          child: InkWell(
-            // opens full preview of image with submission confirmation
-            onTap: () => _navigateToDetail(context, imgPath),
-            borderRadius: BorderRadius.circular(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _PlantCardImage(imageUrl: imgPath),
-                _PlantCardInfo(match: match, confidenceColor: confidenceColor),
-              ],
-            ),
-          ),
-        );
-      },
+    return NeonContainer(
+      borderRadius: const BorderRadius.all(Radius.elliptical(15, 15)),
+      child: InkWell(
+        onTap: () => _navigateToDetail(context),
+        borderRadius: BorderRadius.circular(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _PlantCardImage(scientificName: match.scientificName),
+            _PlantCardInfo(match: match, confidenceColor: confidenceColor),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class _PlantCardImage extends StatelessWidget {
-  final String imageUrl;
+  final String scientificName;
 
-  /// The image section of a plant card — occupies the upper [Expanded] portion.
-  ///
-  /// Renders a network image when [imageUrl] is a valid, non-placeholder URL,
-  /// otherwise falls back to a grey [Placeholder] widget. A URL is treated as a
-  /// placeholder when it is empty or starts with `"https://placeholder"`.
-  ///
-  /// The image is clipped to rounded corners (radius 12) inside a [ClipRRect]
-  /// to match the card's inner border radius.
-  ///
-  /// Parameters:
-  /// - [imageUrl]: the URL to load, or an empty string / placeholder URL to
-  ///   trigger the fallback
-  const _PlantCardImage({required this.imageUrl});
+  const _PlantCardImage({required this.scientificName});
 
   @override
   Widget build(BuildContext context) {
-    final bool isPlaceholder =
-        imageUrl.isEmpty || imageUrl.startsWith("https://placeholder");
-
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12.0),
-          // Plant image, might need to be reformatted if we are pulling from database
-          child: isPlaceholder
-              ? const Placeholder(color: Colors.grey, strokeWidth: 1.0)
-              : Image.network(imageUrl, fit: BoxFit.cover),
+          child: Image.asset(
+            localPlantAssetPath(scientificName),
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) =>
+                const Placeholder(color: Colors.grey, strokeWidth: 1.0),
+          ),
         ),
       ),
     );
@@ -336,7 +303,6 @@ class DisplayBigPlantScreen extends StatelessWidget {
   final PlantMatch match;
   final PlantMatch modelMatch;
   final List<Map<String, dynamic>> allPredictions;
-  final String imgPath;
   final Color confidenceColor;
   final String capturedImagePath;
 
@@ -345,7 +311,6 @@ class DisplayBigPlantScreen extends StatelessWidget {
     required this.match,
     required this.modelMatch,
     required this.allPredictions,
-    required this.imgPath,
     required this.confidenceColor,
     required this.capturedImagePath,
   });
@@ -359,12 +324,6 @@ class DisplayBigPlantScreen extends StatelessWidget {
   /// Throws an [Exception] if the final submission fails, so [LoadingScreen]
   /// can display [errorMsg].
   Future<void> _submitIdentification() async {
-    int correctSpeciesId = await getPlantSpeciesID(
-      scientificName: match.scientificName,
-    );
-    int incorrectSpeciesId = await getPlantSpeciesID(
-      scientificName: modelMatch.scientificName,
-    );
 
     int identificationId = await savePlantSubmission(
       allPredictions: allPredictions,
@@ -373,14 +332,10 @@ class DisplayBigPlantScreen extends StatelessWidget {
       longitude: 0.0,
     );
 
-    debugPrint("identificationId: $identificationId");
-    debugPrint("correct species id: $correctSpeciesId | correct species sci name: ${match.scientificName}");
-    debugPrint("incorrect species id: $incorrectSpeciesId | incorrect species sci name: ${modelMatch.scientificName}");
-
     final String presignedUrl = await submitIncorrectIdentification(
       identificationId: identificationId,
-      correctSpeciesId: correctSpeciesId,
-      incorrectSpeciesId: incorrectSpeciesId,
+      correctSpeciesSciName: match.scientificName,
+      incorrectSpeciesSciName: modelMatch.scientificName,
     );
 
     final imageBytes = await File(capturedImagePath).readAsBytes();
@@ -446,14 +401,14 @@ class DisplayBigPlantScreen extends StatelessWidget {
                     const SizedBox(height: 24.0),
                     ClipRRect(
                       borderRadius: BorderRadius.all(Radius.elliptical(10, 10)),
-                      child:
-                          (imgPath == "" ||
-                              imgPath.startsWith("https://placeholder"))
-                          ? const Placeholder(
-                              color: Colors.grey,
-                              strokeWidth: 1.0,
-                            )
-                          : Image.network(imgPath, fit: BoxFit.cover),
+                      child: Image.asset(
+                        localPlantAssetPath(match.scientificName),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Placeholder(
+                          color: Colors.grey,
+                          strokeWidth: 1.0,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 24.0),
                     const Text(

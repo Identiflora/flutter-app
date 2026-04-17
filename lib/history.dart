@@ -4,6 +4,7 @@ import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/user_credentials/auth_objects.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'package:identiflora/theme/neon_theme.dart';
+import 'package:identiflora/theme/general_utils.dart';
 import 'submission_map.dart';
 
 // NOTE: I used neonIcon for the icons on this page but I have no idea if thats right way to do this,
@@ -91,6 +92,13 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
+  Widget _placeholder(ThemeData theme) => Container(
+    height: 200,
+    width: double.infinity,
+    color: theme.colorScheme.surface,
+    child: const Center(child: NeonIcon(Icons.eco, size: 120.0)),
+  );
+
   Widget _buildPlantCard(Map<String, dynamic> item, ThemeData theme) {
     String displayDateTime = 'Unknown Date';
     if (item['time_submitted'] != null) {
@@ -117,25 +125,15 @@ class _HistoryPageState extends State<HistoryPage> {
               // Photo Section
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(15.0)),
-                child: Image.network(
-                  // App attempts to show user submitted image, if that fails then the database image,
-                  // and if that fails it just fails and triggers the errorBuilder to show an icon placeholder 
-                  item['submission_img'] ?? item['species_img'] ?? '',
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 200,
-                    width: double.infinity,
-                    color: theme.colorScheme.surface,
-                    child: const Center(
-                      child: NeonIcon(
-                        Icons.eco, 
-                        size: 120.0,
-                      ),
-                    ),
-                  ),
-                ),
+                child: (item['scientific_name'] != null)
+                    ? Image.asset(
+                        localPlantAssetPath(item['scientific_name']),
+                        height: 200,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _placeholder(theme),
+                      )
+                    : _placeholder(theme),
               ),
               // Details Section
               Padding(

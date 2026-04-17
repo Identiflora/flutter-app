@@ -2,6 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+String localPlantAssetPath(String scientificName) {
+  final parts = scientificName.trim().split(' ');
+  final fileName = '${parts[0]}_${parts[1]}';
+  return 'assets/plant_images/identiflora_one_image_per_plant/$fileName.webp';
+}
+
 /// Returns an error popup based on error string and optional duration
 /// ```dart
 /// ScaffoldMessenger.of(context).showSnackBar(
@@ -111,35 +117,11 @@ bool validPassword(String unhashedPasswordString) {
           && unhashedPasswordString.length >= 4;
 }
 
-/// General use loading screen for easy implementation that requires end action among other required fields. 
+/// General use loading screen for easy implementation that requires end action among other required fields.
 /// * Navigation to a new window using postLoadingBuilder.
 /// * Pop from window to a specific route using postLoadingPop and popErrorScreenButton.
-/// 
-/// 
-/// <br>Example navigation use case:
-/// ```dart
-/// Navigator.push(
-///   context,
-///   MaterialPageRoute(
-///     builder: (context) => LoadingScreen<String>.withNav(
-///       loadingMsg: "Retrieving this identification information...", 
-///       foundMsg: "Identification information found! One moment...", 
-///       errorMsg: "Unable to find identification information. One moment...", 
-///       futureFunction: getPlantSpeciesUrl(
-///          scientificName: widget.predictions[correctIndex]['label']
-///       ),
-///       postLoadingBuilder: (context, imgURL) => ResultsWidget(
-///         userChoiceIndex: userChoice!,
-///         correctIndex: correctIndex,
-///         allPredictions: widget.predictions,
-///          imgURL: imgURL ?? "",
-///       ),
-///       navigateOnError: true,
-///      )
-///   ),
-/// );
-/// ```
-/// 
+///
+///
 /// <br>Example pop use case:
 /// ```dart
 /// Navigator.push(
@@ -204,32 +186,6 @@ class LoadingScreen<T> extends StatelessWidget {
     this.errorPopup = true
   });
 
-  /// General use loading screen for easy implementation that requires end action among other required fields. 
-  /// 
-  /// 
-  /// <br>Example navigation use case:
-  /// ```dart
-  /// Navigator.push(
-  ///   context,
-  ///   MaterialPageRoute(
-  ///     builder: (context) => LoadingScreen<String>.withNav(
-  ///       loadingMsg: "Retrieving this identification information...", 
-  ///       foundMsg: "Identification information found! One moment...", 
-  ///       errorMsg: "Unable to find identification information. One moment...", 
-  ///       futureFunction: getPlantSpeciesUrl(
-  ///          scientificName: widget.predictions[correctIndex]['label']
-  ///       ),
-  ///       postLoadingBuilder: (context, imgURL) => ResultsWidget(
-  ///         userChoiceIndex: userChoice!,
-  ///         correctIndex: correctIndex,
-  ///         allPredictions: widget.predictions,
-  ///          imgURL: imgURL ?? "",
-  ///       ),
-  ///       navigateOnError: true,
-  ///      )
-  ///   ),
-  /// );
-  /// ```
   const LoadingScreen.withNav({
     super.key,
     required this.loadingMsg,
