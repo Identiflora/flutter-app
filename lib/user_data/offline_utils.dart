@@ -88,11 +88,11 @@ class ConnService {
       _processing = true;
 
       // Process data queue here
-      final int? userPts = await getUserPts();
-      if (userPts != null) {
+      final int? queuedPts = await getQueuedPts();
+      if (queuedPts != null) {
         try {
-          await submitUserGlobalPoints(addPoints: userPts);
-          await deleteUserPts();
+          await submitUserGlobalPoints(addPoints: queuedPts);
+          await deleteQueuedPts();
         }
         catch (error) {
           debugPrint("Error submitting cached points: $error");

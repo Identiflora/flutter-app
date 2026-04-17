@@ -6,6 +6,7 @@ import 'model_incorrect.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'package:identiflora/user_data/offline_utils.dart';
+import 'package:identiflora/user_data/user_data_service.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
 
 class ResultsWidget extends StatefulWidget {
@@ -286,7 +287,10 @@ class _Results extends State<ResultsWidget> {
                                                   historyResult == "success"
                                               ? addPoints
                                               : 0, // Enforce errors and incorrect case
-                                        ),
+                                        ).then((result) {
+                                          if (result) UserDataService().refreshPoints();
+                                          return result;
+                                        }),
                                         postLoadingPop: ModalRoute.withName(
                                           "/",
                                         ),

@@ -9,6 +9,7 @@ import 'package:identiflora/user_credentials/account_utils.dart';
 import 'package:identiflora/user_credentials/sign_up.dart';
 import 'auth_objects.dart';
 import '../user_data/cache_utils.dart';
+import '../user_data/user_data_service.dart';
 import 'dart:math';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'dart:io' show Platform;
@@ -122,6 +123,7 @@ class _LoginFormState extends State<LoginForm> {
 
       //SAVE AUTHTOKEN TO DEVICE
       await saveAuthToken(token.accessToken);
+      await UserDataService().init();
     } catch (err) {
       if (mounted && !hasOTPError && !err.toString().contains("401")) {
         errorPopupMessage(context, "Login failed: $err", null);
@@ -192,6 +194,7 @@ class _LoginFormState extends State<LoginForm> {
       );
 
       await saveAuthToken(token.accessToken);
+      await UserDataService().init();
 
       return true;
     } catch (error) {

@@ -53,6 +53,23 @@ Future<void> deleteUserPts() async {
   await storage.delete(key: 'points');
 }
 
+/// Store points earned while offline, to be flushed to the server on reconnect.
+/// This is a delta (points to add), not the user's total.
+Future<void> saveQueuedPts(int pts) async {
+  await storage.write(key: 'points_queue', value: pts.toString());
+}
+
+/// Get the queued offline points delta.
+Future<int?> getQueuedPts() async {
+  String? str = await storage.read(key: 'points_queue');
+  return str != null ? int.tryParse(str) : null;
+}
+
+/// Delete the queued offline points delta after it has been submitted.
+Future<void> deleteQueuedPts() async {
+  await storage.delete(key: 'points_queue');
+}
+
 /// Store the user's badge filepath on the device for later use
 Future<void> saveUserBadge(String badgePath) async {
   await storage.write(key: 'badge_path', value: badgePath);

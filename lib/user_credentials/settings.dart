@@ -4,6 +4,7 @@ import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/theme/general_utils.dart';
 import 'package:settings_ui/settings_ui.dart';
 import '../user_data/cache_utils.dart';
+import '../user_data/user_data_service.dart';
 import 'package:provider/provider.dart';
 import 'package:identiflora/theme/theme_provider.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
@@ -246,6 +247,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                                 final success = await submitDeleteAccount();
                                 if (success) {
                                   await deleteAuthToken();
+                                  UserDataService().clear();
                                   if (!context.mounted) return;
                                   Navigator.popUntil(context, ModalRoute.withName('/'));
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -293,6 +295,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                             onPressed: () {
                               // Sign out logic
                               deleteAuthToken();
+                              UserDataService().clear();
                               Navigator.popUntil(
                                 context,
                                 ModalRoute.withName('/'),

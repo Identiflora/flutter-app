@@ -573,14 +573,10 @@ Future<bool> submitUserGlobalPoints({required int addPoints}) async {
 
   final bool isOffline = await ConnService().getIsOffline;
   if (isOffline) {
-    final curPts = await getUserPts();
-
-    if (curPts != null) {
-      await saveUserPts(curPts + addPoints);
-    } else {
-      await saveUserPts(addPoints);
-    }
-
+    final curQueued = await getQueuedPts();
+    await saveQueuedPts((curQueued ?? 0) + addPoints);
+    final curDisplay = await getUserPts();
+    await saveUserPts((curDisplay ?? 0) + addPoints);
     return true;
   }
 

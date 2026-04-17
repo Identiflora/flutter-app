@@ -7,6 +7,7 @@ import 'package:identiflora/leaderboard_utils.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:identiflora/theme/general_utils.dart';
 import 'package:identiflora/user_data/offline_utils.dart';
+import 'package:identiflora/user_data/user_data_service.dart';
 import 'package:identiflora/view_account/view_account_utils.dart';
 import 'package:provider/provider.dart';
 import 'camera_utils.dart';
@@ -65,6 +66,7 @@ class _AppState extends State<AppSetup> {
   @override
   void initState() {
     _connService.init();
+    UserDataService().init();
     super.initState();
   }
 
