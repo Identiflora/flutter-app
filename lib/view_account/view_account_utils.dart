@@ -41,6 +41,11 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   @override
   void initState() {
     super.initState();
+    _loadFromService();
+    _refreshInBackground();
+  }
+
+  void _loadFromService() {
     final svc = UserDataService();
     playerPoints = svc.points;
     username = svc.username.isNotEmpty ? svc.username : ' ';
@@ -52,6 +57,13 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
       levelData.value[0].toDouble(),
     );
     playerLevel = levelData.key;
+  }
+
+  void _refreshInBackground() {
+    UserDataService().refresh().then((_) {
+      if (!mounted) return;
+      setState(_loadFromService);
+    });
   }
 
   @override

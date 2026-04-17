@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:identiflora/database_utils.dart';
-import 'package:identiflora/theme/general_utils.dart';
 import 'package:identiflora/user_credentials/login.dart';
 import 'package:identiflora/view_account/view_account_utils.dart';
-import 'auth_objects.dart';
+import 'package:identiflora/user_data/cache_utils.dart' as cache;
 import 'package:identiflora/theme/neon_theme.dart';
 
 class AccountWidget extends StatefulWidget {
@@ -36,31 +34,12 @@ class _Account extends State<AccountWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GestureDetector(
             onTap: () async {
-              try {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => LoadingScreen<bool>.withNav(
-                      loadingMsg: "Loading account information...",
-                      foundMsg: "Account found! One moment...",
-                      errorMsg: "Unable to find account information. Returning...",
-                      futureFunction: authenticateToken(),
-                      postLoadingBuilder: (context, success) {
-                        if (success == null || !success) {
-                          return const LoginScreen();
-                        }
-                        return ViewAccountScreen();
-                      },
-                      navigateOnError: true,
-                    ),
-                  ),
-                );
-              } on RateLimitException catch (e) {
-                if (context.mounted) {
-                  errorPopupMessage(context, e.message, null);
-                }
-              } catch (error) {
-                errorPopupMessage(context, "$error", null);
+              final token = await cache.getAuthToken();
+              if (!context.mounted) return;
+              if (token == null) {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+              } else {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const ViewAccountScreen()));
               }
             },
             child: Icon(

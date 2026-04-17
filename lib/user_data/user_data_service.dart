@@ -25,10 +25,10 @@ class UserDataService {
     if (cachedUsername != null && cachedUsername.isNotEmpty) _username = cachedUsername;
     if (cachedBadge != null && cachedBadge.isNotEmpty) _badgePath = cachedBadge;
 
-    _refreshFromApi();
+    refresh();
   }
 
-  Future<void> _refreshFromApi() async {
+  Future<void> refresh() async {
     try {
       final pts = await api.getUserPoints();
       final uname = await api.getUsername();
