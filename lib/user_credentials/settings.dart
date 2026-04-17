@@ -316,6 +316,41 @@ class _SettingsScreen extends State<SettingsScreen> {
                 ),
               ],
             ),
+            SettingsSection(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'About',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Divider(
+                      height: 0.5,
+                      thickness: 0.5,
+                      color: Theme.of(context).colorScheme.inverseSurface,
+                    ),
+                  ),
+                ],
+              ),
+
+              tiles: <SettingsTile>[
+                  SettingsTile.navigation(
+                  leading: NeonIcon(Icons.info_outline),
+                  title: const Text('Licenses'),
+                  onPressed: (context) {
+                    showLicensePage(
+                      context: context,
+                      applicationName: 'Identiflora'
+                    );
+                  } 
+                ),
+              ],
+            ),
           ],
         ),
       )
@@ -516,6 +551,67 @@ class _ChangePasswordState extends State<ChangePassword> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class LicenseModalBottomSheet {
+  static void show(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      sheetAnimationStyle: AnimationStyle(
+        duration: Duration(milliseconds: 600),
+      ),
+      builder: (context) => const LicenseSheetContent(),
+    );
+  }
+}
+
+class LicenseSheetContent extends StatelessWidget {
+  const LicenseSheetContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      expand: false,
+      snap: true,
+      snapAnimationDuration: const Duration(milliseconds: 300),
+      snapSizes: [.7, .91],
+      builder: (context, scrollController) {
+        return Container(
+          width: MediaQuery.of(context).size.width,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            //anything to add to the sheet goes in this child
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withAlpha(220),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                Text("Licenses"),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
