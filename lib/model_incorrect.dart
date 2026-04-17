@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/main.dart';
 import 'package:identiflora/theme/general_utils.dart';
+import 'package:identiflora/user_data/cache_utils.dart';
+import 'package:identiflora/user_data/history_utils.dart';
+import 'package:identiflora/user_data/offline_utils.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
 
@@ -324,29 +326,45 @@ class DisplayBigPlantScreen extends StatelessWidget {
   /// Throws an [Exception] if the final submission fails, so [LoadingScreen]
   /// can display [errorMsg].
   Future<void> _submitIdentification() async {
+    debugPrint('[IncorrectID] _submitIdentification started');
+    debugPrint('[IncorrectID] capturedImagePath=$capturedImagePath');
+    debugPrint('[IncorrectID] correct=${match.scientificName} incorrect=${modelMatch.scientificName}');
 
-    int identificationId = await savePlantSubmission(
+    final bool isOffline = await ConnService().getIsOffline;
+    debugPrint('[IncorrectID] isOffline=$isOffline');
+
+    if (isOffline) {
+      debugPrint('[IncorrectID] Offline — saving to queue');
+      await saveQueuedIncorrectID(QueuedIncorrectID(
+        allPredictions: allPredictions,
+        userGuess: match.scientificName,
+        latitude: 0.0,
+        longitude: 0.0,
+        correctSpeciesSciName: match.scientificName,
+        incorrectSpeciesSciName: modelMatch.scientificName,
+        imagePath: capturedImagePath,
+      ));
+      debugPrint('[IncorrectID] Queued successfully');
+      return;
+    }
+
+    debugPrint('[IncorrectID] Online — calling savePlantSubmission');
+    final int identificationId = await savePlantSubmission(
       allPredictions: allPredictions,
       userGuess: match.scientificName,
       latitude: 0.0,
       longitude: 0.0,
     );
+    debugPrint('[IncorrectID] savePlantSubmission returned identificationId=$identificationId');
 
-    final String presignedUrl = await submitIncorrectIdentification(
+    debugPrint('[IncorrectID] Calling submitIncorrectIdentification');
+    await submitIncorrectIdentification(
       identificationId: identificationId,
       correctSpeciesSciName: match.scientificName,
       incorrectSpeciesSciName: modelMatch.scientificName,
+      image: File(capturedImagePath),
     );
-
-    final imageBytes = await File(capturedImagePath).readAsBytes();
-    final uploadResponse = await http.put(
-      Uri.parse(presignedUrl),
-      headers: {'Content-Type': 'image/jpeg'},
-      body: imageBytes,
-    );
-    if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
-      throw Exception('Failed to upload image: ${uploadResponse.statusCode}');
-    }
+    debugPrint('[IncorrectID] submitIncorrectIdentification completed');
   }
 
   /// Builds the Submit button. On tap, navigates to a [LoadingScreen] that

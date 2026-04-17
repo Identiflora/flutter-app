@@ -10,23 +10,19 @@ import 'package:identiflora/user_data/offline_utils.dart';
 import 'user_credentials/auth_objects.dart';
 import 'environment.dart';
 
-/// Send an incorrect-identification report to the API.
-/// Can be used directly in a Flutter button:
-///   onPressed: () => submitIncorrectIdentification(
-///     identificationId: 1,
-///     correctSpeciesId: 2,
-///     incorrectSpeciesId: 3,
-///   );
-Future<String> submitIncorrectIdentification({
+Future<void> submitIncorrectIdentification({
   required int identificationId,
   required String correctSpeciesSciName,
   required String incorrectSpeciesSciName,
+  required File image,
 }) async {
-  String apiBaseUrl = Environment.apiUrl;
-  // Build the request URL for the FastAPI endpoint.
-  final uri = Uri.parse(apiBaseUrl).resolve('/incorrect-identifications');
+  debugPrint('[submitIncorrectID] Starting — identificationId=$identificationId correct=$correctSpeciesSciName incorrect=$incorrectSpeciesSciName');
+  debugPrint('[submitIncorrectID] image.path=${image.path}');
 
-  // Prepare JSON payload expected by the API.
+  String apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/incorrect-identifications');
+  debugPrint('[submitIncorrectID] POST $uri');
+
   final payload = jsonEncode({
     'identification_id': identificationId,
     'correct_species': correctSpeciesSciName,
@@ -35,7 +31,6 @@ Future<String> submitIncorrectIdentification({
 
   final httpClient = http.Client();
   try {
-    // Create and send the POST request with JSON body.
     final response = await httpClient.post(
       uri,
       headers: {
@@ -45,18 +40,40 @@ Future<String> submitIncorrectIdentification({
       body: payload,
     );
 
+    debugPrint('[submitIncorrectID] POST status=${response.statusCode} body=${response.body}');
+
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      return decoded['url'] as String;
+      final presignedUrl = decoded['url'] as String;
+      debugPrint('[submitIncorrectID] Presigned URL=$presignedUrl');
+
+      final imageBytes = await image.readAsBytes();
+      debugPrint('[submitIncorrectID] Image bytes length=${imageBytes.length}');
+
+      debugPrint('[submitIncorrectID] Uploading to S3...');
+      final uploadResponse = await httpClient.put(
+        Uri.parse(presignedUrl),
+        headers: {'Content-Type': 'image/jpeg'},
+        body: imageBytes,
+      );
+      debugPrint('[submitIncorrectID] S3 PUT status=${uploadResponse.statusCode}');
+
+      if (uploadResponse.statusCode < 200 || uploadResponse.statusCode >= 300) {
+        debugPrint('[submitIncorrectID] S3 upload FAILED: ${uploadResponse.body}');
+        throw HttpException(
+          'S3 upload failed: ${uploadResponse.statusCode}',
+          uri: Uri.parse(presignedUrl),
+        );
+      }
+      debugPrint('[submitIncorrectID] S3 upload succeeded');
     } else {
-      // Surface the response for debugging purposes.
+      debugPrint('[submitIncorrectID] API POST FAILED');
       throw HttpException(
         'API error ${response.statusCode}: ${response.body}',
         uri: uri,
       );
     }
   } finally {
-    // Ensure the HTTP httpClient is closed.
     httpClient.close();
   }
 }

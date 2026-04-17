@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:identiflora/user_data/history_utils.dart';
 
@@ -161,4 +162,43 @@ Future<int?> getOfflineUserHistoryCount() async {
 /// Delete the user's offline history count off of their device
 Future<void> deleteOfflineUserHistoryCount() async {
   await storage.delete(key: 'history_count');
+}
+
+Future<void> _saveQueuedIncorrectIDCount(int count) async {
+  await storage.write(key: 'incorrect_id_queue_count', value: count.toString());
+}
+
+Future<int?> _getQueuedIncorrectIDCount() async {
+  String? str = await storage.read(key: 'incorrect_id_queue_count');
+  return str != null ? int.tryParse(str) : null;
+}
+
+Future<void> saveQueuedIncorrectID(QueuedIncorrectID item) async {
+  int count = (await _getQueuedIncorrectIDCount()) ?? 0;
+  count++;
+  await storage.write(key: 'incorrect_id_queue_$count', value: jsonEncode(item.toJson()));
+  await _saveQueuedIncorrectIDCount(count);
+  debugPrint('[Cache] saveQueuedIncorrectID: saved at index $count imagePath=${item.imagePath}');
+}
+
+Future<List<QueuedIncorrectID>?> getQueuedIncorrectIDs() async {
+  final int? count = await _getQueuedIncorrectIDCount();
+  if (count == null) return null;
+
+  final List<QueuedIncorrectID> items = [];
+  for (int i = 1; i <= count; i++) {
+    final String? json = await storage.read(key: 'incorrect_id_queue_$i');
+    if (json == null) throw FormatException('Unable to get queued incorrect ID for index $i');
+    items.add(QueuedIncorrectID.fromJson(jsonDecode(json)));
+  }
+  return items;
+}
+
+Future<void> deleteQueuedIncorrectIDs() async {
+  final int? count = await _getQueuedIncorrectIDCount();
+  if (count == null) return;
+  for (int i = count; i > 0; i--) {
+    await storage.delete(key: 'incorrect_id_queue_$i');
+  }
+  await storage.delete(key: 'incorrect_id_queue_count');
 }

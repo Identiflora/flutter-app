@@ -256,16 +256,6 @@ class GuessResultActionButtons extends StatelessWidget {
             labelText: 'No',
             textColor: incorrectColor,
             onPressed: () async {
-              if (await ConnService().getIsOffline) {
-                if (context.mounted) {
-                  errorPopupMessage(
-                    context,
-                    "Action not available while offline",
-                    null,
-                  );
-                }
-                return;
-              }
               if (context.mounted) {
                 Navigator.push(
                   context,

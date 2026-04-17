@@ -81,18 +81,24 @@ class ConnService {
   }
 
   Future<void> _sendDataQueue() async {
+    debugPrint('[DataQueue] _sendDataQueue called. _processing=$_processing');
     // Guard for multiple data queue sending at once
-    if (_processing) return;
+    if (_processing) {
+      debugPrint('[DataQueue] Already processing — skipping');
+      return;
+    }
 
     try {
       _processing = true;
 
       // Process data queue here
       final int? queuedPts = await getQueuedPts();
+      debugPrint('[DataQueue] queuedPts=$queuedPts');
       if (queuedPts != null) {
         try {
           await submitUserGlobalPoints(addPoints: queuedPts);
           await deleteQueuedPts();
+          debugPrint('[DataQueue] Points submitted and cleared');
         }
         catch (error) {
           debugPrint("Error submitting cached points: $error");
@@ -100,26 +106,67 @@ class ConnService {
       }
 
       final List<HistoryData>? userHistory = await getUserHistory();
+      debugPrint('[DataQueue] userHistory count=${userHistory?.length}');
       if (userHistory != null) {
         try {
           for (HistoryData history in userHistory) {
             await savePlantSubmission(
-              allPredictions: history.allPredictions, 
-              userGuess: history.userGuess, 
-              latitude: history.latitude, 
+              allPredictions: history.allPredictions,
+              userGuess: history.userGuess,
+              latitude: history.latitude,
               longitude: history.longitude,
               imgUrl: history.imgUrl
             );
           }
 
           await deleteUserHistory();
+          debugPrint('[DataQueue] History submitted and cleared');
         }
         catch (error) {
           debugPrint("Error submitting cached history: $error");
         }
       }
 
+      final List<QueuedIncorrectID>? queuedIncorrectIDs = await getQueuedIncorrectIDs();
+      debugPrint('[DataQueue] queuedIncorrectIDs count=${queuedIncorrectIDs?.length}');
+      if (queuedIncorrectIDs != null) {
+        try {
+          for (int i = 0; i < queuedIncorrectIDs.length; i++) {
+            final QueuedIncorrectID item = queuedIncorrectIDs[i];
+            debugPrint('[DataQueue] Processing incorrectID[$i]: correct=${item.correctSpeciesSciName} incorrect=${item.incorrectSpeciesSciName} imagePath=${item.imagePath}');
+            final File file = File(item.imagePath);
+            final bool fileExists = await file.exists();
+            debugPrint('[DataQueue] Image file exists=$fileExists');
+            if (!fileExists) {
+              debugPrint('[DataQueue] Skipping — image not found at ${item.imagePath}');
+              continue;
+            }
+            debugPrint('[DataQueue] Calling savePlantSubmission for incorrectID[$i]');
+            final int identificationId = await savePlantSubmission(
+              allPredictions: item.allPredictions,
+              userGuess: item.userGuess,
+              latitude: item.latitude,
+              longitude: item.longitude,
+            );
+            debugPrint('[DataQueue] savePlantSubmission returned identificationId=$identificationId');
+            await submitIncorrectIdentification(
+              identificationId: identificationId,
+              correctSpeciesSciName: item.correctSpeciesSciName,
+              incorrectSpeciesSciName: item.incorrectSpeciesSciName,
+              image: file,
+            );
+            debugPrint('[DataQueue] incorrectID[$i] submitted successfully');
+          }
+          await deleteQueuedIncorrectIDs();
+          debugPrint('[DataQueue] Incorrect ID queue cleared');
+        }
+        catch (error) {
+          debugPrint("Error submitting cached incorrect IDs: $error");
+        }
+      }
+
       _processing = false;
+      debugPrint('[DataQueue] _sendDataQueue complete');
     }
     on SocketException catch (_) {
       debugPrint("Internet access is no longer available for data queue.");

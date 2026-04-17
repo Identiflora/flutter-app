@@ -30,6 +30,7 @@ dependencies:
   intl: ^0.20.2
   confetti: ^0.8.0
   google_maps_flutter: ^2.10.0
+  flutter_offline_queue_pro: ^1.0.4
 
 dev_dependencies:
   flutter_test:
