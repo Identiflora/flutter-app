@@ -125,6 +125,7 @@ class _LoginFormState extends State<LoginForm> {
 
       //SAVE AUTHTOKEN TO DEVICE
       await saveAuthToken(token.accessToken);
+      await savePasswordHash(hashedPassword);
       await UserDataService().init();
     } on AuthException {
       rethrow;

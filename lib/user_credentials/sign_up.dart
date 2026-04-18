@@ -97,6 +97,7 @@ class _SignUpFormState extends State<SignUpForm> {
       
       //SAVE AUTHTOKEN TO DEVICE
       await saveAuthToken(token.accessToken);
+      await savePasswordHash(hashedPassword);
       await UserDataService().init();
 
       return true;
