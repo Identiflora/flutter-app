@@ -293,8 +293,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              // Sign out logic
-                              deleteAuthToken();
+                              clearUserCache();
                               UserDataService().clear();
                               Navigator.popUntil(
                                 context,

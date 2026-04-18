@@ -276,19 +276,17 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
           onTap: () async {
             if (widget.isReadOnly) return;
             if (badge.isUnlocked(widget.playerLevel)) {
-              // Run API based selection logic here
+              final previousBadge = selectedBadgeFilePath;
+              setState(() {
+                selectedBadgeFilePath = badge.imagePath;
+              });
+              UserDataService().updateBadge(badge.imagePath);
+              if (widget.onBadgeSelected != null) {
+                widget.onBadgeSelected!(badge.imagePath);
+              }
+
               try {
                 await submitUserBadge(badgeFilePath: badge.imagePath);
-                UserDataService().updateBadge(badge.imagePath);
-
-                setState(() {
-                  selectedBadgeFilePath = badge.imagePath;
-                });
-
-                if (widget.onBadgeSelected != null) {
-                  widget.onBadgeSelected!(badge.imagePath);
-                }
-
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -299,6 +297,13 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
                   );
                 }
               } catch (error) {
+                setState(() {
+                  selectedBadgeFilePath = previousBadge;
+                });
+                UserDataService().updateBadge(previousBadge);
+                if (widget.onBadgeSelected != null) {
+                  widget.onBadgeSelected!(previousBadge);
+                }
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

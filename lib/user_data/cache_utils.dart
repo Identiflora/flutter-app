@@ -202,3 +202,18 @@ Future<void> deleteQueuedIncorrectIDs() async {
   }
   await storage.delete(key: 'incorrect_id_queue_count');
 }
+
+/// Clears all cached user data. Call on logout to prevent stale data from
+/// appearing for the next user session.
+Future<void> clearUserCache() async {
+  await Future.wait([
+    deleteAuthToken(),
+    deleteUsername(),
+    deleteUserPts(),
+    deleteUserBadge(),
+    deleteUserNumFriends(),
+    deleteQueuedPts(),
+    deleteUserHistory(),
+    deleteQueuedIncorrectIDs(),
+  ]);
+}
