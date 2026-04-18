@@ -66,6 +66,81 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
     });
   }
 
+  Future<void> _showUsernameDialog() async {
+    final controller = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Change Username'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'Enter new username'),
+            maxLength: 16,
+            textInputAction: TextInputAction.done,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final newUsername = controller.text.trim();
+                if (newUsername == username.trim()) {
+                  Navigator.of(dialogContext).pop();
+                  await showDialog<void>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Same Username'),
+                      content: const Text(
+                        'The new username must be different from your current username.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                  return;
+                }
+                Navigator.of(dialogContext).pop();
+                try {
+                  final success = await submitUsernameChange(newUsername: newUsername);
+                  if (success && mounted) {
+                    UserDataService().updateUsername(newUsername);
+                    setState(() => username = newUsername);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Username updated!'),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to update username: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+    controller.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,9 +187,7 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                 const SizedBox(width: 56.0),
                 Text(username, style: TextStyle(fontSize: 30.0)),
                 IconButton(
-                  onPressed: () {
-                    //takes you to edit username
-                  },
+                  onPressed: () => _showUsernameDialog(),
                   icon: NeonIcon(Icons.edit),
                 ),
                 SizedBox(width: 8.0),

@@ -1378,3 +1378,48 @@ Future<List<Map<String, dynamic>>> fetchSubmissionHistory() async {
     httpClient.close();
   }
 }
+
+/// Sends a username change request.
+/// Can be used directly in a Flutter button:
+///   onPressed: () => submitUsernameChange(
+///     newUsername: example_username
+///   );
+Future<bool> submitUsernameChange({required String newUsername}) async {
+  String apiBaseUrl = Environment.apiUrl;
+  // Build the request URL for the FastAPI endpoint.
+  final uri = Uri.parse(apiBaseUrl).resolve('/change-username');
+
+  debugPrint(newUsername);
+
+  final httpClient = http.Client();
+  try {
+    final response = await httpClient.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${await getAuthToken()}',
+      },
+      body: jsonEncode({"new_username": newUsername}),
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final jsonResponse = jsonDecode(response.body);
+      final success = jsonResponse as bool;
+      return success;
+    } else if (response.statusCode == 404) {
+      throw AuthException(
+        'User does not exist: ${response.body}',
+        statusCode: 404,
+      );
+    } else {
+      // Surface the response for debugging purposes.
+      throw HttpException(
+        'API error ${response.statusCode}: ${response.body}',
+        uri: uri,
+      );
+    }
+  } finally {
+    // Ensure the HTTP httpClient is closed even if an error occurs.
+    httpClient.close();
+  }
+}
