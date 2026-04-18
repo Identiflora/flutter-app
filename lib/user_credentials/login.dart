@@ -106,6 +106,8 @@ class _LoginFormState extends State<LoginForm> {
         );
         return false;
       }
+    } on AuthException {
+      rethrow;
     } catch (error) {
       hasOTPError = true;
       if (mounted) {
@@ -124,6 +126,8 @@ class _LoginFormState extends State<LoginForm> {
       //SAVE AUTHTOKEN TO DEVICE
       await saveAuthToken(token.accessToken);
       await UserDataService().init();
+    } on AuthException {
+      rethrow;
     } catch (err) {
       if (mounted && !hasOTPError && !err.toString().contains("401")) {
         errorPopupMessage(context, "Login failed: $err", null);
@@ -197,7 +201,10 @@ class _LoginFormState extends State<LoginForm> {
       await UserDataService().init();
 
       return true;
-    } catch (error) {
+    } on AuthException {
+      rethrow;
+    }
+    catch (error) {
       if (context.mounted) {
         errorPopupMessage(context, "Login failed: $error", null);
       }

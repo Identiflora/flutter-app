@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:identiflora/user_credentials/auth_objects.dart';
 
 String localPlantAssetPath(String scientificName) {
   final parts = scientificName.trim().split(' ');
@@ -314,7 +315,7 @@ class LoadingScreen<T> extends StatelessWidget {
                     Navigator.pop(context);
 
                     if(snapshot.hasError) {
-                      if(snapshot.error is SocketException) {
+                      if(snapshot.error is SocketException || (snapshot.error is AuthException && snapshot.error.toString().contains("Network error"))) {
                         errorPopupMessage(
                           context,
                           "Error connecting to the internet. Please check your network connection.",
@@ -405,7 +406,7 @@ class LoadingScreen<T> extends StatelessWidget {
                     );
                   }
                   else if(snapshot.hasError) {
-                    if(snapshot.error is SocketException) {
+                    if(snapshot.error is SocketException || (snapshot.error is AuthException && snapshot.error.toString().contains("Network error"))) {
                       errorPopupMessage(
                         context,
                         "Error connecting to the internet. Please check your network connection.",

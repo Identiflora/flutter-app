@@ -100,6 +100,8 @@ class _SignUpFormState extends State<SignUpForm> {
       await UserDataService().init();
 
       return true;
+    } on AuthException {
+      rethrow;
     } catch (err) {
       if (mounted) {
         errorPopupMessage(context, "Login failed: $err", null);
