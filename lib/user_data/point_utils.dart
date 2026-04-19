@@ -15,52 +15,53 @@ library;
 /// ```dart
 /// final Map<int, int> accountLevels = const {
 ///    0: 0,
-///    1: 1,
-///    2: 4, // 3 points needed
-///    3: 9, // 5 points needed
-///    4: 16, // 7 points needed
-///    5: 25, // 9 points needed
-///    6: 35, // 10 points neeeded
-///    7: 45, // 10 points needed
-///    8: 60, // 15 points needed
-///    9: 75, // 15 points needed
-///    10: 100, // 25 points needed
-///    11: 125, // 25 points neeed
-///    12: 150, // 25 points needed
-///    13: 180, // 30 points needed
-///    14: 220, // 30 points needed
-///    15: 255, // 35 points needed
-///    16: 290, // 35 points needed
-///    17: 325, // 35 points needed
-///    18: 365, // 40 points needed
-///    19: 405, // 40 points needed
-///    20: 455, // 50 points needed
+///    1: 2,   // 2 points needed   (reached after 1 identification)
+///    2: 5,   // 3 points needed
+///    3: 8,   // 3 points needed
+///    4: 11,  // 3 points needed
+///    5: 17,  // 6 points needed
+///    6: 23,  // 6 points needed
+///    7: 32,  // 9 points needed
+///    8: 44,  // 12 points needed
+///    9: 56,  // 12 points needed
+///    10: 68, // 12 points needed
+///    11: 83, // 15 points needed
+///    12: 101, // 18 points needed
+///    13: 122, // 21 points needed
+///    14: 143, // 21 points needed
+///    15: 164, // 21 points needed
+///    16: 188, // 24 points needed
+///    17: 215, // 27 points needed
+///    18: 242, // 27 points needed
+///    19: 269, // 27 points needed
+///    20: 299, // 30 points needed  (reached after ~100 identifications)
 ///  };
 /// ```
 MapEntry<int, List<int>> calculateAccountLevel(int currentPoints) {
-  // Map of account levels where key is level and value is cumulative max points needed for that level.
+  // Map of account levels where key is level and value is cumulative points needed to reach that level.
+  // All thresholds are ≡2 (mod 3) so users earning 3 pts/identification never land exactly on a threshold.
   final Map<int, int> accountLevels = const {
     0: 0,
-    1: 1,
-    2: 4, // 3 points needed
-    3: 9, // 5 points needed
-    4: 16, // 7 points needed
-    5: 25, // 9 points needed
-    6: 35, // 10 points neeeded
-    7: 45, // 10 points needed
-    8: 60, // 15 points needed
-    9: 75, // 15 points needed
-    10: 100, // 25 points needed
-    11: 125, // 25 points neeed
-    12: 150, // 25 points needed
-    13: 180, // 30 points needed
-    14: 220, // 30 points needed
-    15: 255, // 35 points needed
-    16: 290, // 35 points needed
-    17: 325, // 35 points needed
-    18: 365, // 40 points needed
-    19: 405, // 40 points needed
-    20: 455, // 50 points needed
+    1: 2,    // 2 points needed   (reached after 1 identification)
+    2: 5,    // 3 points needed
+    3: 8,    // 3 points needed
+    4: 11,   // 3 points needed
+    5: 17,   // 6 points needed
+    6: 23,   // 6 points needed
+    7: 32,   // 9 points needed
+    8: 44,   // 12 points needed
+    9: 56,   // 12 points needed
+    10: 68,  // 12 points needed
+    11: 83,  // 15 points needed
+    12: 101, // 18 points needed
+    13: 122, // 21 points needed
+    14: 143, // 21 points needed
+    15: 164, // 21 points needed
+    16: 188, // 24 points needed
+    17: 215, // 27 points needed
+    18: 242, // 27 points needed
+    19: 269, // 27 points needed
+    20: 299, // 30 points needed  (reached after ~100 identifications)
   };
 
   // Default values

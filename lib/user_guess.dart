@@ -136,7 +136,7 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
                       enableCondition: userChoice != null,
                       labelText: 'Confirm Selection',
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                             builder: (context) => ResultsWidget(

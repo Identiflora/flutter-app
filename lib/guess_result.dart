@@ -124,7 +124,7 @@ class _Results extends State<ResultsWidget> {
     }
 
     final bool isCorrect = widget.userChoiceIndex == widget.correctIndex;
-    const int addPoints = 1;
+    const int addPoints = 3;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Results'), centerTitle: true),
