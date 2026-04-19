@@ -16,6 +16,7 @@ class FriendsHomescreenButton extends StatelessWidget {
     
             child: TextButton(
               onPressed: () {
+                 print(" NAVIGATING TO FRIENDS SCREEN");
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const FriendsScreen()),
@@ -46,11 +47,15 @@ class _FriendsScreenState extends State<FriendsScreen> {
   @override
   void initState() {
     super.initState();
+   print(" FRIENDS SCREEN INIT STATE HIT"); 
+
+
     _friendsFuture = _loadFriends();
   }
 
   Future<List<FriendUser>> _loadFriends() async {
     final raw = await fetchFriendsRaw(); 
+     print("LOADING FRIENDS API CALL STARTED");
     return raw
         .map((e) => FriendUser.fromJson((e as Map).cast<String, dynamic>()))
         .toList();

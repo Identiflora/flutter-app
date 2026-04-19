@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:identiflora/gallery_utils.dart';
 import 'package:identiflora/history.dart';
+import 'package:identiflora/friends_utils.dart';
 import 'package:identiflora/leaderboard_utils.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:identiflora/theme/general_utils.dart';
@@ -15,6 +16,7 @@ import 'user_credentials/account_utils.dart';
 import 'environment.dart';
 import 'package:identiflora/theme/theme.dart';
 import 'package:identiflora/theme/theme_provider.dart';
+
 
 Future<void> main() async {
   await dotenv.load(fileName: Environment.fileName);
@@ -107,7 +109,7 @@ class HomeScreen extends StatelessWidget {
           AccountWidget(),
           GalleryWidget(),
           LeaderboardWidget(),
-          HistoryWidget()
+          FriendsHomescreenButton()
         ],
       ),
     );

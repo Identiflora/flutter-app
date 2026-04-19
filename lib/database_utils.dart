@@ -985,14 +985,15 @@ Future<String> getUsername() async {
 }
 
 Future<List<dynamic>> fetchFriendsRaw() async {
+   print("fetchFriendsRaw CALLED");
   final apiBaseUrl = Environment.apiUrl;
+  print("BASE URL: $apiBaseUrl");
   final uri = Uri.parse('$apiBaseUrl/friends');
-
+  print("FINAL FRIENDS URL: $uri");
   final client = HttpClient();
   try {
     final request = await client.getUrl(uri);
-    request.headers.set(
-      HttpHeaders.authorizationHeader,
+    request.headers.set(      HttpHeaders.authorizationHeader,
       'Bearer ${await getAuthToken()}',
     ); //end
 
