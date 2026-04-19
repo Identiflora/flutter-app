@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
@@ -103,7 +104,10 @@ class _SignUpFormState extends State<SignUpForm> {
       return true;
     } on AuthException {
       rethrow;
-    } catch (err) {
+    } on HttpException {
+      rethrow;
+    }
+    catch (err) {
       if (mounted) {
         errorPopupMessage(context, "Login failed: $err", null);
       }

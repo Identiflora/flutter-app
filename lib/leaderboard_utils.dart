@@ -153,16 +153,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   Future<String> _getUserRegion() async {
     try {
       return await getUserRegion();
-    } 
-    on SocketException catch (_) {
+    } on SocketException {
       errorPopupMessage(
         context, 
         "Error connecting to the internet. Please check your network connection.",
         Duration(seconds: 5)
       );
       return "";
-    }
-    catch (error) {
+    } on HttpException {
+      errorPopupMessage(
+        context,
+        "Error in API communication. Please wait a moment and try again. API may take a moment to wake up.",
+        Duration(seconds: 5),
+      );
+      return "";
+    } catch (error) {
       errorPopupMessage(
         context, 
         "Error while loading leaderboard region: $error",
@@ -362,14 +367,21 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             );
           } else if (snapshot.hasError) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if(snapshot.error.toString().contains("Network error") && leaderboardType != "Regional") {
+              if (snapshot.error.toString().contains("Network error") && leaderboardType != "Regional") {
                 errorPopupMessage(
                   context,
                   "Error connecting to the internet. Please check your network connection.",
                   Duration(seconds: 5),
                 );
               }
-              else if(leaderboardType != "Regional") {
+              else if (snapshot.error is HttpException) {
+                errorPopupMessage(
+                  context,
+                  "Error in API communication. Please wait a moment and try again. API may take a moment to wake up.",
+                  Duration(seconds: 5),
+                );
+              }
+              else if (leaderboardType != "Regional") {
                 errorPopupMessage(
                   context,
                   "Error while loading leaderboard: ${snapshot.error}, ${snapshot.error.runtimeType}",

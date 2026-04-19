@@ -12,7 +12,7 @@ import '../user_data/cache_utils.dart';
 import '../user_data/user_data_service.dart';
 import 'dart:math';
 import 'package:identiflora/widgets/neon_widgets.dart';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, HttpException;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -108,6 +108,8 @@ class _LoginFormState extends State<LoginForm> {
       }
     } on AuthException {
       rethrow;
+    } on HttpException {
+      rethrow;
     } catch (error) {
       hasOTPError = true;
       if (mounted) {
@@ -128,6 +130,8 @@ class _LoginFormState extends State<LoginForm> {
       await savePasswordHash(hashedPassword);
       await UserDataService().init();
     } on AuthException {
+      rethrow;
+    } on HttpException {
       rethrow;
     } catch (err) {
       if (mounted && !hasOTPError && !err.toString().contains("401")) {
@@ -203,6 +207,8 @@ class _LoginFormState extends State<LoginForm> {
 
       return true;
     } on AuthException {
+      rethrow;
+    } on HttpException {
       rethrow;
     }
     catch (error) {

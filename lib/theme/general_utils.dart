@@ -315,10 +315,17 @@ class LoadingScreen<T> extends StatelessWidget {
                     Navigator.pop(context);
 
                     if(snapshot.hasError) {
-                      if(snapshot.error is SocketException || (snapshot.error is AuthException && snapshot.error.toString().contains("Network error"))) {
+                      if (snapshot.error is SocketException || (snapshot.error is AuthException && snapshot.error.toString().contains("Network error"))) {
                         errorPopupMessage(
                           context,
                           "Error connecting to the internet. Please check your network connection.",
+                          Duration(seconds: 5),
+                        );
+                      }
+                      else if (snapshot.error is HttpException) {
+                        errorPopupMessage(
+                          context,
+                          "Error in API communication. Please wait a moment and try again. API may take a moment to wake up.",
                           Duration(seconds: 5),
                         );
                       }
@@ -413,6 +420,13 @@ class LoadingScreen<T> extends StatelessWidget {
                         Duration(seconds: 5),
                       );
                     }
+                    else if (snapshot.error is HttpException) {
+                        errorPopupMessage(
+                          context,
+                          "Error in API communication. Please wait a moment and try again. API may take a moment to wake up.",
+                          Duration(seconds: 5),
+                        );
+                      }
                     else {
                       errorPopupMessage(
                         context, 
