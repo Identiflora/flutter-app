@@ -36,13 +36,14 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   String username = " ";
   String selectedBadgeFilePath = 'assets/brand/Identiflora_logo.png';
 
-  int numFriends = 15; //need to calculate number of friends in initState
+  int numFriends = 0;
 
   @override
   void initState() {
     super.initState();
     _loadFromService();
     _refreshInBackground();
+    _loadFriendCount();
   }
 
   void _loadFromService() {
@@ -57,6 +58,19 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
       levelData.value[0].toDouble(),
     );
     playerLevel = levelData.key;
+  }
+
+  Future<void> _loadFriendCount() async {
+    try {
+      final rawFriends = await fetchFriendsRaw();
+      if (!mounted) return;
+
+      setState(() {
+        numFriends = rawFriends.length;
+      });
+    } catch (e) {
+      // optional: handle error
+    }
   }
 
   void _refreshInBackground() {
