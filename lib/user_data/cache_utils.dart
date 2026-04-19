@@ -71,6 +71,21 @@ Future<void> deleteQueuedPts() async {
   await storage.delete(key: 'points_queue');
 }
 
+/// Store the user's hashed password on the device for local verification
+Future<void> savePasswordHash(String hash) async {
+  await storage.write(key: 'password_hash', value: hash);
+}
+
+/// Get the user's stored password hash
+Future<String?> getPasswordHash() async {
+  return await storage.read(key: 'password_hash');
+}
+
+/// Delete the user's stored password hash
+Future<void> deletePasswordHash() async {
+  await storage.delete(key: 'password_hash');
+}
+
 /// Store the user's badge filepath on the device for later use
 Future<void> saveUserBadge(String badgePath) async {
   await storage.write(key: 'badge_path', value: badgePath);
@@ -215,5 +230,6 @@ Future<void> clearUserCache() async {
     deleteQueuedPts(),
     deleteUserHistory(),
     deleteQueuedIncorrectIDs(),
+    deletePasswordHash(),
   ]);
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
@@ -97,10 +98,16 @@ class _SignUpFormState extends State<SignUpForm> {
       
       //SAVE AUTHTOKEN TO DEVICE
       await saveAuthToken(token.accessToken);
+      await savePasswordHash(hashedPassword);
       await UserDataService().init();
 
       return true;
-    } catch (err) {
+    } on AuthException {
+      rethrow;
+    } on HttpException {
+      rethrow;
+    }
+    catch (err) {
       if (mounted) {
         errorPopupMessage(context, "Login failed: $err", null);
       }

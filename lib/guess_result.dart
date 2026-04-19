@@ -5,7 +5,6 @@ import 'package:identiflora/theme/general_utils.dart';
 import 'model_incorrect.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
-import 'package:identiflora/user_data/offline_utils.dart';
 import 'package:identiflora/user_data/user_data_service.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
 

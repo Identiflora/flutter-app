@@ -52,6 +52,15 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreen extends State<SettingsScreen> {
   bool notificationsEnabled = true;
+  bool _isGoogleUser = false;
+
+  @override
+  void initState() {
+    super.initState();
+    getPasswordHash().then((hash) {
+      if (mounted) setState(() => _isGoogleUser = hash == null);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -201,9 +210,13 @@ class _SettingsScreen extends State<SettingsScreen> {
               ),
 
               tiles: <SettingsTile>[
-                  SettingsTile.navigation(
+                SettingsTile.navigation(
+                  enabled: !_isGoogleUser,
                   leading: NeonIcon(Icons.email),
                   title: const Text('Change Email'),
+                  value: _isGoogleUser
+                      ? const Text('Not available for Google accounts')
+                      : null,
                   onPressed: (context) {
                     Navigator.push(
                       context,
@@ -215,12 +228,18 @@ class _SettingsScreen extends State<SettingsScreen> {
                 ),
 
                 SettingsTile.navigation(
+                  enabled: !_isGoogleUser,
                   leading: NeonIcon(Icons.password),
                   title: const Text('Change Password'),
+                  value: _isGoogleUser
+                      ? const Text('Not available for Google accounts')
+                      : null,
                   onPressed: (context) {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ChangePassword()),
+                      MaterialPageRoute(
+                        builder: (context) => const ChangePassword(),
+                      ),
                     );
                   },
                 ),
@@ -231,49 +250,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                   onPressed: (context) {
                     showDialog(
                       context: context,
-                      builder: (dialogContext) => AlertDialog(
-                        title: const Text('Delete Account?'),
-                        content: const Text(
-                          'This action is permanent. All your plant submissions, points, and badges will be lost forever.',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(dialogContext),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              try {
-                                final success = await submitDeleteAccount();
-                                if (success) {
-                                  await deleteAuthToken();
-                                  UserDataService().clear();
-                                  if (!context.mounted) return;
-                                  Navigator.popUntil(context, ModalRoute.withName('/'));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text("Account deleted successfully"),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  errorPopupMessage(
-                                    context, 
-                                    "Error: $e", 
-                                    null
-                                  );
-                                }
-                              }
-                            },
-                            child: const Text(
-                              'Delete',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ),
-                        ],
-                      ),
+                      builder: (_) => DeleteAccountDialog(isGoogleUser: _isGoogleUser),
                     );
                   },
                 ),
@@ -341,21 +318,21 @@ class _SettingsScreen extends State<SettingsScreen> {
               ),
 
               tiles: <SettingsTile>[
-                  SettingsTile.navigation(
+                SettingsTile.navigation(
                   leading: NeonIcon(Icons.info_outline),
                   title: const Text('Licenses'),
                   onPressed: (context) {
                     showLicensePage(
                       context: context,
-                      applicationName: 'Identiflora'
+                      applicationName: 'Identiflora',
                     );
-                  } 
+                  },
                 ),
               ],
             ),
           ],
         ),
-      )
+      ),
     );
   }
 }
@@ -371,27 +348,33 @@ class ChangeEmail extends StatefulWidget {
 }
 
 class _ChangeEmailState extends State<ChangeEmail> {
+  final currentPasswordControl = TextEditingController();
   final newEmailControl = TextEditingController();
+  bool currentPassIsObscured = true;
 
   void confirmPressed() async {
+    final currentPassword = currentPasswordControl.text.trim();
     final newEmail = newEmailControl.text.trim();
 
-    if (newEmail.isEmpty) {
+    if (currentPassword.isEmpty || newEmail.isEmpty) {
+      errorPopupMessage(context, "Please complete all fields!", null);
+
+      return;
+    } else if (!validEmail(newEmail)) {
       errorPopupMessage(
-        context, 
-        "Please complete all fields!", 
-        null
+        context,
+        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}",
+        Duration(seconds: 8),
       );
 
       return;
     }
-    else if (!validEmail(newEmail)) {
-      errorPopupMessage(
-        context, 
-        "Emails cannot be less than 5 characters and must contain '@' and '.'\n\nAdditionally, emails cannot contain any of the following:\n${printBlacklistedChars()}", 
-        Duration(seconds: 8)
-      );
 
+    final storedHash = await getPasswordHash();
+    if (storedHash == null || hashPassword(currentPassword) != storedHash) {
+      if (mounted) {
+        errorPopupMessage(context, "Incorrect password.", null);
+      }
       return;
     }
 
@@ -409,26 +392,35 @@ class _ChangeEmailState extends State<ChangeEmail> {
       }
     } catch (err) {
       if (mounted) {
-        errorPopupMessage(
-          context, 
-          "Failed to update email: $err", 
-          null
-        );
+        errorPopupMessage(context, "Failed to update email: $err", null);
       }
     }
-}
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text("Change Email")
-      ),
+      appBar: AppBar(centerTitle: true, title: const Text("Change Email")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            NeonInputField(
+              controller: currentPasswordControl,
+              labelText: "Current Password",
+              obscureText: currentPassIsObscured,
+              suffixIcon: IconButton(
+                onPressed: () => setState(
+                  () => currentPassIsObscured = !currentPassIsObscured,
+                ),
+                icon: Icon(
+                  currentPassIsObscured
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             NeonInputField(controller: newEmailControl, labelText: "New Email"),
             const SizedBox(height: 16),
             SizedBox(
@@ -455,60 +447,64 @@ class ChangePassword extends StatefulWidget {
 }
 
 class _ChangePasswordState extends State<ChangePassword> {
+  final currentPasswordControl = TextEditingController();
   final newPasswordControl = TextEditingController();
   final confirmPasswordControl = TextEditingController();
+  bool currentPassIsObscured = true;
   bool passIsObscured = true;
 
   void confirmPressed() async {
+    final currentPassword = currentPasswordControl.text.trim();
     final password = newPasswordControl.text.trim();
     final confirm = confirmPasswordControl.text.trim();
 
-    if(password.isEmpty) {
+    if (currentPassword.isEmpty || password.isEmpty) {
+      errorPopupMessage(context, "Please complete all fields!", null);
+
+      return;
+    } else if (password != confirm) {
+      errorPopupMessage(context, "Password confirm does not match!", null);
+
+      return;
+    } else if (!validPassword(password)) {
       errorPopupMessage(
-        context, 
-        "Please complete all fields!", 
-        null
+        context,
+        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}",
+        Duration(seconds: 8),
       );
 
       return;
     }
-    else if (password != confirm) {
-      errorPopupMessage(
-        context, 
-        "Password confirm does not match!", 
-        null
-      );
-      
-      return;
-    }
-    else if(!validPassword(password)) {
-      errorPopupMessage(
-        context, 
-        "Passwords cannot be less than 4 characters or contain any of the following:\n${printBlacklistedChars()}", 
-        Duration(seconds: 8)
-      );
 
+    final storedHash = await getPasswordHash();
+    if (storedHash == null || hashPassword(currentPassword) != storedHash) {
+      if (mounted) {
+        errorPopupMessage(context, "Incorrect password.", null);
+      }
       return;
     }
 
     try {
       final hashedPassword = hashPassword(password);
-      
-      bool success = await submitPasswordChange(newPasswordHash: hashedPassword);
+
+      bool success = await submitPasswordChange(
+        newPasswordHash: hashedPassword,
+      );
 
       if (success && mounted) {
+        await savePasswordHash(hashedPassword);
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Successfully updated password!"), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text("Successfully updated password!"),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.pop(context);
       }
     } catch (err) {
       if (mounted) {
-        errorPopupMessage(
-          context, 
-          "Error: $err", 
-          null
-        );
+        errorPopupMessage(context, "Error: $err", null);
       }
     }
   }
@@ -516,43 +512,180 @@ class _ChangePasswordState extends State<ChangePassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text("Change Password")
-      ),
+      appBar: AppBar(centerTitle: true, title: const Text("Change Password")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             NeonInputField(
-              controller: newPasswordControl, 
-              labelText: "New Password",
-              obscureText: passIsObscured,
+              controller: currentPasswordControl,
+              labelText: "Current Password",
+              obscureText: currentPassIsObscured,
               suffixIcon: IconButton(
-                onPressed: () => setState(() => passIsObscured = !passIsObscured), 
-                icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
+                onPressed: () => setState(
+                  () => currentPassIsObscured = !currentPassIsObscured,
+                ),
+                icon: Icon(
+                  currentPassIsObscured
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            
             NeonInputField(
-              controller: confirmPasswordControl, 
+              controller: newPasswordControl,
+              labelText: "New Password",
+              obscureText: passIsObscured,
+              suffixIcon: IconButton(
+                onPressed: () =>
+                    setState(() => passIsObscured = !passIsObscured),
+                icon: Icon(
+                  passIsObscured
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            NeonInputField(
+              controller: confirmPasswordControl,
               labelText: "Confirm New Password",
               obscureText: passIsObscured,
               suffixIcon: IconButton(
-                onPressed: () => setState(() => passIsObscured = !passIsObscured), 
-                icon: Icon(passIsObscured ? Icons.visibility_outlined : Icons.visibility_off_outlined)
+                onPressed: () =>
+                    setState(() => passIsObscured = !passIsObscured),
+                icon: Icon(
+                  passIsObscured
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            
-            NeonOutlinedButton(
-              onPressed: confirmPressed, 
-              labelText: "Confirm"
-            ),
+
+            NeonOutlinedButton(onPressed: confirmPressed, labelText: "Confirm"),
           ],
         ),
       ),
+    );
+  }
+}
+
+class DeleteAccountDialog extends StatefulWidget {
+  const DeleteAccountDialog({super.key, required this.isGoogleUser});
+
+  final bool isGoogleUser;
+
+  @override
+  State<DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
+  final passwordControl = TextEditingController();
+  bool passIsObscured = true;
+  bool confirmed = false;
+
+  @override
+  void dispose() {
+    passwordControl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onDeletePressed() async {
+    if (widget.isGoogleUser) {
+      if (!confirmed) {
+        errorPopupMessage(context, "Please check the confirmation box to proceed.", null);
+        return;
+      }
+    } else {
+      final entered = passwordControl.text.trim();
+      if (entered.isEmpty) {
+        errorPopupMessage(context, "Please enter your password.", null);
+        return;
+      }
+      final storedHash = await getPasswordHash();
+      if (!mounted) return;
+      if (storedHash == null || hashPassword(entered) != storedHash) {
+        errorPopupMessage(context, "Incorrect password.", null);
+        return;
+      }
+    }
+
+    try {
+      final success = await submitDeleteAccount();
+      if (!mounted) return;
+      if (success) {
+        await deleteAuthToken();
+        UserDataService().clear();
+        if (!mounted) return;
+        Navigator.popUntil(context, ModalRoute.withName('/'));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Account deleted successfully"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      errorPopupMessage(context, "Error: $e", null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Delete Account?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'This action is permanent. All your plant submissions, points, and badges will be lost forever.',
+          ),
+          const SizedBox(height: 16),
+          if (widget.isGoogleUser)
+            Row(
+              children: [
+                Checkbox(
+                  value: confirmed,
+                  onChanged: (value) => setState(() => confirmed = value ?? false),
+                ),
+                const Expanded(
+                  child: Text('I understand this action cannot be undone.'),
+                ),
+              ],
+            )
+          else ...[
+            const Text('You must enter your password to complete this action.'),
+            const SizedBox(height: 12),
+            NeonInputField(
+              controller: passwordControl,
+              labelText: 'Enter password',
+              obscureText: passIsObscured,
+              suffixIcon: IconButton(
+                onPressed: () => setState(() => passIsObscured = !passIsObscured),
+                icon: Icon(
+                  passIsObscured
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: _onDeletePressed,
+          child: const Text('Delete', style: TextStyle(color: Colors.red)),
+        ),
+      ],
     );
   }
 }
