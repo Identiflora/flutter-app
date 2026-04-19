@@ -218,6 +218,41 @@ Future<void> deleteQueuedIncorrectIDs() async {
   await storage.delete(key: 'incorrect_id_queue_count');
 }
 
+Future<List<Map<String, dynamic>>> _getRecentIdentifications() async {
+  final raw = await storage.read(key: 'recent_identifications');
+  if (raw == null) return [];
+  return List<Map<String, dynamic>>.from(jsonDecode(raw));
+}
+
+Future<void> _saveRecentIdentifications(List<Map<String, dynamic>> list) async {
+  await storage.write(key: 'recent_identifications', value: jsonEncode(list));
+}
+
+/// Returns true if the identification is allowed (species not seen in the last 30 min).
+/// Prunes stale entries and, if allowed, records the new identification.
+Future<bool> checkAndRecordIdentification(String scientificName) async {
+  final now = DateTime.now();
+  final cutoff = now.subtract(const Duration(minutes: 30));
+
+  List<Map<String, dynamic>> entries = await _getRecentIdentifications();
+
+  entries = entries.where((e) {
+    final ts = DateTime.parse(e['timestamp'] as String);
+    return ts.isAfter(cutoff);
+  }).toList();
+
+  final alreadySeen = entries.any((e) => e['scientific_name'] == scientificName);
+
+  if (alreadySeen) {
+    await _saveRecentIdentifications(entries);
+    return false;
+  }
+
+  entries.add({'scientific_name': scientificName, 'timestamp': now.toIso8601String()});
+  await _saveRecentIdentifications(entries);
+  return true;
+}
+
 /// Clears all cached user data. Call on logout to prevent stale data from
 /// appearing for the next user session.
 Future<void> clearUserCache() async {
