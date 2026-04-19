@@ -9,6 +9,24 @@ String localPlantAssetPath(String scientificName) {
   return 'assets/plant_images/identiflora_one_image_per_plant/$fileName.webp';
 }
 
+void showCooldownDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Already Identified'),
+      content: const Text(
+        'You identified this plant recently. Please wait 30 minutes before identifying the same plant again.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+          child: const Text('OK'),
+        ),
+      ],
+    ),
+  );
+}
+
 /// Returns an error popup based on error string and optional duration
 /// ```dart
 /// ScaffoldMessenger.of(context).showSnackBar(
