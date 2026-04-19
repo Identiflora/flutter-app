@@ -1053,6 +1053,119 @@ Future<List<Map<String, dynamic>>> fetchFriends() async {
   return raw.map((e) => (e as Map).cast<String, dynamic>()).toList();
 }
 
+//updated friends
+Future<List<dynamic>> fetchPendingFriendsRaw() async {
+  final apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/friends/pending');
+
+  final client = HttpClient();
+  try {
+    final request = await client.getUrl(uri);
+    request.headers.set(
+      HttpHeaders.authorizationHeader,
+      'Bearer ${await getAuthToken()}',
+    );
+
+    final response = await request.close();
+    final body = await utf8.decodeStream(response);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final decoded = jsonDecode(body);
+
+      if (decoded is List) return decoded;
+      if (decoded is Map && decoded['pending_requests'] is List) {
+        return decoded['pending_requests'] as List;
+      }
+
+      throw FormatException('Unexpected /friends/pending response: $decoded');
+    } else {
+      throw HttpException('API error ${response.statusCode}: $body', uri: uri);
+    }
+  } finally {
+    client.close(force: true);
+  }
+}
+
+Future<List<Map<String, dynamic>>> fetchPendingFriends() async {
+  final raw = await fetchPendingFriendsRaw();
+  return raw.map((e) => (e as Map).cast<String, dynamic>()).toList();
+}
+
+Future<void> acceptFriendRequestRaw({required int requesterId}) async {
+  final apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(
+    apiBaseUrl,
+  ).resolve('/friends/accept?requester_id=$requesterId');
+
+  final client = HttpClient();
+  try {
+    final request = await client.postUrl(uri);
+    request.headers.set(
+      HttpHeaders.authorizationHeader,
+      'Bearer ${await getAuthToken()}',
+    );
+    request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+
+    final response = await request.close();
+    final body = await utf8.decodeStream(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw HttpException('API error ${response.statusCode}: $body', uri: uri);
+    }
+  } finally {
+    client.close(force: true);
+  }
+}
+
+Future<void> rejectFriendRequestRaw({required int requesterId}) async {
+  final apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(
+    apiBaseUrl,
+  ).resolve('/friends/reject?requester_id=$requesterId');
+
+  final client = HttpClient();
+  try {
+    final request = await client.postUrl(uri);
+    request.headers.set(
+      HttpHeaders.authorizationHeader,
+      'Bearer ${await getAuthToken()}',
+    );
+    request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+
+    final response = await request.close();
+    final body = await utf8.decodeStream(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw HttpException('API error ${response.statusCode}: $body', uri: uri);
+    }
+  } finally {
+    client.close(force: true);
+  }
+}
+
+Future<void> deleteFriendRaw({required int friendId}) async {
+  final apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve('/friends?friend_id=$friendId');
+
+  final client = HttpClient();
+  try {
+    final request = await client.deleteUrl(uri);
+    request.headers.set(
+      HttpHeaders.authorizationHeader,
+      'Bearer ${await getAuthToken()}',
+    );
+
+    final response = await request.close();
+    final body = await utf8.decodeStream(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw HttpException('API error ${response.statusCode}: $body', uri: uri);
+    }
+  } finally {
+    client.close(force: true);
+  }
+}
+
 // Get the current user's region
 Future<String> getUserRegion() async {
   String apiBaseUrl = Environment.apiUrl;
