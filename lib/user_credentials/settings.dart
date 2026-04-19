@@ -214,7 +214,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                   enabled: !_isGoogleUser,
                   leading: NeonIcon(Icons.email),
                   title: const Text('Change Email'),
-                  value: _isGoogleUser
+                  description: _isGoogleUser
                       ? const Text('Not available for Google accounts')
                       : null,
                   onPressed: (context) {
@@ -231,7 +231,7 @@ class _SettingsScreen extends State<SettingsScreen> {
                   enabled: !_isGoogleUser,
                   leading: NeonIcon(Icons.password),
                   title: const Text('Change Password'),
-                  value: _isGoogleUser
+                  description: _isGoogleUser
                       ? const Text('Not available for Google accounts')
                       : null,
                   onPressed: (context) {
