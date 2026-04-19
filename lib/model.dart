@@ -12,7 +12,7 @@ class OfflinePlantService {
   static const int INPUT_SIZE = 224;
   static const int NUM_CHANNELS = 3;
   // added this for when the # of classes changes after transfer learning
-  static const int NUM_CLASSES = 1081;
+  static const int NUM_CLASSES = 589;
 
   // PlantNet Standard Normalization
   static const List<double> MEAN = [0.485, 0.456, 0.406];
@@ -72,7 +72,7 @@ class OfflinePlantService {
     var inputTensor = input.reshape([1, 3, INPUT_SIZE, INPUT_SIZE]); 
     
     // Run Inference
-    var outputTensor = List.filled(1 * NUM_CLASSES, 0.0).reshape([1, 1081]);
+    var outputTensor = List.filled(1 * NUM_CLASSES, 0.0).reshape([1, 589]);
     _interpreter!.run(inputTensor, outputTensor);
 
     // Parse Output with Softmax
