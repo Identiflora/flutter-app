@@ -1,12 +1,14 @@
 ﻿# flutter-app
-All the actual Flutter app code for [Identiflora](https://identifloraapp.wordpress.com/). Please setup the following to use this app directly off GitHub. Although, some setup may also require steps outlined in the [identiflora-api](https://github.com/Identiflora/identiflora-api) and [identiflora-database](https://github.com/Identiflora/identiflora-database) as well.
 
-# Google Cloud Setup
+All the actual Flutter app code for [Identiflora](https://identifloraapp.wordpress.com/). Please setup the following to use this app directly off GitHub code. Although, some setup may also require steps outlined in the [identiflora-api](https://github.com/Identiflora/identiflora-api) and [identiflora-database](https://github.com/Identiflora/identiflora-database) as well.
+
+## Google Cloud Setup
+
 [Google Cloud](https://cloud.google.com/) is required to have any form of contact with Google's API, such as for the "Sign in with Google" button. Currently, the only steps required to setup Google Cloud for Identiflora is to make a personalized [Android keystore](https://docs.flutter.dev/deployment/android#create-an-upload-keystore) and client IDs for both the debug and release versions. However, this key must be accessed through build channels, which requires some additional setup.
 
 Note that this is a pretty extensive process and if you do not have about 30 minutes to an hour to do this in one sitting then I would suggest waiting until you do. The app will function perfectly fine as long as you do not plan to use a release version for testing or click the "Sign in with Google" button.
 
-<u>Pre-Google Cloud Setup</u> (Keystore)
+### Pre-Google Cloud Setup (Keystore)
 1. Open terminal (or CMD) and navigate to "android" directory within the "flutter-app" local repo location.
 2. Open .txt file or any document and create a password for your keystore. This is the same password you will copy into the terminal in the next step. DO NOT CLOSE THIS BUT SAVE THIS SOMEWHERE YOU CAN FIND IT LATER.
 3. Run this command and copy over password from step 2 (DO NOT ANSWER ANY OTHER PROMPTS WITHOUT VIEWING STEP 4):
@@ -43,7 +45,7 @@ Note that this is a pretty extensive process and if you do not have about 30 min
   9. **VERY IMPORTANT!** Verify that both your keystore file (.jks) and key.properties are ignored by Git. This should be done automatically as Flutter has built in ignores for any .jks and key.properties. No repository should contain these files as that is a breach of security.
 <br></br>
 
-<u>Google Cloud Setup</u> (Client IDs)
+### Google Cloud Setup (Client IDs)
 1. Log onto [Google Cloud console](https://console.cloud.google.com/) and setup an account, if needed.
 2. Click "Select a Project" on the top left and create a new project (top right of pop up window). This can be named whatever you want.
 3. Click "Select Project" in notification window, after project is finished being created. 
@@ -78,7 +80,7 @@ Note that this is a pretty extensive process and if you do not have about 30 min
 10. Replace the placeholder values (`YOUR_IOS_CLIENT_ID...`) with your actual iOS Client ID and Reversed Client ID respectively.
 <br></br>
 
-# Environment
+## Environment(s) Setup
 
 The environment class (in lib/environment.dart) is setup to allow easy swapping between local development and cloud testing. There are just a couple of things to complete locally to set it up. 
 
@@ -95,62 +97,13 @@ The environment class (in lib/environment.dart) is setup to allow easy swapping 
 
 ***WARNING:*** Make sure to follow the Google Cloud setup steps above BEFORE adding Google variables from ".env.example" to any environment. It will also explain the process of why they are neededed in more detail.
 
-## Usage:
+### Usage:
 
 If you need to add a new environment variable for any reason, you must add it to all of the `.env` files, and add a get method for it in the Environment class. 
 
 Once a get method is implemented, environment variables can be accessed using Environment.exampleVariable. 
+<br></br>
 
+## Google Maps Setup
 
-
-# BELOW INFORMATION IS OUTDATED AND NEEDS TO BE MOVED
-
-# GBIF Data Formatting Script
-
-This script prepares a subset of the GBIF / Pl@ntNet dataset for model training. It:
-
-1. Reads **`occurrence.txt`** and **`multimedia.txt`** from the GBIF Darwin Core Archive.
-2. Merges them on **`gbifID`** to attach scientific names to each image.
-3. Filters out non-image or invalid records.
-4. Selects species such that:
-   - Every selected species has **at least 3 images**.
-   - The **total number of images** never exceeds a user-specified limit.
-5. Splits images into **train / validation / test**, ensuring:
-   - All three splits contain the **same set of species**.
-   - Each species appears **at least once** in each split.
-   - The number of images per species may vary between splits.
-6. Downloads the images into a folder structure compatible with `torchvision.datasets.ImageFolder`.
-
-## Requirements
-
-### Python
-
-- Tested on Python 3.10.5.
-
-### Dependencies
-
-- pandas version 2.3.3
-- requests version 2.32.5
-
-Dependencies can be installed locally by running the following command:
-
-  ```pip install -r requirements.txt```
-
-## Running the script
-
-To run the script, run the following command:
-
-```
-python .\Model\data_formatting\format_gbif_data.py 
-  --dwca_dir "\path_to_dataset_dir"
-  --output_dir "\path_to_desired_output_location" 
-  --max_images 500 
-  --max_multimedia_rows 500 
-  --max_occurence_rows 500
-```
-
-where dwca_dir is the path to the directory containing the GBIF dataset, and output_dir is the desired output location of the image folder.
-
-
-
-
+Google Maps is used to display plant identification geolocation data of where the plant was identified. To setup Google Maps, get an [API key from Google](https://mapsplatform.google.com/) and add it to your environment file under "MAPS_API_KEY" variable name, as shown in the env.example. Additionally, enter this API key into your Android local.properties file as "maps.api.key" variable name.
