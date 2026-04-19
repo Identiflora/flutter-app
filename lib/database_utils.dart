@@ -986,7 +986,7 @@ Future<String> getUsername() async {
 
 Future<List<dynamic>> fetchFriendsRaw() async {
   final apiBaseUrl = Environment.apiUrl;
-  final uri = Uri.parse(apiBaseUrl).resolve('/friends');
+  final uri = Uri.parse('$apiBaseUrl/friends');
 
   final client = HttpClient();
   try {
