@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/theme/neon_theme.dart';
 
 // friends button
 class FriendsHomescreenButton extends StatelessWidget {
@@ -39,9 +40,6 @@ class FriendsScreen extends StatefulWidget {
 
 class _FriendsScreenState extends State<FriendsScreen> {
   late Future<FriendsPageData> _pageFuture;
-
-  static const Color themeGreen = Color(0xFF4CAF50);
-  static const Color lightGreen = Color(0xFFE8F5E9);
 
   @override
   void initState() {
@@ -256,19 +254,14 @@ Future<void> _addFriendDialog() async {
     }
   }
 
-  Widget _sectionHeader(String title, IconData icon) {
+  Widget _sectionHeader(BuildContext context, String title, IconData icon) {
+    final neonTheme = Theme.of(context).extension<NeonTheme>();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: themeGreen,
+        color: Theme.of(context).colorScheme.primary,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: neonTheme?.containerGlow ?? [],
       ),
       child: Row(
         children: [
@@ -287,12 +280,12 @@ Future<void> _addFriendDialog() async {
     );
   }
 
-  Widget _emptyCard(String text) {
+  Widget _emptyCard(BuildContext context, String text) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: lightGreen,
+        color: Theme.of(context).colorScheme.surfaceBright,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Text(
@@ -302,7 +295,9 @@ Future<void> _addFriendDialog() async {
     );
   }
 
-  Widget _friendTile(FriendUser friend) {
+  Widget _friendTile(BuildContext context, FriendUser friend) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final surfaceBright = Theme.of(context).colorScheme.surfaceBright;
     return Card(
       elevation: 1.5,
       margin: const EdgeInsets.only(bottom: 10),
@@ -310,11 +305,11 @@ Future<void> _addFriendDialog() async {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         leading: CircleAvatar(
-          backgroundColor: lightGreen,
+          backgroundColor: surfaceBright,
           child: Text(
             friend.username.isNotEmpty ? friend.username[0].toUpperCase() : "?",
-            style: const TextStyle(
-              color: themeGreen,
+            style: TextStyle(
+              color: primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -326,14 +321,16 @@ Future<void> _addFriendDialog() async {
         subtitle: Text("User ID: ${friend.id}"),
         trailing: IconButton(
           tooltip: "Remove friend",
-          icon: const Icon(Icons.close, color: Colors.redAccent),
+          icon: Icon(Icons.close, color: Theme.of(context).colorScheme.error),
           onPressed: () => _confirmDeleteFriend(friend),
         ),
       ),
     );
   }
 
-  Widget _pendingTile(FriendUser requester) {
+  Widget _pendingTile(BuildContext context, FriendUser requester) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final surfaceBright = Theme.of(context).colorScheme.surfaceBright;
     return Card(
       elevation: 1.5,
       margin: const EdgeInsets.only(bottom: 10),
@@ -341,13 +338,13 @@ Future<void> _addFriendDialog() async {
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         leading: CircleAvatar(
-          backgroundColor: lightGreen,
+          backgroundColor: surfaceBright,
           child: Text(
             requester.username.isNotEmpty
                 ? requester.username[0].toUpperCase()
                 : "?",
-            style: const TextStyle(
-              color: themeGreen,
+            style: TextStyle(
+              color: primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -362,12 +359,12 @@ Future<void> _addFriendDialog() async {
           children: [
             IconButton(
               tooltip: "Accept",
-              icon: const Icon(Icons.check_circle, color: Colors.green),
+              icon: Icon(Icons.check_circle, color: primary),
               onPressed: () => _acceptRequest(requester),
             ),
             IconButton(
               tooltip: "Reject",
-              icon: const Icon(Icons.cancel, color: Colors.redAccent),
+              icon: Icon(Icons.cancel, color: Theme.of(context).colorScheme.error),
               onPressed: () => _rejectRequest(requester),
             ),
           ],
@@ -379,7 +376,7 @@ Future<void> _addFriendDialog() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7FBF7),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: IconButton(
@@ -387,7 +384,7 @@ Future<void> _addFriendDialog() async {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Friends'),
-        backgroundColor: themeGreen,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         elevation: 2,
         actions: [
@@ -398,7 +395,7 @@ Future<void> _addFriendDialog() async {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: themeGreen,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         onPressed: _addFriendDialog,
         child: const Icon(Icons.person_add, color: Colors.white),
       ),
@@ -408,7 +405,11 @@ Future<void> _addFriendDialog() async {
           future: _pageFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              );
             }
 
             if (snapshot.hasError) {
@@ -425,19 +426,19 @@ Future<void> _addFriendDialog() async {
 
             return ListView(
               children: [
-                _sectionHeader("Friends", Icons.group),
+                _sectionHeader(context, "Friends", Icons.group),
                 const SizedBox(height: 12),
                 if (friends.isEmpty)
-                  _emptyCard("No friends yet.")
+                  _emptyCard(context, "No friends yet.")
                 else
-                  ...friends.map(_friendTile),
+                  ...friends.map((f) => _friendTile(context, f)),
                 const SizedBox(height: 24),
-                _sectionHeader("Pending Friends", Icons.hourglass_top),
+                _sectionHeader(context, "Pending Friends", Icons.hourglass_top),
                 const SizedBox(height: 12),
                 if (pending.isEmpty)
-                  _emptyCard("No pending friend requests.")
+                  _emptyCard(context, "No pending friend requests.")
                 else
-                  ...pending.map(_pendingTile),
+                  ...pending.map((r) => _pendingTile(context, r)),
                 const SizedBox(height: 90),
               ],
             );
