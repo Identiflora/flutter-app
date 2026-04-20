@@ -8,6 +8,7 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 class OfflinePlantService {
   Interpreter? _interpreter;
   List<String>? _labels;
+  List<String>? _commonNames;
 
   static const int INPUT_SIZE = 224;
   static const int NUM_CHANNELS = 3;
@@ -26,6 +27,10 @@ class OfflinePlantService {
       // Load the scientific name labels
       final labelData = await rootBundle.loadString('assets/model/labels.txt');
       _labels = labelData.split('\n');
+
+      // Load the common name labels
+      final commonNameData = await rootBundle.loadString('assets/model/common_names.txt');
+      _commonNames = commonNameData.split('\n');
     } catch (e) {
       // whatever error handling we go with
     }
@@ -87,8 +92,9 @@ class OfflinePlantService {
         'class_index': i,
         // this saves the confidence score as a converted percentage, it might be more sound to save
         // the raw score and then apply the softmax when its actually needed but idk
-        'score': probabilities[i], 
+        'score': probabilities[i],
         'label': _labels != null ? _labels![i] : 'Class $i',
+        'common_name': getCommonName(i),
       });
     }
 
@@ -97,6 +103,13 @@ class OfflinePlantService {
     // screen will display in order of confidence score inherently
     sortedResults.sort((a, b) => (b['score'] as double).compareTo(a['score']));
 
-    return sortedResults.take(5).toList(); 
+    return sortedResults.take(5).toList();
+  }
+
+  String getCommonName(int current_idx) {
+    if (_commonNames == null || current_idx < 0 || current_idx >= _commonNames!.length) {
+      return '';
+    }
+    return _commonNames![current_idx];
   }
 }
