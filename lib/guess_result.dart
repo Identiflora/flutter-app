@@ -102,11 +102,15 @@ class _Results extends State<ResultsWidget> {
     int addPoints,
   ) async {
     final historyResult = await saveHistory(userPickedName);
+    bool allowed = false;
 
-    // Determine if identification is unique and save to recent if not.
-    // This is a second check where the first is defined in camera_utils
-    final topLabel = widget.allPredictions[widget.correctIndex]['label'];
-    final allowed = await checkAndRecordIdentification(topLabel);
+    if (historyResult == "success") {
+      // Determine if identification is unique and save to recent if not.
+      // This is a second check where the first is defined in camera_utils
+      final topLabel = widget.allPredictions[widget.correctIndex]['label'];
+      allowed = await checkAndRecordIdentification(topLabel);
+    }
+    
 
     final pointsToAdd = isCorrect && allowed && historyResult == "success" ? addPoints : 0;
     submitUserGlobalPoints(addPoints: pointsToAdd).then((result) {
