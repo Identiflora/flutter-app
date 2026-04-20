@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/user_credentials/auth_objects.dart';
@@ -54,11 +55,34 @@ class HistoryPage extends StatefulWidget {
 
 class _HistoryPageState extends State<HistoryPage> {
   late Future<List<Map<String, dynamic>>> _historyFuture;
+  Map<String, String> _commonNameMap = {};
+
+  Future<Map<String, String>> _loadCommonNameMap() async {
+    final labelData = await rootBundle.loadString('assets/model/labels.txt');
+    final commonData = await rootBundle.loadString('assets/model/common_names.txt');
+    final labels = labelData.split('\n');
+    final commons = commonData.split('\n');
+    final map = <String, String>{};
+    for (int i = 0; i < labels.length && i < commons.length; i++) {
+      final parts = labels[i].trim().split('_');
+      if (parts.length < 2) continue;
+      final key = '${parts[0]}_${parts[1]}';
+      final val = commons[i].trim();
+      if (val.isNotEmpty) map[key] = val;
+    }
+    return map;
+  }
 
   @override
   void initState() {
     super.initState();
-      _historyFuture = fetchSubmissionHistory();
+    _historyFuture = Future.wait([
+      fetchSubmissionHistory(),
+      _loadCommonNameMap(),
+    ]).then((results) {
+      _commonNameMap = results[1] as Map<String, String>;
+      return results[0] as List<Map<String, dynamic>>;
+    });
     // _historyFuture = Future.error(AuthException("Your session has timed out", statusCode: 401));
   }
 
@@ -142,7 +166,13 @@ class _HistoryPageState extends State<HistoryPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item['species_name']?.toUpperCase() ?? 'UNKNOWN PLANT',
+                      () {
+                        final sciParts = (item['scientific_name']?.toString() ?? '').split(' ');
+                        final sciKey = sciParts.length >= 2 ? '${sciParts[0]}_${sciParts[1]}' : sciParts.join('_');
+                        return (_commonNameMap[sciKey]?.isNotEmpty == true
+                            ? _commonNameMap[sciKey]!
+                            : item['species_name'] as String? ?? 'Unknown Plant').toUpperCase();
+                      }(),
                       style: TextStyle(
                         color: theme.colorScheme.primary,
                         fontSize: 20.0,
