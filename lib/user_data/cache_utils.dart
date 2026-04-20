@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:identiflora/user_data/history_utils.dart';
 
@@ -51,6 +52,38 @@ Future<int?> getUserPts() async {
 /// Delete the user's points off of their device
 Future<void> deleteUserPts() async {
   await storage.delete(key: 'points');
+}
+
+/// Store points earned while offline, to be flushed to the server on reconnect.
+/// This is a delta (points to add), not the user's total.
+Future<void> saveQueuedPts(int pts) async {
+  await storage.write(key: 'points_queue', value: pts.toString());
+}
+
+/// Get the queued offline points delta.
+Future<int?> getQueuedPts() async {
+  String? str = await storage.read(key: 'points_queue');
+  return str != null ? int.tryParse(str) : null;
+}
+
+/// Delete the queued offline points delta after it has been submitted.
+Future<void> deleteQueuedPts() async {
+  await storage.delete(key: 'points_queue');
+}
+
+/// Store the user's hashed password on the device for local verification
+Future<void> savePasswordHash(String hash) async {
+  await storage.write(key: 'password_hash', value: hash);
+}
+
+/// Get the user's stored password hash
+Future<String?> getPasswordHash() async {
+  return await storage.read(key: 'password_hash');
+}
+
+/// Delete the user's stored password hash
+Future<void> deletePasswordHash() async {
+  await storage.delete(key: 'password_hash');
 }
 
 /// Store the user's badge filepath on the device for later use
@@ -144,4 +177,94 @@ Future<int?> getOfflineUserHistoryCount() async {
 /// Delete the user's offline history count off of their device
 Future<void> deleteOfflineUserHistoryCount() async {
   await storage.delete(key: 'history_count');
+}
+
+Future<void> _saveQueuedIncorrectIDCount(int count) async {
+  await storage.write(key: 'incorrect_id_queue_count', value: count.toString());
+}
+
+Future<int?> _getQueuedIncorrectIDCount() async {
+  String? str = await storage.read(key: 'incorrect_id_queue_count');
+  return str != null ? int.tryParse(str) : null;
+}
+
+Future<void> saveQueuedIncorrectID(QueuedIncorrectID item) async {
+  int count = (await _getQueuedIncorrectIDCount()) ?? 0;
+  count++;
+  await storage.write(key: 'incorrect_id_queue_$count', value: jsonEncode(item.toJson()));
+  await _saveQueuedIncorrectIDCount(count);
+  debugPrint('[Cache] saveQueuedIncorrectID: saved at index $count imagePath=${item.imagePath}');
+}
+
+Future<List<QueuedIncorrectID>?> getQueuedIncorrectIDs() async {
+  final int? count = await _getQueuedIncorrectIDCount();
+  if (count == null) return null;
+
+  final List<QueuedIncorrectID> items = [];
+  for (int i = 1; i <= count; i++) {
+    final String? json = await storage.read(key: 'incorrect_id_queue_$i');
+    if (json == null) throw FormatException('Unable to get queued incorrect ID for index $i');
+    items.add(QueuedIncorrectID.fromJson(jsonDecode(json)));
+  }
+  return items;
+}
+
+Future<void> deleteQueuedIncorrectIDs() async {
+  final int? count = await _getQueuedIncorrectIDCount();
+  if (count == null) return;
+  for (int i = count; i > 0; i--) {
+    await storage.delete(key: 'incorrect_id_queue_$i');
+  }
+  await storage.delete(key: 'incorrect_id_queue_count');
+}
+
+Future<List<Map<String, dynamic>>> _getRecentIdentifications() async {
+  final raw = await storage.read(key: 'recent_identifications');
+  if (raw == null) return [];
+  return List<Map<String, dynamic>>.from(jsonDecode(raw));
+}
+
+Future<void> _saveRecentIdentifications(List<Map<String, dynamic>> list) async {
+  await storage.write(key: 'recent_identifications', value: jsonEncode(list));
+}
+
+/// Returns true if the identification is allowed (species not seen in the last 30 min).
+/// Prunes stale entries and, if allowed, records the new identification.
+Future<bool> checkAndRecordIdentification(String scientificName) async {
+  final now = DateTime.now();
+  final cutoff = now.subtract(const Duration(minutes: 30));
+
+  List<Map<String, dynamic>> entries = await _getRecentIdentifications();
+
+  entries = entries.where((e) {
+    final ts = DateTime.parse(e['timestamp'] as String);
+    return ts.isAfter(cutoff);
+  }).toList();
+
+  final alreadySeen = entries.any((e) => e['scientific_name'] == scientificName);
+
+  if (alreadySeen) {
+    await _saveRecentIdentifications(entries);
+    return false;
+  }
+
+  entries.add({'scientific_name': scientificName, 'timestamp': now.toIso8601String()});
+  await _saveRecentIdentifications(entries);
+  return true;
+}
+
+/// Clears all cached user data. Call on logout to prevent stale data from
+/// appearing for the next user session.
+Future<void> clearUserCache() async {
+  await Future.wait([
+    deleteAuthToken(),
+    deleteUsername(),
+    deleteUserPts(),
+    deleteUserBadge(),
+    deleteUserNumFriends(),
+    deleteQueuedPts(),
+    deleteUserHistory(),
+    deleteQueuedIncorrectIDs(),
+    deletePasswordHash(),
+  ]);
 }

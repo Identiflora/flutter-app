@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:identiflora/model.dart';
 import 'package:identiflora/user_guess.dart';
+import 'package:identiflora/theme/general_utils.dart';
 import 'package:identiflora/theme/neon_theme.dart';
+import 'package:identiflora/user_data/cache_utils.dart';
 
 /// Get camera info from phone
 Future<CameraDescription> getCamera() async {
@@ -242,13 +244,20 @@ class DisplayPictureScreen extends StatelessWidget {
           List<Map<String, dynamic>> results = await _plantService.predict(
             File(imgPath),
           );
+          final topLabel = results[0]['label'] as String;
+          final allowed = await checkAndRecordIdentification(topLabel);
+          // ignore: use_build_context_synchronously
+          if (!allowed) {
+            if (context.mounted) showCooldownDialog(context);
+            return;
+          }
           // Navigate to next page
-          Navigator.push(
+          Navigator.pushReplacement(
             // ignore: use_build_context_synchronously
             context,
             MaterialPageRoute<void>(
               // This is also the location to pass the taken photo to the model and will require rescalling or cropping before this point
-              builder: (context) => UserChoiceScreen(predictions: results),
+              builder: (context) => UserChoiceScreen(predictions: results, capturedImagePath: imgPath),
             ),
           );
         },

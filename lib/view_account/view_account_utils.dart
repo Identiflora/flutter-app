@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/friends_utils.dart';
+import 'package:identiflora/user_data/user_data_service.dart';
 import 'package:identiflora/user_data/badge_utils.dart';
 import 'package:identiflora/user_data/point_utils.dart';
 import 'level_bottom_sheet.dart';
@@ -35,50 +36,123 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
   String username = " ";
   String selectedBadgeFilePath = 'assets/brand/Identiflora_logo.png';
 
-  int numFriends = 15; //need to calculate number of friends in initState
+  int numFriends = 0;
 
   @override
   void initState() {
     super.initState();
+    _loadFromService();
+    _refreshInBackground();
+    _loadFriendCount();
+  }
 
-    _getPlayerPoints().then((response) {
+  void _loadFromService() {
+    final svc = UserDataService();
+    playerPoints = svc.points;
+    username = svc.username.isNotEmpty ? svc.username : ' ';
+    if (svc.badgePath.isNotEmpty) selectedBadgeFilePath = svc.badgePath;
+    levelData = calculateAccountLevel(playerPoints);
+    normalizedPlayerPoints = normalize(
+      levelData.value[1].toDouble(),
+      0,
+      levelData.value[0].toDouble(),
+    );
+    playerLevel = levelData.key;
+  }
+
+  Future<void> _loadFriendCount() async {
+    try {
+      final rawFriends = await fetchFriendsRaw();
+      if (!mounted) return;
+
       setState(() {
-        playerPoints = response;
-        levelData = calculateAccountLevel(playerPoints);
-        normalizedPlayerPoints = normalize(
-          levelData.value[1].toDouble(),
-          0,
-          levelData.value[0].toDouble(),
+        numFriends = rawFriends.length;
+      });
+    } catch (e) {
+      // optional: handle error
+    }
+  }
+
+  void _refreshInBackground() {
+    UserDataService().refresh().then((_) {
+      if (!mounted) return;
+      setState(_loadFromService);
+    });
+  }
+
+  Future<void> _showUsernameDialog() async {
+    final controller = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Change Username'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'Enter new username'),
+            maxLength: 16,
+            textInputAction: TextInputAction.done,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final newUsername = controller.text.trim();
+                if (newUsername == username.trim()) {
+                  Navigator.of(dialogContext).pop();
+                  await showDialog<void>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('Same Username'),
+                      content: const Text(
+                        'The new username must be different from your current username.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                  return;
+                }
+                Navigator.of(dialogContext).pop();
+                try {
+                  final success = await submitUsernameChange(newUsername: newUsername);
+                  if (success && mounted) {
+                    UserDataService().updateUsername(newUsername);
+                    setState(() => username = newUsername);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Username updated!'),
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to update username: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text('Submit'),
+            ),
+          ],
         );
-        playerLevel = levelData.key;
-      });
-    });
-
-    _getPlayerUsername().then((response) {
-      setState(() {
-        username = response;
-      });
-    });
-
-    _getPlayerSelectedBadge().then((response) {
-      setState(() {
-        if (response.isNotEmpty) {
-          selectedBadgeFilePath = response;
-        }
-      });
-    });
-  }
-
-  Future<int> _getPlayerPoints() async {
-    return await getUserPoints();
-  }
-
-  Future<String> _getPlayerUsername() async {
-    return await getUsername();
-  }
-
-  Future<String> _getPlayerSelectedBadge() async {
-    return await fetchUserBadge();
+      },
+    );
+    controller.dispose();
   }
 
   @override
@@ -127,9 +201,7 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                 const SizedBox(width: 56.0),
                 Text(username, style: TextStyle(fontSize: 30.0)),
                 IconButton(
-                  onPressed: () {
-                    //takes you to edit username
-                  },
+                  onPressed: () => _showUsernameDialog(),
                   icon: NeonIcon(Icons.edit),
                 ),
                 SizedBox(width: 8.0),
@@ -251,10 +323,6 @@ class BadgesDisplay extends StatefulWidget {
 class _BadgesDisplayState extends State<BadgesDisplay> {
   String selectedBadgeFilePath = '';
 
-  Future<String> _getPlayerSelectedBadge() async {
-    return await fetchUserBadge();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -262,11 +330,7 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
     if (widget.selectedBadge != null) {
       selectedBadgeFilePath = widget.selectedBadge!;
     } else {
-      _getPlayerSelectedBadge().then((response) {
-        setState(() {
-          selectedBadgeFilePath = response;
-        });
-      });
+      selectedBadgeFilePath = UserDataService().badgePath;
     }
   }
 
@@ -283,14 +347,21 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isTablet = screenWidth >= 600;
+    final int crossAxisCount = isTablet ? 6 : 4;
+    final double badgeRadius = isTablet ? 20.0 : 25.0;
+    final double spacing = isTablet ? 10.0 : 15.0;
+    final double padding = isTablet ? 12.0 : 16.0;
+
     return GridView.builder(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.all(padding),
       physics: const BouncingScrollPhysics(),
       itemCount: widget.badges.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4, // Number of badges per row
-        crossAxisSpacing: 15.0, // Horizontal space between badges
-        mainAxisSpacing: 15.0, // Vertical space between rows
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: spacing,
+        mainAxisSpacing: spacing,
       ),
       itemBuilder: (context, index) {
         AccountBadge badge = widget.badges[index];
@@ -299,18 +370,17 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
           onTap: () async {
             if (widget.isReadOnly) return;
             if (badge.isUnlocked(widget.playerLevel)) {
-              // Run API based selection logic here
+              final previousBadge = selectedBadgeFilePath;
+              setState(() {
+                selectedBadgeFilePath = badge.imagePath;
+              });
+              UserDataService().updateBadge(badge.imagePath);
+              if (widget.onBadgeSelected != null) {
+                widget.onBadgeSelected!(badge.imagePath);
+              }
+
               try {
                 await submitUserBadge(badgeFilePath: badge.imagePath);
-
-                setState(() {
-                  selectedBadgeFilePath = badge.imagePath;
-                });
-
-                if (widget.onBadgeSelected != null) {
-                  widget.onBadgeSelected!(badge.imagePath);
-                }
-
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -321,6 +391,13 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
                   );
                 }
               } catch (error) {
+                setState(() {
+                  selectedBadgeFilePath = previousBadge;
+                });
+                UserDataService().updateBadge(previousBadge);
+                if (widget.onBadgeSelected != null) {
+                  widget.onBadgeSelected!(previousBadge);
+                }
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -344,6 +421,8 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
             badge,
             badge.isUnlocked(widget.playerLevel),
             selectedBadgeFilePath == badge.imagePath,
+            badgeRadius: badgeRadius,
+            isTablet: isTablet,
           ),
         );
       },

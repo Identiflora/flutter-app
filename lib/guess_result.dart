@@ -5,6 +5,7 @@ import 'package:identiflora/theme/general_utils.dart';
 import 'model_incorrect.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
+import 'package:identiflora/user_data/user_data_service.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
 
 class ResultsWidget extends StatefulWidget {
@@ -12,14 +13,16 @@ class ResultsWidget extends StatefulWidget {
   final int correctIndex;
   final List<Map<String, dynamic>> allPredictions;
   final List<Map<String, dynamic>> orderedPredictions;
-  final String imgURL;
+  final String scientificName;
+  final String capturedImagePath;
 
   const ResultsWidget({
     required this.userChoiceIndex,
     required this.correctIndex,
     required this.allPredictions,
     required this.orderedPredictions,
-    required this.imgURL,
+    required this.scientificName,
+    required this.capturedImagePath,
     super.key,
   });
 
@@ -84,9 +87,7 @@ class _Results extends State<ResultsWidget> {
         userGuess: userPickedName,
         latitude: lat,
         longitude: lng,
-        imgUrl: widget.imgURL,
       );
-
       return "success";
     } catch (error) {
       // Error is surfaced to loading screen
@@ -94,15 +95,18 @@ class _Results extends State<ResultsWidget> {
     }
   }
 
-  /// Formats an error string for both history and saving points
-  String formatCombinedErrorString(String? historyError) {
-    if (historyError != null && historyError.contains("not authenticated")) {
-      return "Please log in then try again to save plant history and update earned points.";
-    } else if (historyError != null) {
-      return "History had error meaning points were not added: $historyError";
-    }
-
-    return "History had unexpected non-fatal error.";
+  Future<String> _saveHistoryAndFirePoints(
+    String userPickedName,
+    bool isCorrect,
+    int addPoints,
+  ) async {
+    final historyResult = await saveHistory(userPickedName);
+    final pointsToAdd =
+        isCorrect && historyResult == "success" ? addPoints : 0;
+    submitUserGlobalPoints(addPoints: pointsToAdd).then((result) {
+      if (result) UserDataService().refreshPoints();
+    });
+    return historyResult;
   }
 
   @override
@@ -124,18 +128,7 @@ class _Results extends State<ResultsWidget> {
     }
 
     final bool isCorrect = widget.userChoiceIndex == widget.correctIndex;
-
-    // correct color based off themeing with a hard dark red for incorrect
-    final Color incorrectColor = Theme.of(context).colorScheme.error;
-    final Color correctColor = Theme.of(context).colorScheme.secondary;
-
-    const TextStyle mainTextStyle = TextStyle(fontSize: 22, height: 1.2);
-
-    final TextStyle plantNameStyle = mainTextStyle.copyWith(
-      fontWeight: FontWeight.bold,
-    );
-
-    final int addPoints = 1;
+    const int addPoints = 3;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Results'), centerTitle: true),
@@ -147,78 +140,11 @@ class _Results extends State<ResultsWidget> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: mainTextStyle,
-                      children: <TextSpan>[
-                        if (isCorrect) ...[
-                          // Correct guess
-                          TextSpan(
-                            text: "You said this plant is a\n",
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).textTheme.displayMedium!.color,
-                            ),
-                          ),
-                          TextSpan(
-                            text: userPickedName,
-                            style: plantNameStyle.copyWith(color: correctColor),
-                          ),
-                          TextSpan(
-                            text: "\nand were correct!",
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).textTheme.displayMedium!.color,
-                            ),
-                          ),
-                        ] else if (widget.userChoiceIndex != -1) ...[
-                          // Incorrect guess
-                          TextSpan(
-                            text: "You said this plant is a\n",
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).textTheme.displayMedium!.color,
-                            ),
-                          ),
-                          TextSpan(
-                            text: "$userPickedName...\n",
-                            style: plantNameStyle.copyWith(
-                              color: incorrectColor,
-                            ),
-                          ),
-                          TextSpan(
-                            text: "but it is actually a\n",
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).textTheme.displayMedium!.color,
-                            ),
-                          ),
-                          TextSpan(
-                            text: modelTopName,
-                            style: plantNameStyle.copyWith(color: correctColor),
-                          ),
-                        ] else ...[
-                          // Skipped Guess
-                          TextSpan(
-                            text: "This plant is a\n",
-                            style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).textTheme.displayMedium!.color,
-                            ),
-                          ),
-                          TextSpan(
-                            text: modelTopName,
-                            style: plantNameStyle.copyWith(color: correctColor),
-                          ),
-                        ],
-                      ],
-                    ),
+                  ResultText(
+                    isCorrect: isCorrect,
+                    userChoiceIndex: widget.userChoiceIndex,
+                    userPickedName: userPickedName,
+                    modelTopName: modelTopName,
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
@@ -229,11 +155,11 @@ class _Results extends State<ResultsWidget> {
                         borderRadius: const BorderRadius.all(
                           Radius.elliptical(15, 15),
                         ),
-                        child:
-                            (widget.imgURL == "" ||
-                                widget.imgURL.startsWith("https://placeholder"))
-                            ? const Placeholder()
-                            : Image.network(widget.imgURL, fit: BoxFit.cover),
+                        child: Image.asset(
+                          localPlantAssetPath(widget.scientificName),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Placeholder(),
+                        ),
                       ),
                     ),
                   ),
@@ -242,90 +168,19 @@ class _Results extends State<ResultsWidget> {
                   const Text(
                     'Does this look correct?',
                     textAlign: TextAlign.center,
-                    style: mainTextStyle,
+                    style: TextStyle(fontSize: 22, height: 1.2),
                   ),
 
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      // Yes Button
-                      Expanded(
-                        child: DisabledButton(
-                          enableCondition: true,
-                          labelText: 'Yes',
-                          textColor: correctColor,
-                          onPressed: () async {
-                            // Nested loading screens to handle saving plant history and adding points
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => LoadingScreen.withNav(
-                                  loadingMsg:
-                                      "Please wait while we save your latest identification...",
-                                  foundMsg:
-                                      "Identification saved! One moment...",
-                                  errorMsg:
-                                      "We could not find your account to save plant history. Please check that you are logged in.",
-                                  futureFunction: saveHistory(userPickedName),
-                                  postLoadingBuilder:
-                                      (
-                                        context,
-                                        historyResult,
-                                      ) => LoadingScreen<bool>.withPop(
-                                        loadingMsg:
-                                            "Please wait while we update your points...",
-                                        foundMsg:
-                                            "Points updated! One moment...",
-                                        errorMsg: historyResult == "success"
-                                            ? isCorrect
-                                                  ? "Sorry, we couldn't update your points! Please try again later."
-                                                  : ""
-                                            : formatCombinedErrorString(
-                                                historyResult!,
-                                              ),
-                                        futureFunction: submitUserGlobalPoints(
-                                          addPoints:
-                                              isCorrect &&
-                                                  historyResult == "success"
-                                              ? addPoints
-                                              : 0, // Enforce errors and incorrect case
-                                        ),
-                                        postLoadingPop: ModalRoute.withName(
-                                          "/",
-                                        ),
-                                        popErrorScreenButton: null,
-                                        popOnError: true,
-                                        // If points returns false, make sure error is surfaced
-                                        valueEqualCheck: true,
-                                      ),
-                                  navigateOnError: true,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      // No Button
-                      Expanded(
-                        // Would like to eventually change to neon outlined buttons, red outline for no
-                        child: DisabledButton(
-                          enableCondition: true,
-                          labelText: 'No',
-                          textColor: incorrectColor,
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TopMatchesWidget(
-                                  predictions: widget.allPredictions,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                  GuessResultActionButtons(
+                    onYesTap: () => _saveHistoryAndFirePoints(
+                      userPickedName,
+                      isCorrect,
+                      addPoints,
+                    ),
+                    allPredictions: widget.allPredictions,
+                    correctIndex: widget.correctIndex,
+                    capturedImagePath: widget.capturedImagePath,
                   ),
                   const Spacer(),
                 ],
@@ -344,6 +199,156 @@ class _Results extends State<ResultsWidget> {
               minBlastForce: 50,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class GuessResultActionButtons extends StatelessWidget {
+  final Future<String> Function() onYesTap;
+  final List<Map<String, dynamic>> allPredictions;
+  final int correctIndex;
+  final String capturedImagePath;
+
+  const GuessResultActionButtons({
+    required this.onYesTap,
+    required this.allPredictions,
+    required this.correctIndex,
+    required this.capturedImagePath,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color correctColor = Theme.of(context).colorScheme.secondary;
+    final Color incorrectColor = Theme.of(context).colorScheme.error;
+
+    return Row(
+      children: [
+        Expanded(
+          child: DisabledButton(
+            enableCondition: true,
+            labelText: 'Yes',
+            textColor: correctColor,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LoadingScreen<String>.withPop(
+                    loadingMsg:
+                        "Please wait while we save your latest identification...",
+                    foundMsg: "Identification saved! One moment...",
+                    errorMsg:
+                        "We could not find your account to save plant history. Please check that you are logged in.",
+                    futureFunction: onYesTap(),
+                    postLoadingPop: ModalRoute.withName("/"),
+                    popErrorScreenButton: null,
+                    popOnError: true,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(width: 16),
+        // Would like to eventually change to neon outlined buttons, red outline for no
+        Expanded(
+          child: DisabledButton(
+            enableCondition: true,
+            labelText: 'No',
+            textColor: incorrectColor,
+            onPressed: () async {
+              if (context.mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TopMatchesWidget(
+                      predictions: allPredictions,
+                      correctIndex: correctIndex,
+                      capturedImagePath: capturedImagePath,
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ResultText extends StatelessWidget {
+  final bool isCorrect;
+  final int userChoiceIndex;
+  final String userPickedName;
+  final String modelTopName;
+
+  const ResultText({
+    required this.isCorrect,
+    required this.userChoiceIndex,
+    required this.userPickedName,
+    required this.modelTopName,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const TextStyle mainTextStyle = TextStyle(fontSize: 22, height: 1.2);
+    final TextStyle plantNameStyle = mainTextStyle.copyWith(
+      fontWeight: FontWeight.bold,
+    );
+    final Color correctColor = Theme.of(context).colorScheme.secondary;
+    final Color incorrectColor = Theme.of(context).colorScheme.error;
+    final Color defaultTextColor =
+        Theme.of(context).textTheme.displayMedium!.color!;
+
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        style: mainTextStyle,
+        children: <TextSpan>[
+          if (isCorrect) ...[
+            TextSpan(
+              text: "You said this plant is a\n",
+              style: TextStyle(color: defaultTextColor),
+            ),
+            TextSpan(
+              text: userPickedName,
+              style: plantNameStyle.copyWith(color: correctColor),
+            ),
+            TextSpan(
+              text: "\nand were correct!",
+              style: TextStyle(color: defaultTextColor),
+            ),
+          ] else if (userChoiceIndex != -1) ...[
+            TextSpan(
+              text: "You said this plant is a\n",
+              style: TextStyle(color: defaultTextColor),
+            ),
+            TextSpan(
+              text: "$userPickedName...\n",
+              style: plantNameStyle.copyWith(color: incorrectColor),
+            ),
+            TextSpan(
+              text: "but it is actually a\n",
+              style: TextStyle(color: defaultTextColor),
+            ),
+            TextSpan(
+              text: modelTopName,
+              style: plantNameStyle.copyWith(color: correctColor),
+            ),
+          ] else ...[
+            TextSpan(
+              text: "This plant is a\n",
+              style: TextStyle(color: defaultTextColor),
+            ),
+            TextSpan(
+              text: modelTopName,
+              style: plantNameStyle.copyWith(color: correctColor),
+            ),
+          ],
         ],
       ),
     );

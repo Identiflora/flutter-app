@@ -9,9 +9,10 @@ import 'package:identiflora/user_credentials/account_utils.dart';
 import 'package:identiflora/user_credentials/sign_up.dart';
 import 'auth_objects.dart';
 import '../user_data/cache_utils.dart';
+import '../user_data/user_data_service.dart';
 import 'dart:math';
 import 'package:identiflora/widgets/neon_widgets.dart';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform, HttpException;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -105,6 +106,10 @@ class _LoginFormState extends State<LoginForm> {
         );
         return false;
       }
+    } on AuthException {
+      rethrow;
+    } on HttpException {
+      rethrow;
     } catch (error) {
       hasOTPError = true;
       if (mounted) {
@@ -122,6 +127,12 @@ class _LoginFormState extends State<LoginForm> {
 
       //SAVE AUTHTOKEN TO DEVICE
       await saveAuthToken(token.accessToken);
+      await savePasswordHash(hashedPassword);
+      await UserDataService().init();
+    } on AuthException {
+      rethrow;
+    } on HttpException {
+      rethrow;
     } catch (err) {
       if (mounted && !hasOTPError && !err.toString().contains("401")) {
         errorPopupMessage(context, "Login failed: $err", null);
@@ -192,9 +203,15 @@ class _LoginFormState extends State<LoginForm> {
       );
 
       await saveAuthToken(token.accessToken);
+      await UserDataService().init();
 
       return true;
-    } catch (error) {
+    } on AuthException {
+      rethrow;
+    } on HttpException {
+      rethrow;
+    }
+    catch (error) {
       if (context.mounted) {
         errorPopupMessage(context, "Login failed: $error", null);
       }

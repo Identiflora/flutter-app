@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:identiflora/database_utils.dart';
-import 'package:identiflora/theme/general_utils.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'guess_result.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
 
 class UserChoiceScreen extends StatefulWidget {
   final List<Map<String, dynamic>> predictions;
+  final String capturedImagePath;
 
-  const UserChoiceScreen({super.key, required this.predictions});
+  const UserChoiceScreen({super.key, required this.predictions, required this.capturedImagePath});
 
   @override
   State<StatefulWidget> createState() => _UserChoiceScreen();
 }
 
 class _UserChoiceScreen extends State<UserChoiceScreen> {
-  late String imgURL;
   int? userChoice; // do need this though
   late final String correctChoice;
   late final List<Map<String, dynamic>> orderedPredictions;
@@ -142,25 +140,17 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
                       enableCondition: userChoice != null,
                       labelText: 'Confirm Selection',
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => LoadingScreen<String>.withNav(
-                              loadingMsg: "Please wait while we retrieve this identification information...", 
-                              foundMsg: "Identification information found! One moment...", 
-                              errorMsg: "Unable to find identification information. One moment...", 
-                              futureFunction: getPlantSpeciesUrl(
-                                scientificName: widget.predictions[correctIndex]['label']
-                              ),
-                              postLoadingBuilder: (context, imgURL) => ResultsWidget(
-                                userChoiceIndex: userChoice!,
-                                correctIndex: correctIndex,
-                                allPredictions: widget.predictions,
-                                orderedPredictions: orderedPredictions,
-                                imgURL: imgURL ?? "",
-                              ),
-                              navigateOnError: true,
-                            )
+                            builder: (context) => ResultsWidget(
+                              userChoiceIndex: userChoice!,
+                              correctIndex: correctIndex,
+                              allPredictions: widget.predictions,
+                              orderedPredictions: orderedPredictions,
+                              scientificName: widget.predictions[correctIndex]['label'],
+                              capturedImagePath: widget.capturedImagePath,
+                            ),
                           ),
                         );
                       },
@@ -174,22 +164,14 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => LoadingScreen<String>.withNav(
-                              loadingMsg: "Please wait while we retrieve this identification information...", 
-                              foundMsg: "Identification information found! One moment...", 
-                              errorMsg: "Unable to find identification information. One moment...", 
-                              futureFunction: getPlantSpeciesUrl(
-                                scientificName: widget.predictions[correctIndex]['label']
-                              ),
-                              postLoadingBuilder: (context, imgURL) => ResultsWidget(
-                                userChoiceIndex: -1,
-                                correctIndex: correctIndex,
-                                allPredictions: widget.predictions,
-                                orderedPredictions: orderedPredictions,
-                                imgURL: imgURL ?? "",
-                              ), 
-                              navigateOnError: true,
-                            )
+                            builder: (context) => ResultsWidget(
+                              userChoiceIndex: -1,
+                              correctIndex: correctIndex,
+                              allPredictions: widget.predictions,
+                              orderedPredictions: orderedPredictions,
+                              scientificName: widget.predictions[correctIndex]['label'],
+                              capturedImagePath: widget.capturedImagePath,
+                            ),
                           ),
                         );
                       },

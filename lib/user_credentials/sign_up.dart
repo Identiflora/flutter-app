@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
@@ -6,6 +7,7 @@ import 'package:identiflora/theme/general_utils.dart';
 import 'package:identiflora/user_credentials/account_utils.dart';
 import 'auth_objects.dart';
 import '../user_data/cache_utils.dart';
+import '../user_data/user_data_service.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 
 List<String> getRegions() {
@@ -96,9 +98,16 @@ class _SignUpFormState extends State<SignUpForm> {
       
       //SAVE AUTHTOKEN TO DEVICE
       await saveAuthToken(token.accessToken);
+      await savePasswordHash(hashedPassword);
+      await UserDataService().init();
 
       return true;
-    } catch (err) {
+    } on AuthException {
+      rethrow;
+    } on HttpException {
+      rethrow;
+    }
+    catch (err) {
       if (mounted) {
         errorPopupMessage(context, "Login failed: $err", null);
       }

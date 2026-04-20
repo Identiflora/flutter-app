@@ -1,37 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
 
-//friends button
+// friends button
 class FriendsHomescreenButton extends StatelessWidget {
   const FriendsHomescreenButton({super.key});
 
   @override
- Widget build(BuildContext context) {
-
+  Widget build(BuildContext context) {
     return SafeArea(
       child: Align(
         alignment: Alignment.bottomRight,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-    
-            child: TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FriendsScreen()),
-                );
-              }, //end child text button
-              child: const Text ("Friends",
+          child: TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FriendsScreen()),
+              );
+            },
+            child: const Text(
+              "Friends",
               style: TextStyle(fontSize: 18),
-              ), //end child text button
             ),
+          ),
         ),
       ),
     );
-  } //end build widget
-} // end FriendsHomescreenButton
+  }
+}
 
-//screen you navigate to
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({super.key});
 
@@ -39,28 +37,38 @@ class FriendsScreen extends StatefulWidget {
   State<FriendsScreen> createState() => _FriendsScreenState();
 }
 
-
 class _FriendsScreenState extends State<FriendsScreen> {
-  late Future<List<FriendUser>> _friendsFuture;
+  late Future<FriendsPageData> _pageFuture;
 
   @override
   void initState() {
     super.initState();
-    _friendsFuture = _loadFriends();
+    _pageFuture = _loadPageData();
   }
 
-  Future<List<FriendUser>> _loadFriends() async {
-    final raw = await fetchFriendsRaw(); 
-    return raw
+  Future<FriendsPageData> _loadPageData() async {
+    final rawFriends = await fetchFriendsRaw();
+    final rawPending = await fetchPendingFriendsRaw();
+
+    final friends = rawFriends
         .map((e) => FriendUser.fromJson((e as Map).cast<String, dynamic>()))
         .toList();
+
+    final pending = rawPending
+        .map((e) => FriendUser.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+
+    return FriendsPageData(
+      friends: friends,
+      pendingRequests: pending,
+    );
   }
 
   Future<void> _refresh() async {
     setState(() {
-      _friendsFuture = _loadFriends();
+      _pageFuture = _loadPageData();
     });
-    await _friendsFuture;
+    await _pageFuture;
   }
 
   Future<void> _addFriendDialog() async {
@@ -69,10 +77,14 @@ class _FriendsScreenState extends State<FriendsScreen> {
     final username = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text("Add friend"),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(labelText: "Friend username"),
+          decoration: const InputDecoration(
+            labelText: "Friend username",
+            border: OutlineInputBorder(),
+          ),
           autofocus: true,
         ),
         actions: [
@@ -91,10 +103,10 @@ class _FriendsScreenState extends State<FriendsScreen> {
     if (username == null || username.isEmpty) return;
 
     try {
-      await addFriendRaw(friendUsername: username); // from database_utils.dart
+      await addFriendRaw(friendUsername: username);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Added $username")),
+        SnackBar(content: Text("Friend request sent to $username")),
       );
       await _refresh();
     } catch (e) {
@@ -105,60 +117,267 @@ class _FriendsScreenState extends State<FriendsScreen> {
     }
   }
 
+  Future<void> _confirmDeleteFriend(FriendUser friend) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("Remove friend"),
+        content: Text(
+          "Are you sure you would like to remove ${friend.username} as a friend?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Remove"),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true) return;
+
+    try {
+      await deleteFriendRaw(friendId: friend.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("${friend.username} removed")),
+      );
+      await _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to delete friend: $e")),
+      );
+    }
+  }
+
+  Future<void> _acceptRequest(FriendUser requester) async {
+    try {
+      await acceptFriendRequestRaw(requesterId: requester.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Accepted ${requester.username}")),
+      );
+      await _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to accept request: $e")),
+      );
+    }
+  }
+
+  Future<void> _rejectRequest(FriendUser requester) async {
+    try {
+      await rejectFriendRequestRaw(requesterId: requester.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Rejected ${requester.username}")),
+      );
+      await _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to reject request: $e")),
+      );
+    }
+  }
+
+  Widget _sectionHeader(String title, IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.primary,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.onSurface.withOpacity(0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: colorScheme.onPrimary),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyCard(String text) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceBright,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 15),
+      ),
+    );
+  }
+
+  Widget _friendTile(FriendUser friend) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      elevation: 1.5,
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        leading: CircleAvatar(
+          backgroundColor: colorScheme.surfaceBright,
+          child: Text(
+            friend.username.isNotEmpty ? friend.username[0].toUpperCase() : "?",
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        title: Text(
+          friend.username,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text("User ID: ${friend.id}"),
+        trailing: IconButton(
+          tooltip: "Remove friend",
+          icon: Icon(Icons.close, color: colorScheme.error),
+          onPressed: () => _confirmDeleteFriend(friend),
+        ),
+      ),
+    );
+  }
+
+  Widget _pendingTile(FriendUser requester) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      elevation: 1.5,
+      margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        leading: CircleAvatar(
+          backgroundColor: colorScheme.surfaceBright,
+          child: Text(
+            requester.username.isNotEmpty
+                ? requester.username[0].toUpperCase()
+                : "?",
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        title: Text(
+          requester.username,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Text("User ID: ${requester.id}"),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: "Accept",
+              icon: Icon(Icons.check_circle, color: colorScheme.primary),
+              onPressed: () => _acceptRequest(requester),
+            ),
+            IconButton(
+              tooltip: "Reject",
+              icon: Icon(Icons.cancel, color: colorScheme.error),
+              onPressed: () => _rejectRequest(requester),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text('Friends'),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        elevation: 2,
         actions: [
-          IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh)),
+          IconButton(
+            onPressed: _refresh,
+            icon: const Icon(Icons.refresh),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: colorScheme.primary,
         onPressed: _addFriendDialog,
-        child: const Icon(Icons.person_add),
+        child: Icon(Icons.person_add, color: colorScheme.onPrimary),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: FutureBuilder<List<FriendUser>>(
-          future: _friendsFuture,
+        child: FutureBuilder<FriendsPageData>(
+          future: _pageFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasData && snapshot.data != null) {
-              final friends = snapshot.data!;
-              if (friends.isEmpty) {
-                return const Center(
-                  child: Text(
-                    "No friends yet.\nTap + to add one.",
-                    textAlign: TextAlign.center,
-                  ),
-                );
-              }
+            }
 
-              return ListView.separated(
-                itemCount: friends.length,
-                separatorBuilder: (_, __) => const Divider(),
-                itemBuilder: (context, index) {
-                  final f = friends[index];
-                  return ListTile(
-                    title: Text(f.username),
-                    subtitle: Text("id: ${f.id}"),
-                  );
-                },
-              );
-            } else if (snapshot.hasError) {
+            if (snapshot.hasError) {
               return Center(
                 child: Text(
                   "Error loading friends:\n${snapshot.error}",
                   textAlign: TextAlign.center,
                 ),
               );
-            } else {
-              return const Center(
-                child: Text("No friends found."),
-              );
             }
+
+            final friends = snapshot.data?.friends ?? [];
+            final pending = snapshot.data?.pendingRequests ?? [];
+
+            return ListView(
+              children: [
+                _sectionHeader("Friends", Icons.group),
+                const SizedBox(height: 12),
+                if (friends.isEmpty)
+                  _emptyCard("No friends yet.")
+                else
+                  ...friends.map(_friendTile),
+                const SizedBox(height: 24),
+                _sectionHeader("Pending Friends", Icons.hourglass_top),
+                const SizedBox(height: 12),
+                if (pending.isEmpty)
+                  _emptyCard("No pending friend requests.")
+                else
+                  ...pending.map(_pendingTile),
+                const SizedBox(height: 90),
+              ],
+            );
           },
         ),
       ),
@@ -166,7 +385,15 @@ class _FriendsScreenState extends State<FriendsScreen> {
   }
 }
 
+class FriendsPageData {
+  final List<FriendUser> friends;
+  final List<FriendUser> pendingRequests;
 
+  FriendsPageData({
+    required this.friends,
+    required this.pendingRequests,
+  });
+}
 
 class FriendUser {
   final int id;
