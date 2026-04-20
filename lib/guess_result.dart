@@ -2,6 +2,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/theme/general_utils.dart';
+import 'package:identiflora/user_data/cache_utils.dart';
 import 'model_incorrect.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
@@ -101,11 +102,21 @@ class _Results extends State<ResultsWidget> {
     int addPoints,
   ) async {
     final historyResult = await saveHistory(userPickedName);
-    final pointsToAdd =
-        isCorrect && historyResult == "success" ? addPoints : 0;
+    bool allowed = false;
+
+    if (historyResult == "success") {
+      // Determine if identification is unique and save to recent if not.
+      // This is a second check where the first is defined in camera_utils
+      final topLabel = widget.allPredictions[widget.correctIndex]['label'];
+      allowed = await checkAndRecordIdentification(topLabel);
+    }
+    
+
+    final pointsToAdd = isCorrect && allowed && historyResult == "success" ? addPoints : 0;
     submitUserGlobalPoints(addPoints: pointsToAdd).then((result) {
       if (result) UserDataService().refreshPoints();
     });
+    
     return historyResult;
   }
 
@@ -113,14 +124,18 @@ class _Results extends State<ResultsWidget> {
   Widget build(BuildContext context) {
     final Map<String, dynamic> topMatch =
         widget.allPredictions[widget.correctIndex];
-    final String modelTopName = topMatch['label'];
+    final String modelTopName = (topMatch['common_name'] as String).isNotEmpty
+        ? topMatch['common_name'] as String
+        : topMatch['label'] as String;
     final Map<String, dynamic> userPick;
     String userPickedName = "";
 
     // Check for bounds and skip case
     if (widget.userChoiceIndex <= 4 && widget.userChoiceIndex >= 0) {
       userPick = widget.allPredictions[widget.userChoiceIndex];
-      userPickedName = userPick['label'];
+      userPickedName = (userPick['common_name'] as String).isNotEmpty
+          ? userPick['common_name'] as String
+          : userPick['label'] as String;
     }
 
     final bool isCorrect = widget.userChoiceIndex == widget.correctIndex;
@@ -232,11 +247,9 @@ class GuessResultActionButtons extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => LoadingScreen<String>.withPop(
-                    loadingMsg:
-                        "Please wait while we save your latest identification...",
+                    loadingMsg: "Please wait while we save your latest identification...",
                     foundMsg: "Identification saved! One moment...",
-                    errorMsg:
-                        "We could not find your account to save plant history. Please check that you are logged in.",
+                    errorMsg: "We could not find your account to save plant history. Please check that you are logged in.",
                     futureFunction: onYesTap(),
                     postLoadingPop: ModalRoute.withName("/"),
                     popErrorScreenButton: null,

@@ -93,7 +93,9 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
                                 borderWidth: 4,
                                 fontSize: 18.0,
                                 fontWeight: FontWeight.bold,
-                                labelText: entry.value['label'],
+                                labelText: (entry.value['common_name'] as String).isNotEmpty
+                                    ? entry.value['common_name'] as String
+                                    : entry.value['label'] as String,
                               )
                             : TextButton(
                                 onPressed: () => selectOption(entry.key),
@@ -116,7 +118,9 @@ class _UserChoiceScreen extends State<UserChoiceScreen> {
                                   elevation: 0,
                                 ),
                                 child: Text(
-                                  entry.value['label'],
+                                  (entry.value['common_name'] as String).isNotEmpty
+                                      ? entry.value['common_name'] as String
+                                      : entry.value['label'] as String,
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
