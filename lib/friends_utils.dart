@@ -74,21 +74,85 @@ class _FriendsScreenState extends State<FriendsScreen> {
     await _pageFuture;
   }
 
-  Future<void> _addFriendDialog() async {
-    final controller = TextEditingController();
+Future<void> _addFriendDialog() async {
+  FriendUser? selectedUser;
 
-    final username = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
+  final result = await showDialog<FriendUser>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text("Add friend"),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: "Friend username",
-            border: OutlineInputBorder(),
+        content: SizedBox(
+          width: 350,
+          child: Autocomplete<FriendUser>(
+            displayStringForOption: (option) => option.username,
+            optionsBuilder: (TextEditingValue textEditingValue) async {
+              final query = textEditingValue.text.trim();
+
+              if (query.isEmpty) {
+                return const Iterable<FriendUser>.empty();
+              }
+
+              try {
+                final raw = await searchUsersRaw(query: query);
+                return raw
+                    .map((e) => FriendUser.fromJson(e))
+                    .toList();
+              } catch (_) {
+                return const Iterable<FriendUser>.empty();
+              }
+            },
+            onSelected: (FriendUser user) {
+              selectedUser = user;
+            },
+            fieldViewBuilder: (
+              context,
+              textEditingController,
+              focusNode,
+              onFieldSubmitted,
+            ) {
+              return TextField(
+                controller: textEditingController,
+                focusNode: focusNode,
+                decoration: const InputDecoration(
+                  labelText: "Friend username",
+                  hintText: "Start typing a username",
+                  border: OutlineInputBorder(),
+                ),
+                autofocus: true,
+              );
+            },
+            optionsViewBuilder: (context, onSelected, options) {
+              final optionsList = options.toList();
+
+              return Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: 350,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 220),
+                      child: ListView.builder(
+                        padding: EdgeInsets.zero,
+                        shrinkWrap: true,
+                        itemCount: optionsList.length,
+                        itemBuilder: (context, index) {
+                          final option = optionsList[index];
+                          return ListTile(
+                            title: Text(option.username),
+                            onTap: () => onSelected(option),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
-          autofocus: true,
         ),
         actions: [
           TextButton(
@@ -96,29 +160,30 @@ class _FriendsScreenState extends State<FriendsScreen> {
             child: const Text("Cancel"),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            onPressed: () => Navigator.pop(context, selectedUser),
             child: const Text("Add"),
           ),
         ],
-      ),
+      );
+    },
+  );
+
+  if (result == null) return;
+
+  try {
+    await addFriendRaw(friendUsername: result.username);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Friend request sent to ${result.username}")),
     );
-
-    if (username == null || username.isEmpty) return;
-
-    try {
-      await addFriendRaw(friendUsername: username);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Friend request sent to $username")),
-      );
-      await _refresh();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to add friend: $e")),
-      );
-    }
+    await _refresh();
+  } catch (e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Failed to add friend: $e")),
+    );
   }
+}
 
   Future<void> _confirmDeleteFriend(FriendUser friend) async {
     final shouldDelete = await showDialog<bool>(
