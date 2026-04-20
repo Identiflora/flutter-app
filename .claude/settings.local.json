@@ -3,8 +3,7 @@
     "allow": [
       "WebFetch(domain:pub.dev)",
       "Bash(flutter analyze:*)",
-      "WebFetch(domain:my.plantnet.org)",
-      "WebFetch(domain:my-api.plantnet.org)"
+      "Bash(flutter analyze *)"
     ]
   }
 }

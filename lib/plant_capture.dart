@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'model.dart';
-import 'theme/general_utils.dart';
-import 'user_data/cache_utils.dart';
 import 'user_guess.dart';
 
 // This doesn't use the main menu camera so maybe we could link it to that later
@@ -43,16 +41,6 @@ class _PlantCaptureScreenState extends State<PlantCaptureScreen> {
       setState(() => _isLoading = false);
 
       if (results.isNotEmpty && mounted) {
-        // Check to see if top label was recently identified
-        final topLabel = results[0]['label'] as String;
-        final allowed = await checkIdentification(topLabel);
-
-        if (!mounted) return;
-        if (!allowed) {
-          showCooldownDialog(context, topLabel);
-          return;
-        }
-        
         Navigator.push(
           context,
           MaterialPageRoute(

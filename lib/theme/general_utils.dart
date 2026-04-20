@@ -4,38 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:identiflora/user_credentials/auth_objects.dart';
 
 String localPlantAssetPath(String scientificName) {
-  // Split by underscore
-  final parts = scientificName.trim().split('_');
-
-  // Safety check: ensure there are at least Genus and species parts
-  if (parts.length < 2) {
-    return 'assets/plant_images/identiflora_one_image_per_plant/placeholder.webp';
-  }
-
-  // Construct the filename using the first two parts (Genus_Species)
-  // NOTE: there is an edge case of the Mentha_×_piperita_L where the x denotes hybrid not the species
-  // might cause issues later but this works for how the local image file is named
+  final parts = scientificName.trim().split(' ');
   final fileName = '${parts[0]}_${parts[1]}';
-  
   return 'assets/plant_images/identiflora_one_image_per_plant/$fileName.webp';
-}
-
-void showCooldownDialog(BuildContext context, String label) {
-  showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: const Text('Already Identified'),
-      content: Text(
-        'You identified $label recently. Please wait 30 minutes before identifying the same plant again.',
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
-          child: const Text('OK'),
-        ),
-      ],
-    ),
-  );
 }
 
 /// Returns an error popup based on error string and optional duration

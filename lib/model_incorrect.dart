@@ -64,11 +64,13 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
   List<PlantMatch> _buildMatches() {
     return widget.predictions.map((pred) {
       return PlantMatch(
-        commonName: (pred['common_name'] as String).isNotEmpty
-            ? pred['common_name'] as String
-            : pred['label'] as String,
+        // no implementation for commonName yet, needs either a second label text document
+        // with common name or get it get from database
+        commonName: 'Common Name TBD',
         scientificName: pred['label'],
         confidenceScore: pred['score'],
+        // maybe plant image could included here as well, still not sure how that will
+        // work with getting it from the database
       );
     }).toList();
   }

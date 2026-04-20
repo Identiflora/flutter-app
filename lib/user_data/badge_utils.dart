@@ -72,28 +72,23 @@ Widget getBadgeDisplay(
   BuildContext context,
   AccountBadge badge,
   bool unlockCondition,
-  bool isSelected, {
-  double badgeRadius = 25.0,
-  bool isTablet = false,
-}) {
+  bool isSelected,
+) {
   return Stack(
     fit: StackFit.expand,
     children: [
       CircleAvatar(
-        radius: badgeRadius,
+        radius: 25.0,
         backgroundColor: Theme.of(context).colorScheme.surfaceBright,
         backgroundImage: badge.displayImage,
         child: unlockCondition
             ? null
-            : Builder(builder: (context) {
-                final double overlayRadius = isTablet ? 80.0 : 50.0;
-                return CircleAvatar(
-                  radius: overlayRadius,
-                  backgroundColor: Colors.black.withAlpha(150),
-                  foregroundColor: Theme.of(context).colorScheme.inversePrimary,
-                  child: Icon(Icons.lock_person_rounded, size: overlayRadius * 0.7),
-                );
-              }),
+            : CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.black.withAlpha(150),
+                foregroundColor: Theme.of(context).colorScheme.inversePrimary,
+                child: Icon(Icons.lock_person_rounded, size: 35),
+              ),
       ),
       isSelected
           ? Positioned(
@@ -108,7 +103,7 @@ Widget getBadgeDisplay(
                 child: Icon(
                   Icons.check,
                   color: Theme.of(context).colorScheme.surface,
-                  size: badgeRadius * 0.8,
+                  size: 20,
                 ),
               ),
             )
