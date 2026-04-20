@@ -335,7 +335,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
       debugPrint('[IncorrectID] Offline — saving to queue');
       await saveQueuedIncorrectID(QueuedIncorrectID(
         allPredictions: allPredictions,
-        userGuess: match.scientificName,
+        userGuess: match.scientificName.replaceAll("_", " "),
         latitude: 0.0,
         longitude: 0.0,
         correctSpeciesSciName: match.scientificName,
@@ -349,7 +349,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
     debugPrint('[IncorrectID] Online — calling savePlantSubmission');
     final int identificationId = await savePlantSubmission(
       allPredictions: allPredictions,
-      userGuess: match.scientificName,
+      userGuess: match.scientificName.replaceAll("_", " "),
       latitude: 0.0,
       longitude: 0.0,
     );
