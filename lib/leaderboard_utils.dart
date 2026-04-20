@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/theme/general_utils.dart';
+import 'package:identiflora/user_data/user_data_service.dart';
 import 'package:identiflora/view_account/view_alternate_account_screen.dart';
 import 'package:identiflora/widgets/leaderboard_widgets.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
@@ -117,7 +118,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     if (leaderboardType == "Global") {
       users = await submitGlobalLeaderboardRequest(leaderboardSize: maxUsers);
     } else if (leaderboardType == "Friends") {
+      // Grab current user's friends in a sorted list
       users = await submitFriendsLeaderboardRequest(leaderboardSize: maxUsers);
+
+      // Construct current user
+      final userData = UserDataService();
+      final LeaderboardUser currentUser = LeaderboardUser(
+        userName: userData.username, 
+        userScore: userData.points, 
+        displayedBadgeFilePath: userData.badgePath
+      );
+
+      // Add current user to friends list
+      users.add(currentUser);
+      users.sort((a, b) => -a.userScore.compareTo(b.userScore));
     } else if (leaderboardType == "Regional") {
       users = await submitRegionalLeaderboardRequest(leaderboardSize: maxUsers);
     } else {
