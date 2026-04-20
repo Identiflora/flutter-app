@@ -152,7 +152,6 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
         );
       },
     );
-    controller.dispose();
   }
 
   @override
