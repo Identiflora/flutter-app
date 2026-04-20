@@ -10,7 +10,6 @@ import 'package:identiflora/user_data/offline_utils.dart';
 import 'user_credentials/auth_objects.dart';
 import 'environment.dart';
 
-final Uri apiBaseUrl = Uri.parse(Environment.apiUrl);
 
 Future<void> submitIncorrectIdentification({
   required int identificationId,
@@ -1148,24 +1147,39 @@ Future<void> rejectFriendRequestRaw({required int requesterId}) async {
 Future<List<Map<String, dynamic>>> searchUsersRaw({
   required String query,
 }) async {
-  final token = await getAuthToken();
-  final uri = apiBaseUrl.resolve('/friends/search?query=${Uri.encodeQueryComponent(query)}');
+  final apiBaseUrl = Environment.apiUrl;
+  final uri = Uri.parse(apiBaseUrl).resolve(
+    '/friends/search?query=${Uri.encodeQueryComponent(query)}',
+  );
 
-  final request = await HttpClient().getUrl(uri);
-  request.headers.set('Authorization', 'Bearer $token');
-  request.headers.set('Accept', 'application/json');
+  final client = HttpClient();
+  try {
+    final request = await client.getUrl(uri);
+    request.headers.set(
+      HttpHeaders.authorizationHeader,
+      'Bearer ${await getAuthToken()}',
+    );
+    request.headers.set(HttpHeaders.acceptHeader, 'application/json');
 
-  final response = await request.close();
-  final body = await response.transform(utf8.decoder).join();
+    final response = await request.close();
+    final body = await utf8.decodeStream(response);
 
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw HttpException('Failed to search users: ${response.statusCode} $body');
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final decoded = jsonDecode(body) as Map<String, dynamic>;
+      final results = (decoded['results'] as List?) ?? [];
+
+      return results
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    } else {
+      throw HttpException(
+        'Failed to search users: ${response.statusCode} $body',
+        uri: uri,
+      );
+    }
+  } finally {
+    client.close(force: true);
   }
-
-  final decoded = jsonDecode(body) as Map<String, dynamic>;
-  final results = (decoded['results'] as List?) ?? [];
-
-  return results.map((e) => (e as Map).cast<String, dynamic>()).toList();
 }
 
 Future<void> deleteFriendRaw({required int friendId}) async {
