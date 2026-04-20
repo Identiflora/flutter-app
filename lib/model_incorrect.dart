@@ -271,7 +271,7 @@ class _PlantCardInfo extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            match.scientificName,
+            match.scientificName.replaceAll("_", " "),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
@@ -454,7 +454,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     Text(
-                      sciName,
+                      sciName.replaceAll("_", " "),
                       style: TextStyle(
                         fontSize: 22,
                         color: Theme.of(context).colorScheme.primary,
