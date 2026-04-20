@@ -10,6 +10,8 @@ import 'package:identiflora/user_data/offline_utils.dart';
 import 'user_credentials/auth_objects.dart';
 import 'environment.dart';
 
+final Uri apiBaseUrl = Uri.parse(Environment.apiUrl);
+
 Future<void> submitIncorrectIdentification({
   required int identificationId,
   required String correctSpeciesSciName,
