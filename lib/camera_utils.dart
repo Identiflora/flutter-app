@@ -244,13 +244,15 @@ class DisplayPictureScreen extends StatelessWidget {
           List<Map<String, dynamic>> results = await _plantService.predict(
             File(imgPath),
           );
+          
+          // Check to see if top label was recently identified
           final topLabel = results[0]['label'] as String;
-          final allowed = await checkAndRecordIdentification(topLabel);
-          // ignore: use_build_context_synchronously
+          final allowed = await checkIdentification(topLabel);
           if (!allowed) {
-            if (context.mounted) showCooldownDialog(context);
+            if (context.mounted) showCooldownDialog(context, topLabel);
             return;
           }
+
           // Navigate to next page
           Navigator.pushReplacement(
             // ignore: use_build_context_synchronously

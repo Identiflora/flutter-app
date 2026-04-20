@@ -43,13 +43,16 @@ class _PlantCaptureScreenState extends State<PlantCaptureScreen> {
       setState(() => _isLoading = false);
 
       if (results.isNotEmpty && mounted) {
+        // Check to see if top label was recently identified
         final topLabel = results[0]['label'] as String;
-        final allowed = await checkAndRecordIdentification(topLabel);
+        final allowed = await checkIdentification(topLabel);
+
         if (!mounted) return;
         if (!allowed) {
-          showCooldownDialog(context);
+          showCooldownDialog(context, topLabel);
           return;
         }
+        
         Navigator.push(
           context,
           MaterialPageRoute(

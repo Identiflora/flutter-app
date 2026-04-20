@@ -228,6 +228,28 @@ Future<void> _saveRecentIdentifications(List<Map<String, dynamic>> list) async {
   await storage.write(key: 'recent_identifications', value: jsonEncode(list));
 }
 
+/// Returns true if the identification is allowed (species not seen in the last 30 min), false otherwise.
+Future<bool> checkIdentification(String scientificName) async {
+  final now = DateTime.now();
+  final cutoff = now.subtract(const Duration(minutes: 30));
+
+  List<Map<String, dynamic>> entries = await _getRecentIdentifications();
+
+  entries = entries.where((e) {
+    final ts = DateTime.parse(e['timestamp'] as String);
+    return ts.isAfter(cutoff);
+  }).toList();
+
+  final alreadySeen = entries.any((e) => e['scientific_name'] == scientificName);
+
+  if (alreadySeen) {
+    await _saveRecentIdentifications(entries);
+    return false;
+  }
+
+  return true;
+}
+
 /// Returns true if the identification is allowed (species not seen in the last 30 min).
 /// Prunes stale entries and, if allowed, records the new identification.
 Future<bool> checkAndRecordIdentification(String scientificName) async {

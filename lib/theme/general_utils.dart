@@ -20,13 +20,13 @@ String localPlantAssetPath(String scientificName) {
   return 'assets/plant_images/identiflora_one_image_per_plant/$fileName.webp';
 }
 
-void showCooldownDialog(BuildContext context) {
+void showCooldownDialog(BuildContext context, String label) {
   showDialog(
     context: context,
     builder: (_) => AlertDialog(
       title: const Text('Already Identified'),
-      content: const Text(
-        'You identified this plant recently. Please wait 30 minutes before identifying the same plant again.',
+      content: Text(
+        'You identified $label recently. Please wait 30 minutes before identifying the same plant again.',
       ),
       actions: [
         TextButton(
