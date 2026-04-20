@@ -202,6 +202,7 @@ class LevelSystemExplanation extends StatelessWidget {
               );
             }),
           ),
+          SizedBox(height: 24,),
         ],
       ),
     );
