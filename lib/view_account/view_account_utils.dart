@@ -347,21 +347,14 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
 
   @override
   Widget build(BuildContext context) {
-    final double screenWidth = MediaQuery.of(context).size.width;
-    final bool isTablet = screenWidth >= 600;
-    final int crossAxisCount = isTablet ? 6 : 4;
-    final double badgeRadius = isTablet ? 20.0 : 25.0;
-    final double spacing = isTablet ? 10.0 : 15.0;
-    final double padding = isTablet ? 12.0 : 16.0;
-
     return GridView.builder(
-      padding: EdgeInsets.all(padding),
+      padding: const EdgeInsets.all(16.0),
       physics: const BouncingScrollPhysics(),
       itemCount: widget.badges.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: spacing,
-        mainAxisSpacing: spacing,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4, // Number of badges per row
+        crossAxisSpacing: 15.0, // Horizontal space between badges
+        mainAxisSpacing: 15.0, // Vertical space between rows
       ),
       itemBuilder: (context, index) {
         AccountBadge badge = widget.badges[index];
@@ -421,8 +414,6 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
             badge,
             badge.isUnlocked(widget.playerLevel),
             selectedBadgeFilePath == badge.imagePath,
-            badgeRadius: badgeRadius,
-            isTablet: isTablet,
           ),
         );
       },
