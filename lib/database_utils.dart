@@ -1054,6 +1054,29 @@ Future<List<Map<String, dynamic>>> fetchFriends() async {
 }
 
 //updated friends
+// Future<List<Map<String, dynamic>>> searchUsersRaw({
+//   required String query,
+// }) async {
+//   final token = await getAuthToken();
+//   final uri = apiBaseUrl.resolve('/friends/search?query=${Uri.encodeQueryComponent(query)}');
+
+//   final request = await HttpClient().getUrl(uri);
+//   request.headers.set('Authorization', 'Bearer $token');
+//   request.headers.set('Accept', 'application/json');
+
+//   final response = await request.close();
+//   final body = await response.transform(utf8.decoder).join();
+
+//   if (response.statusCode < 200 || response.statusCode >= 300) {
+//     throw HttpException('Failed to search users: ${response.statusCode} $body');
+//   }
+
+//   final decoded = jsonDecode(body) as Map<String, dynamic>;
+//   final results = (decoded['results'] as List?) ?? [];
+
+//   return results.map((e) => (e as Map).cast<String, dynamic>()).toList();
+// }
+
 Future<List<dynamic>> fetchPendingFriendsRaw() async {
   final apiBaseUrl = Environment.apiUrl;
   final uri = Uri.parse(apiBaseUrl).resolve('/friends/pending');
