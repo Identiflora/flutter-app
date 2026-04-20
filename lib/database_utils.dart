@@ -11,6 +11,7 @@ import 'user_credentials/auth_objects.dart';
 import 'environment.dart';
 
 final Uri apiBaseUrl = Uri.parse(Environment.apiUrl);
+
 Future<void> submitIncorrectIdentification({
   required int identificationId,
   required String correctSpeciesSciName,
@@ -1015,6 +1016,29 @@ Future<List<dynamic>> fetchFriendsRaw() async {
   } finally {
     client.close(force: true);
   }
+}
+
+Future<List<Map<String, dynamic>>> searchUsersRaw({
+  required String query,
+}) async {
+  final token = await getAuthToken();
+  final uri = apiBaseUrl.resolve('/friends/search?query=${Uri.encodeQueryComponent(query)}');
+
+  final request = await HttpClient().getUrl(uri);
+  request.headers.set('Authorization', 'Bearer $token');
+  request.headers.set('Accept', 'application/json');
+
+  final response = await request.close();
+  final body = await response.transform(utf8.decoder).join();
+
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    throw HttpException('Failed to search users: ${response.statusCode} $body');
+  }
+
+  final decoded = jsonDecode(body) as Map<String, dynamic>;
+  final results = (decoded['results'] as List?) ?? [];
+
+  return results.map((e) => (e as Map).cast<String, dynamic>()).toList();
 }
 
 // create new friend row in db
