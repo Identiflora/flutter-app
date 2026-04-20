@@ -127,11 +127,11 @@ class _HistoryPageState extends State<HistoryPage> {
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(15.0)),
                 child: (item['scientific_name'] != null)
                     ? Image.asset(
-                        localPlantAssetPath(item['scientific_name']),
+                        localPlantAssetPath(item['scientific_name'].toString().replaceAll(" ", "_")),
                         height: 200,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _placeholder(theme),
+                        errorBuilder: (_, _, _) => _placeholder(theme),
                       )
                     : _placeholder(theme),
               ),
