@@ -129,21 +129,14 @@ class _HistoryPageState extends State<HistoryPage> {
 
     return Column(
       children: [
-        Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(15.0),
-            border: Border.all(
-              color: theme.colorScheme.secondary.withAlpha(60),
-              width: 1.5,
-            ),
-          ),
+        NeonContainer(
+          borderRadius: const BorderRadius.all(Radius.circular(15.0)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Photo Section
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(15.0)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(13.5)),
                 child: (item['scientific_name'] != null)
                     ? Image.asset(
                         localPlantAssetPath(item['scientific_name'].toString().replaceAll(" ", "_")),
