@@ -104,7 +104,7 @@ class _HistoryPageState extends State<HistoryPage> {
           return ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
             itemCount: historyList.length,
-            itemBuilder: (context, index) => _buildPlantCard(historyList[index], theme),
+            itemBuilder: (context, index) => _buildPlantCard(historyList[index], historyList, theme),
           );
         },
       ),
@@ -118,7 +118,7 @@ class _HistoryPageState extends State<HistoryPage> {
     child: const Center(child: NeonIcon(Icons.eco, size: 120.0)),
   );
 
-  Widget _buildPlantCard(Map<String, dynamic> item, ThemeData theme) {
+  Widget _buildPlantCard(Map<String, dynamic> item, List<Map<String, dynamic>> allItems, ThemeData theme) {
     String displayDateTime = 'Unknown Date';
     if (item['time_submitted'] != null) {
       try {
@@ -203,15 +203,13 @@ class _HistoryPageState extends State<HistoryPage> {
                         if ((item['latitude'] != 0) && (item['longitude'] != 0))
                           GestureDetector(
                             onTap: () {
+                              final (allEntries, selectedIdx) = _buildMapEntries(allItems, item);
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => SubmissionMapPage(
-                                    latitude: (item['latitude'] as num).toDouble(),
-                                    longitude: (item['longitude'] as num).toDouble(),
-                                    plantName: item['common_name']?.toString().isNotEmpty == true
-                                        ? item['common_name'] as String
-                                        : item['scientific_name'] as String? ?? 'Unknown Plant',
+                                    entries: allEntries,
+                                    selectedIndex: selectedIdx,
                                   ),
                                 ),
                               );
@@ -229,6 +227,26 @@ class _HistoryPageState extends State<HistoryPage> {
         Padding(padding: const EdgeInsets.symmetric(vertical: 8.0)),
       ],
     );
+  }
+
+  (List<HistoryMapEntry>, int) _buildMapEntries(
+    List<Map<String, dynamic>> allItems,
+    Map<String, dynamic> selected,
+  ) {
+    final entries = allItems
+        .where((e) => (e['latitude'] as num? ?? 0) != 0 && (e['longitude'] as num? ?? 0) != 0)
+        .map((e) => HistoryMapEntry(
+              latitude: (e['latitude'] as num).toDouble(),
+              longitude: (e['longitude'] as num).toDouble(),
+              plantName: e['common_name']?.toString().isNotEmpty == true
+                  ? e['common_name'] as String
+                  : e['scientific_name'] as String? ?? 'Unknown Plant',
+            ))
+        .toList();
+    final selectedLat = (selected['latitude'] as num).toDouble();
+    final selectedLon = (selected['longitude'] as num).toDouble();
+    final idx = entries.indexWhere((e) => e.latitude == selectedLat && e.longitude == selectedLon);
+    return (entries, idx < 0 ? 0 : idx);
   }
 
   // Error handling in the case that user authentication fails or the application is unable to reach

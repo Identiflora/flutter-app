@@ -1,38 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class SubmissionMapPage extends StatelessWidget {
+class HistoryMapEntry {
   final double latitude;
   final double longitude;
   final String plantName;
 
-  const SubmissionMapPage({
-    super.key,
+  const HistoryMapEntry({
     required this.latitude,
     required this.longitude,
     required this.plantName,
   });
+}
+
+class SubmissionMapPage extends StatelessWidget {
+  final List<HistoryMapEntry> entries;
+  final int selectedIndex;
+
+  const SubmissionMapPage({
+    super.key,
+    required this.entries,
+    required this.selectedIndex,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final LatLng position = LatLng(latitude, longitude);
+    final selected = entries[selectedIndex];
+    final position = LatLng(selected.latitude, selected.longitude);
+
+    final markers = <Marker>{};
+    for (int i = 0; i < entries.length; i++) {
+      final e = entries[i];
+      markers.add(Marker(
+        markerId: MarkerId('entry_$i'),
+        position: LatLng(e.latitude, e.longitude),
+        icon: i == selectedIndex
+            ? BitmapDescriptor.defaultMarker
+            : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        infoWindow: InfoWindow(title: e.plantName),
+      ));
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('$plantName Location'),
+        title: Text('${selected.plantName} Location'),
       ),
       body: GoogleMap(
         initialCameraPosition: CameraPosition(
           target: position,
-          zoom: 15.0,
+          zoom: 12.0,
         ),
-        markers: {
-          Marker(
-            markerId: const MarkerId('submission_loc'),
-            position: position,
-            infoWindow: InfoWindow(title: plantName),
-          ),
-        },
+        markers: markers,
       ),
     );
   }
