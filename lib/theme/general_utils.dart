@@ -5,7 +5,7 @@ import 'package:identiflora/user_credentials/auth_objects.dart';
 
 String localPlantAssetPath(String scientificName) {
   // Split by underscore
-  final parts = scientificName.trim().split('_');
+  final parts = scientificName.trim().split(RegExp(r'[_ ]'));
 
   // Safety check: ensure there are at least Genus and species parts
   if (parts.length < 2) {
@@ -283,7 +283,7 @@ class LoadingScreen<T> extends StatelessWidget {
                   ],
                 ),
               );
-            } else if (snapshot.hasData && snapshot.data != null && checkValueEqual(snapshot.data as T)) {
+            } else if (!snapshot.hasError && (snapshot.data != null ? checkValueEqual(snapshot.data as T) : valueEqualCheck == null)) {
               // Run after next frame
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if(successMsg != null && successMsgDuration == null) {

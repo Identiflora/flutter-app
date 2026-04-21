@@ -67,7 +67,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
         commonName: (pred['common_name'] as String).isNotEmpty
             ? pred['common_name'] as String
             : pred['label'] as String,
-        scientificName: pred['label'],
+        scientificName: (pred['label'] as String).split('_').take(2).join(' '),
         confidenceScore: pred['score'],
       );
     }).toList();
@@ -120,7 +120,6 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
 }
 
 class _PlantSelectionHeader extends StatelessWidget {
-
   /// Sliver header shown above the plant-selection grid on the "Sorry about that!"
   /// screen. Prompts the user to pick the plant they believe the model should
   /// have identified.
@@ -140,7 +139,6 @@ class _PlantSelectionHeader extends StatelessWidget {
     );
   }
 }
-
 
 class _PlantMatchCard extends StatelessWidget {
   final PlantMatch match;
@@ -271,7 +269,7 @@ class _PlantCardInfo extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            match.scientificName.replaceAll("_", " "),
+            match.scientificName,
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
@@ -326,22 +324,26 @@ class DisplayBigPlantScreen extends StatelessWidget {
   Future<void> _submitIdentification() async {
     debugPrint('[IncorrectID] _submitIdentification started');
     debugPrint('[IncorrectID] capturedImagePath=$capturedImagePath');
-    debugPrint('[IncorrectID] correct=${match.scientificName} incorrect=${modelMatch.scientificName}');
+    debugPrint(
+      '[IncorrectID] correct=${match.scientificName} incorrect=${modelMatch.scientificName}',
+    );
 
     final bool isOffline = await ConnService().getIsOffline;
     debugPrint('[IncorrectID] isOffline=$isOffline');
 
     if (isOffline) {
       debugPrint('[IncorrectID] Offline — saving to queue');
-      await saveQueuedIncorrectID(QueuedIncorrectID(
-        allPredictions: allPredictions,
-        userGuess: match.scientificName.replaceAll("_", " "),
-        latitude: 0.0,
-        longitude: 0.0,
-        correctSpeciesSciName: match.scientificName,
-        incorrectSpeciesSciName: modelMatch.scientificName,
-        imagePath: capturedImagePath,
-      ));
+      await saveQueuedIncorrectID(
+        QueuedIncorrectID(
+          allPredictions: allPredictions,
+          userGuess: match.scientificName,
+          latitude: 0.0,
+          longitude: 0.0,
+          correctSpeciesSciName: match.scientificName,
+          incorrectSpeciesSciName: modelMatch.scientificName,
+          imagePath: capturedImagePath,
+        ),
+      );
       debugPrint('[IncorrectID] Queued successfully');
       return;
     }
@@ -349,11 +351,14 @@ class DisplayBigPlantScreen extends StatelessWidget {
     debugPrint('[IncorrectID] Online — calling savePlantSubmission');
     final int identificationId = await savePlantSubmission(
       allPredictions: allPredictions,
-      userGuess: match.scientificName.replaceAll("_", " "),
+      userGuess: match.scientificName,
       latitude: 0.0,
       longitude: 0.0,
     );
-    debugPrint('[IncorrectID] savePlantSubmission returned identificationId=$identificationId');
+    debugPrint('[IncorrectID] match.scientificName: ${match.scientificName}');
+    debugPrint(
+      '[IncorrectID] savePlantSubmission returned identificationId=$identificationId',
+    );
 
     debugPrint('[IncorrectID] Calling submitIncorrectIdentification');
     await submitIncorrectIdentification(
@@ -454,7 +459,7 @@ class DisplayBigPlantScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     Text(
-                      sciName.replaceAll("_", " "),
+                      sciName,
                       style: TextStyle(
                         fontSize: 22,
                         color: Theme.of(context).colorScheme.primary,

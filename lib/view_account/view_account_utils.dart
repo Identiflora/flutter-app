@@ -9,6 +9,7 @@ import 'package:identiflora/user_data/point_utils.dart';
 import 'level_bottom_sheet.dart';
 import 'package:identiflora/user_credentials/settings.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
+import 'package:identiflora/theme/general_utils.dart';
 
 double normalize(double value, double min, double max) {
   return ((value - min) / (max - min)).clamp(0.0, 1.0);
@@ -85,70 +86,110 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Change Username'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(hintText: 'Enter new username'),
-            maxLength: 16,
-            textInputAction: TextInputAction.done,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () async {
-                final newUsername = controller.text.trim();
-                if (newUsername == username.trim()) {
-                  Navigator.of(dialogContext).pop();
-                  await showDialog<void>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('Same Username'),
-                      content: const Text(
-                        'The new username must be different from your current username.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.of(ctx).pop(),
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
-                  return;
-                }
-                Navigator.of(dialogContext).pop();
-                try {
-                  final success = await submitUsernameChange(newUsername: newUsername);
-                  if (success && mounted) {
-                    UserDataService().updateUsername(newUsername);
-                    setState(() => username = newUsername);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Username updated!'),
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Failed to update username: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
+        bool isValid = false;
+        return StatefulBuilder(
+          builder: (_, dialogSetState) => AlertDialog(
+            title: const Text('Change Username'),
+            content: TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Enter new username',
+                errorText: isValid
+                    ? null
+                    : "Username field must not be empty and have no more than ${getMaxUsernameLength()} characters.\n\nUsername can only contain letters, numbers, _, -, or .",
+                errorMaxLines: 6,
+              ),
+              maxLength: 16,
+              textInputAction: TextInputAction.done,
+              onChanged: (val) {
+                dialogSetState(() {
+                  isValid = validUsername(val.trim());
+                });
               },
-              child: const Text('Submit'),
             ),
-          ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: isValid
+                    ? () async {
+                        final newUsername = controller.text.trim();
+                        if (newUsername == username.trim()) {
+                          Navigator.of(dialogContext).pop();
+                          await showDialog<void>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Same Username'),
+                              content: const Text(
+                                'The new username must be different from your current username.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(ctx).pop(),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
+                          );
+                          return;
+                        }
+                        Navigator.of(dialogContext).pop();
+                        try {
+                          final success = await submitUsernameChange(
+                            newUsername: newUsername,
+                          );
+                          if (success && mounted) {
+                            UserDataService().updateUsername(newUsername);
+                            setState(() => username = newUsername);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Username updated!'),
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            if (e.toString().contains(
+                              'Username already taken',
+                            )) {
+                              await showDialog<void>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Username Taken'),
+                                  content: const Text('Username already taken'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Failed to update username: $e',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      }
+                    : null,
+                child: const Text('Submit'),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -168,7 +209,9 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
                   );
                 },
               ),
@@ -184,114 +227,119 @@ class _ViewAccountScreenState extends State<ViewAccountScreen> {
                     imagePath: selectedBadgeFilePath,
                   ),
 
-            Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: playerLevel == levelData.value[3]
-                  ? const Text("Max level reached!")
-                  : levelData.value[0] - levelData.value[1] == 1
-                  ? Text("1 more point until level ${playerLevel + 1}!")
-                  : Text("${levelData.value[1]}/${levelData.value[0]}"),
-            ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: playerLevel == levelData.value[3]
+                        ? const Text("Max level reached!")
+                        : levelData.value[0] - levelData.value[1] == 1
+                        ? Text("1 more point until level ${playerLevel + 1}!")
+                        : Text("${levelData.value[1]}/${levelData.value[0]}"),
+                  ),
 
-            // begin username and edit icon
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(width: 56.0),
-                Text(username, style: TextStyle(fontSize: 30.0)),
-                IconButton(
-                  onPressed: () => _showUsernameDialog(),
-                  icon: NeonIcon(Icons.edit),
-                ),
-                SizedBox(width: 8.0),
-              ],
-            ), // end username and edit icon
-            //line separator begin
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: NeonContainer(
-                width: 350,
-                height: 7,
-                backgroundColor: Theme.of(context).colorScheme.secondary,
+                  // begin username and edit icon
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(width: 56.0),
+                      Text(username, style: TextStyle(fontSize: 30.0)),
+                      IconButton(
+                        onPressed: () => _showUsernameDialog(),
+                        icon: NeonIcon(Icons.edit),
+                      ),
+                      SizedBox(width: 8.0),
+                    ],
+                  ), // end username and edit icon
+                  //line separator begin
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: NeonContainer(
+                      width: 350,
+                      height: 7,
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                    ),
+                  ), //line separator end
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      TappableMetric(
+                        numericValue: playerLevel,
+                        category: "Level",
+                        onTap: () {
+                          LevelModalBottomSheet.show(context);
+                        },
+                      ),
+                      TappableMetric(
+                        numericValue: playerPoints,
+                        category: "Points",
+                        onTap: () {
+                          LevelModalBottomSheet.show(
+                            context,
+                          ); //for now assuming levels and points can be explained on the same page.
+                        },
+                      ),
+                      TappableMetric(
+                        numericValue: numFriends,
+                        category: "Friends",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const FriendsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+
+                  // Padding(
+                  //   padding: const EdgeInsets.all(16.0),
+                  //   child: Container(
+                  //     width: 350,
+                  //     height: 7,
+                  //     decoration: BoxDecoration(
+                  //       color: Theme.of(context).colorScheme.primary,
+                  //       borderRadius: BorderRadius.circular(10),
+                  //     ),
+                  //   ),
+                  // ),
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: const Text(
+                      "Badges",
+                      style: TextStyle(fontSize: 20.0),
+                    ),
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32.0,
+                      vertical: 2.0,
+                    ),
+                    child: Divider(
+                      height: 0.5,
+                      thickness: 0.5,
+                      color: Theme.of(context).colorScheme.inverseSurface,
+                    ),
+                  ),
+
+                  Expanded(
+                    child: BadgesDisplay(
+                      badges: badges,
+                      playerLevel: playerLevel,
+                      selectedBadge: selectedBadgeFilePath,
+                      onBadgeSelected: (badgePath) {
+                        setState(() {
+                          selectedBadgeFilePath = badgePath;
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ), //line separator end
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TappableMetric(
-                  numericValue: playerLevel,
-                  category: "Level",
-                  onTap: () {
-                    LevelModalBottomSheet.show(context);
-                  },
-                ),
-                TappableMetric(
-                  numericValue: playerPoints,
-                  category: "Points",
-                  onTap: () {
-                    LevelModalBottomSheet.show(
-                      context,
-                    ); //for now assuming levels and points can be explained on the same page.
-                  },
-                ),
-                TappableMetric(
-                  numericValue: numFriends,
-                  category: "Friends",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const FriendsScreen()),
-                    );
-                  },
-                ),
-              ],
             ),
-
-            // Padding(
-            //   padding: const EdgeInsets.all(16.0),
-            //   child: Container(
-            //     width: 350,
-            //     height: 7,
-            //     decoration: BoxDecoration(
-            //       color: Theme.of(context).colorScheme.primary,
-            //       borderRadius: BorderRadius.circular(10),
-            //     ),
-            //   ),
-            // ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: const Text("Badges", style: TextStyle(fontSize: 20.0)),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32.0,
-                vertical: 2.0,
-              ),
-              child: Divider(
-                height: 0.5,
-                thickness: 0.5,
-                color: Theme.of(context).colorScheme.inverseSurface,
-              ),
-            ),
-
-            Expanded(
-              child: BadgesDisplay(
-                badges: badges,
-                playerLevel: playerLevel,
-                selectedBadge: selectedBadgeFilePath,
-                onBadgeSelected: (badgePath) {
-                  setState(() {
-                    selectedBadgeFilePath = badgePath;
-                  });
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
+          ),
         ],
       ),
     );

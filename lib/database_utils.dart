@@ -1499,7 +1499,9 @@ Future<bool> submitDeleteAccount() async {
 
 // Fetches the user's plant submission history, needs to be updated to new
 // History format
-Future<List<Map<String, dynamic>>> fetchSubmissionHistory() async {
+Future<List<Map<String, dynamic>>> fetchSubmissionHistory({
+  Map<String, String> commonNameMap = const {},
+}) async {
   String apiBaseUrl = Environment.apiUrl;
   final uri = Uri.parse(apiBaseUrl).resolve('/user/history');
   final authToken = await getAuthToken();
@@ -1514,7 +1516,17 @@ Future<List<Map<String, dynamic>>> fetchSubmissionHistory() async {
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final List<dynamic> jsonList = jsonDecode(response.body);
-      return List<Map<String, dynamic>>.from(jsonList);
+      final items = List<Map<String, dynamic>>.from(
+        jsonList.map((e) => Map<String, dynamic>.from(e as Map)),
+      );
+      for (final item in items) {
+        final sciParts = (item['scientific_name']?.toString() ?? '').split(' ');
+        final sciKey = sciParts.length >= 2
+            ? '${sciParts[0]}_${sciParts[1]}'
+            : sciParts.join('_');
+        item['common_name'] = commonNameMap[sciKey] ?? '';
+      }
+      return items;
     } else if (response.statusCode == 404) {
       throw AuthException(
         'No submission history found: ${response.body}',
@@ -1558,6 +1570,11 @@ Future<bool> submitUsernameChange({required String newUsername}) async {
       final jsonResponse = jsonDecode(response.body);
       final success = jsonResponse as bool;
       return success;
+    } else if (response.statusCode == 409) {
+      throw HttpException(
+        'Username already taken',
+        uri: uri,
+      );
     } else if (response.statusCode == 404) {
       throw AuthException(
         'User does not exist: ${response.body}',
