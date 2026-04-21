@@ -415,15 +415,6 @@ class _BadgesDisplayState extends State<BadgesDisplay> {
 
               try {
                 await submitUserBadge(badgeFilePath: badge.imagePath);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Badge selected!"),
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
               } catch (error) {
                 setState(() {
                   selectedBadgeFilePath = previousBadge;
