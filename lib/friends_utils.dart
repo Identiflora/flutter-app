@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:identiflora/database_utils.dart';
 import 'package:identiflora/theme/neon_theme.dart';
+import 'package:identiflora/user_data/cache_utils.dart' as cache;
+import 'package:identiflora/user_data/user_data_service.dart';
 
 // friends button
 class FriendsHomescreenButton extends StatelessWidget {
@@ -54,6 +56,9 @@ class _FriendsScreenState extends State<FriendsScreen> {
     final friends = rawFriends
         .map((e) => FriendUser.fromJson((e as Map).cast<String, dynamic>()))
         .toList();
+
+    UserDataService().updateNumFriends(friends.length);
+    await cache.saveUserNumFriends(friends.length);
 
     final pending = rawPending
         .map((e) => FriendUser.fromJson((e as Map).cast<String, dynamic>()))

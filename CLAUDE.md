@@ -13,7 +13,7 @@ flutter test                 # Run all tests
 flutter test test/foo_test.dart  # Run a single test file
 ```
 
-Environment setup: copy `.env.example` to `.env.development` and `.env.production`, filling in `API_URL`, `GOOGLE_CLIENT_ID`, and `GOOGLE_SERVER_ID`.
+Environment setup: copy `.env.example` to `.env.development` and `.env.production`, filling in `API_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_SERVER_ID`, and `MAPS_API_KEY`. Google Maps also requires `maps.api.key` in `android/local.properties`. Google Sign-In requires a keystore and OAuth client IDs from Google Cloud Console — see `README.md` for the full setup.
 
 ## Architecture
 
@@ -30,7 +30,7 @@ Environment setup: copy `.env.example` to `.env.development` and `.env.productio
 Camera/gallery → `DisplayPictureScreen` (confirm photo) → `OfflinePlantService.predict()` (ML inference) → `UserChoiceScreen` (user picks from 5 options) → `ResultsWidget` (correct answer + plant image). If user disputes the result: `TopMatchesWidget` (grid of alternatives) → `DisplayBigPlantScreen` (confirm selection) → `submitIncorrectIdentification()`.
 
 ### Navigation & Home Screen
-`main.dart` contains `AppSetup` (initializes `ConnService`, builds `MaterialApp` with theme) and `HomeScreen` (a `Stack` with a camera preview and five floating icon buttons: camera center-bottom, leaderboard top-left, account top-right, gallery bottom-left, history bottom-right). All major screens push via `MaterialPageRoute`. One named route exists: `/view_account_screen`.
+`main.dart` contains `AppSetup` (initializes `ConnService`, builds `MaterialApp` with theme) and `HomeScreen` (a `Stack` with a camera preview and floating icon buttons: camera center-bottom, leaderboard top-left, account top-right, gallery bottom-left, history bottom-right, friends bottom-right). All major screens push via `MaterialPageRoute`. One named route exists: `/view_account_screen`.
 
 ### Offline Support
 `ConnService` (`lib/user_data/offline_utils.dart`) is a singleton initialized in `AppSetup`. It listens to `connectivity_plus` and confirms real connectivity by pinging the production server. When offline, submissions and points are queued to local storage. On reconnect, `_sendDataQueue()` flushes them to the API. Always check `await ConnService().getIsOffline` before making API calls where offline behavior differs.
@@ -52,6 +52,13 @@ Camera/gallery → `DisplayPictureScreen` (confirm photo) → `OfflinePlantServi
 | Incorrect ID correction flow | `lib/model_incorrect.dart` |
 | User profile / alternate profiles | `lib/view_account/` |
 | Reusable UI components | `lib/widgets/neon_widgets.dart`, `lib/widgets/button_widgets.dart` |
+| Secure local storage (token, username, badge, points) | `lib/user_data/cache_utils.dart` |
+| Singleton combining cached + remote user data | `lib/user_data/user_data_service.dart` (`UserDataService`) |
+| Friends screen & social features | `lib/friends_utils.dart` |
+| Gallery/image picker entry point | `lib/gallery_utils.dart` |
+| Plant capture screen | `lib/plant_capture.dart` |
+| Leaderboard screen | `lib/leaderboard_utils.dart` |
+| Geolocation submission map | `lib/submission_map.dart` (`SubmissionMapPage`) |
 
 ### Theme
 The app uses a custom `NeonTheme` `ThemeExtension`. Access neon colors/shadows via `Theme.of(context).extension<NeonTheme>()`. Light, dark, and system modes are all supported; the toggle lives in `ThemeProvider`. All visuals such as colors and fonts should be drawn from the theme — no hardcoded values.
