@@ -92,6 +92,7 @@ class ConnService {
       _processing = true;
 
       // Process data queue here
+      //update points 
       final int? queuedPts = await getQueuedPts();
       debugPrint('[DataQueue] queuedPts=$queuedPts');
       if (queuedPts != null) {
@@ -105,6 +106,7 @@ class ConnService {
         }
       }
 
+      //update users history
       final List<HistoryData>? userHistory = await getUserHistory();
       debugPrint('[DataQueue] userHistory count=${userHistory?.length}');
       if (userHistory != null) {
@@ -127,6 +129,7 @@ class ConnService {
         }
       }
 
+      // send queued incorrect identifications
       final List<QueuedIncorrectID>? queuedIncorrectIDs = await getQueuedIncorrectIDs();
       debugPrint('[DataQueue] queuedIncorrectIDs count=${queuedIncorrectIDs?.length}');
       if (queuedIncorrectIDs != null) {
