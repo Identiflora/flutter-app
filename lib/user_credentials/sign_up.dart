@@ -9,6 +9,62 @@ import 'auth_objects.dart';
 import '../user_data/cache_utils.dart';
 import '../user_data/user_data_service.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
+import 'package:password_strength_checker/password_strength_checker.dart';
+
+enum AppPasswordStrength implements PasswordStrengthItem {
+  weak,
+  fair,
+  good,
+  strong,
+  secure;
+
+  @override
+  Color get statusColor => switch (this) {
+    AppPasswordStrength.weak   => Colors.red,
+    AppPasswordStrength.fair   => Colors.orange,
+    AppPasswordStrength.good   => Colors.yellow.shade700,
+    AppPasswordStrength.strong => Colors.green,
+    AppPasswordStrength.secure => const Color(0xFF0B6C0E),
+  };
+
+  @override
+  double get widthPerc => switch (this) {
+    AppPasswordStrength.weak   => 0.15,
+    AppPasswordStrength.fair   => 0.35,
+    AppPasswordStrength.good   => 0.55,
+    AppPasswordStrength.strong => 0.75,
+    AppPasswordStrength.secure => 1.0,
+  };
+
+  @override
+  Widget get statusWidget => Text(
+    switch (this) {
+      AppPasswordStrength.weak   => 'Weak',
+      AppPasswordStrength.fair   => 'Fair',
+      AppPasswordStrength.good   => 'Good',
+      AppPasswordStrength.strong => 'Strong',
+      AppPasswordStrength.secure => 'Secure',
+    },
+    style: TextStyle(color: statusColor, fontSize: 14),
+  );
+
+  static AppPasswordStrength? calculate({required String text}) {
+    if (text.isEmpty) return null;
+
+    final hasLower   = text.contains(RegExp(r'[a-z]'));
+    final hasUpper   = text.contains(RegExp(r'[A-Z]'));
+    final hasDigit   = text.contains(RegExp(r'[0-9]'));
+    final hasSpecial = text.contains(RegExp(r'[!@#\$%&*()?£\-_=]'));
+    final typeCount  = [hasLower, hasUpper, hasDigit, hasSpecial].where((b) => b).length;
+    final len = text.length;
+
+    if (len >= 9 && hasLower && hasUpper && hasDigit && hasSpecial) return AppPasswordStrength.secure;
+    if (len >= 7 && typeCount >= 3) return AppPasswordStrength.strong;
+    if (len >= 5 && typeCount >= 2) return AppPasswordStrength.good;
+    if (len >= 4)                   return AppPasswordStrength.fair;
+    return AppPasswordStrength.weak;
+  }
+}
 
 List<String> getRegions() {
   return ['Northeast US', 'Midwest US', 'Southern US', 'Western US'];
@@ -28,8 +84,26 @@ class _SignUpFormState extends State<SignUpForm> {
   final usernameControl = TextEditingController();
   final passwordControl = TextEditingController();
   final confirmControl = TextEditingController();
+  final passStrengthNotifier = ValueNotifier<AppPasswordStrength?>(null);
   String? userRegion;
   bool passIsObscured = true;
+
+  @override
+  void initState() {
+    super.initState();
+    passwordControl.addListener(_updateStrength);
+  }
+
+  void _updateStrength() {
+    passStrengthNotifier.value = AppPasswordStrength.calculate(text: passwordControl.text);
+  }
+
+  @override
+  void dispose() {
+    passwordControl.removeListener(_updateStrength);
+    passStrengthNotifier.dispose();
+    super.dispose();
+  }
 
   bool validateFields(
     String email,
@@ -197,6 +271,11 @@ class _SignUpFormState extends State<SignUpForm> {
                           : Icons.visibility_off_outlined,
                     ),
                   ),
+                ),
+
+                PasswordStrengthChecker(
+                  strength: passStrengthNotifier,
+                  configuration: const PasswordStrengthCheckerConfiguration(),
                 ),
 
                 NeonOutlinedButton(onPressed: signUp, labelText: "Sign Up"),
