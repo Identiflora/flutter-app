@@ -34,6 +34,7 @@ class SubmissionMapPage extends StatelessWidget {
       markers.add(Marker(
         markerId: MarkerId('entry_$i'),
         position: LatLng(e.latitude, e.longitude),
+        zIndex: i == selectedIndex ? 1.0 : 0.0,
         icon: i == selectedIndex
             ? BitmapDescriptor.defaultMarker
             : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
