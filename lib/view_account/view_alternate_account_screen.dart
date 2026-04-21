@@ -6,13 +6,15 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:identiflora/database_utils.dart';
+import 'package:identiflora/database_utils.dart' hide getUsername;
+import 'package:identiflora/user_data/cache_utils.dart';
+import 'package:identiflora/friends_utils.dart' show FriendUser;
 import 'package:identiflora/user_data/point_utils.dart';
 import 'package:identiflora/user_data/badge_utils.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'view_account_utils.dart';
 
-class ViewAlternateAccountScreen extends StatelessWidget {
+class ViewAlternateAccountScreen extends StatefulWidget {
   final String username;
   final int points;
   final int numFriends;
@@ -27,8 +29,38 @@ class ViewAlternateAccountScreen extends StatelessWidget {
   });
 
   @override
+  State<ViewAlternateAccountScreen> createState() =>
+      _ViewAlternateAccountScreenState();
+}
+
+class _ViewAlternateAccountScreenState
+    extends State<ViewAlternateAccountScreen> {
+  String? _currentUsername;
+  bool _requestSent = false;
+  bool _isAlreadyFriend = false;
+
+  @override
+  void initState() {
+    super.initState();
+    getUsername().then((name) {
+      if (mounted) setState(() => _currentUsername = name);
+    });
+    fetchFriendsRaw().then((raw) {
+      final friends = raw
+          .map((e) => FriendUser.fromJson((e as Map).cast<String, dynamic>()))
+          .toList();
+      if (mounted) {
+        setState(() {
+          _isAlreadyFriend =
+              friends.any((f) => f.username == widget.username);
+        });
+      }
+    }).catchError((_) {});
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final MapEntry<int, List<int>> levelData = calculateAccountLevel(points);
+    final MapEntry<int, List<int>> levelData = calculateAccountLevel(widget.points);
     final int playerLevel = levelData.key;
     final double normalizedPlayerPoints = normalize(
       levelData.value[1].toDouble(),
@@ -54,7 +86,7 @@ class ViewAlternateAccountScreen extends StatelessWidget {
           children: [
             ProgressAvatar(
               normalizedPlayerPoints: normalizedPlayerPoints,
-              imagePath: displayedBadgeFilePath,
+              imagePath: widget.displayedBadgeFilePath,
             ),
 
             Padding(
@@ -66,38 +98,40 @@ class ViewAlternateAccountScreen extends StatelessWidget {
                   : Text("${levelData.value[1]}/${levelData.value[0]}"),
             ),
 
-            Text(username, style: const TextStyle(fontSize: 30.0)),
+            Text(widget.username, style: const TextStyle(fontSize: 30.0)),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: NeonOutlinedButton(
-                onPressed: () async {
-                  try {
-                    await addFriendRaw(friendUsername: username);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Added $username"),
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                        ),
-                      );
-                    }
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Failed to add friend: $e"),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  }
-                },
-                labelText: "Add Friend",
+            if (_currentUsername != null && _currentUsername != widget.username)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: NeonOutlinedButton(
+                  onPressed: (_requestSent || _isAlreadyFriend)
+                      ? null
+                      : () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          try {
+                            await addFriendRaw(friendUsername: widget.username);
+                            if (mounted) {
+                              setState(() => _requestSent = true);
+                            }
+                          } catch (e) {
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text("Failed to add friend: $e"),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                  labelText: _isAlreadyFriend
+                      ? "Added"
+                      : _requestSent
+                      ? "Request Sent"
+                      : "Add Friend",
+                  icon: (_isAlreadyFriend || _requestSent)
+                      ? const Icon(Icons.check)
+                      : null,
+                ),
               ),
-            ),
 
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -119,14 +153,14 @@ class ViewAlternateAccountScreen extends StatelessWidget {
                   },
                 ),
                 TappableMetric(
-                  numericValue: points,
+                  numericValue: widget.points,
                   category: "Points",
                   onTap: () {
                     debugPrint("Points metric pressed");
                   },
                 ),
                 TappableMetric(
-                  numericValue: numFriends,
+                  numericValue: widget.numFriends,
                   category: "Friends",
                   onTap: () {
                     debugPrint("Friends metric pressed");
@@ -157,7 +191,7 @@ class ViewAlternateAccountScreen extends StatelessWidget {
                 badges: badges,
                 playerLevel: playerLevel,
                 isReadOnly: true,
-                selectedBadge: displayedBadgeFilePath,
+                selectedBadge: widget.displayedBadgeFilePath,
               ),
             ),
           ],
