@@ -105,7 +105,7 @@ class NeonInputField extends StatelessWidget {
         obscureText: obscureText != null ? obscureText! : false,
         controller: controller,
         decoration: InputDecoration(
-          labelText: labelText,
+          hintText: labelText,
           suffixIcon: suffixIcon,
         ),
       ),
