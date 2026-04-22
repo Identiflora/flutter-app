@@ -262,18 +262,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                   });
                 });
               }
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  content: Text(
-                    "Now Displaying $value Leaderboard",
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.labelSmall!.color,
-                    ),
-                  ),
-                ),
-              );
             },
           ),
         ],

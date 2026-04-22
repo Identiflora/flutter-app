@@ -114,27 +114,6 @@ class _SettingsScreen extends State<SettingsScreen> {
                   },
                 ),
 
-                //notifications switch
-                SettingsTile(
-                  leading: NeonIcon(Icons.notifications_active),
-                  title: Text('Enable Notifications'),
-
-                  onPressed: (context) {
-                    setState(() {
-                      notificationsEnabled = !notificationsEnabled;
-                    });
-                  },
-
-                  trailing: NeonSwitch(
-                    value: notificationsEnabled,
-                    onChanged: (value) {
-                      setState(() {
-                        notificationsEnabled = value;
-                      });
-                    },
-                  ),
-                ),
-
                 SettingsTile(
                   leading: NeonIcon(Icons.format_paint),
                   title: const Text('Theme'),
