@@ -45,11 +45,12 @@ class _PlantCaptureScreenState extends State<PlantCaptureScreen> {
       if (results.isNotEmpty && mounted) {
         // Check to see if top label was recently identified
         final topLabel = results[0]['label'] as String;
+        final topCommonName = results[0]['common_name'] as String;
         final allowed = await checkIdentification(topLabel);
 
         if (!mounted) return;
         if (!allowed) {
-          showCooldownDialog(context, topLabel);
+          showCooldownDialog(context, topCommonName);
           return;
         }
         

@@ -44,7 +44,7 @@ class SubmissionMapPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${selected.plantName} Location'),
+        title: Text('${selected.plantName} location'),
       ),
       body: GoogleMap(
         initialCameraPosition: CameraPosition(

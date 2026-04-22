@@ -247,9 +247,10 @@ class DisplayPictureScreen extends StatelessWidget {
           
           // Check to see if top label was recently identified
           final topLabel = results[0]['label'] as String;
+          final topCommonName = results[0]['common_name'] as String;
           final allowed = await checkIdentification(topLabel);
           if (!allowed) {
-            if (context.mounted) showCooldownDialog(context, topLabel);
+            if (context.mounted) showCooldownDialog(context, topCommonName);
             return;
           }
 
