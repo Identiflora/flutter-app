@@ -122,7 +122,8 @@ class _HistoryPageState extends State<HistoryPage> {
     String displayDateTime = 'Unknown Date';
     if (item['time_submitted'] != null) {
       try {
-        DateTime dt = DateTime.parse(item['time_submitted']);
+        String rawTime = item['time_submitted'].toString();
+        DateTime dt = DateTime.parse('${rawTime}Z').toLocal(); 
         displayDateTime = DateFormat('MMM d, yyyy - h:mm a').format(dt);
       } catch (e) { /*currently fails silently*/ }
     }
