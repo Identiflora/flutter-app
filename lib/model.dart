@@ -1,9 +1,10 @@
 import 'dart:io';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'dart:math';
 import 'package:tflite_flutter/tflite_flutter.dart';
+
 
 class OfflinePlantService {
   Interpreter? _interpreter;
@@ -46,64 +47,69 @@ class OfflinePlantService {
   Future<List<Map<String, dynamic>>> predict(File imageFile) async {
     if (_interpreter == null) await loadModel();
 
-    // Decode and Resize Image
+    // Decoding Image
     final imageData = await imageFile.readAsBytes();
     final image = img.decodeImage(imageData);
-    // if (image == null) return "Could not decode image";
+    if (image == null) return [];
 
-    final resizedImage = img.copyResize(image!, width: INPUT_SIZE, height: INPUT_SIZE);
+    // Center crop to match transfer learning training inputs
+    int size = image.width < image.height ? image.width : image.height;
+    img.Image croppedImage = img.copyCrop(
+      image,
+      x: (image.width - size) ~/ 2,
+      y: (image.height - size) ~/ 2,
+      width: size,
+      height: size,
+    );
+    img.Image resizedImage = img.copyResize(croppedImage, width: INPUT_SIZE, height: INPUT_SIZE);
 
-    // Preprocess (Normalize to Float32)
+    // Preprocessing and channel loops
     var input = Float32List(1 * 3 * INPUT_SIZE * INPUT_SIZE);
-    
+    int channelSize = INPUT_SIZE * INPUT_SIZE;
 
-    int pixelIndex = 0;
-    for (int c = 0; c < 3; c++) { 
-      for (int y = 0; y < INPUT_SIZE; y++) {
-        for (int x = 0; x < INPUT_SIZE; x++) {
-          var pixel = resizedImage.getPixel(x, y);
-          
-          double val = 0;
-          if (c == 0) val = pixel.r.toDouble();
-          if (c == 1) val = pixel.g.toDouble();
-          if (c == 2) val = pixel.b.toDouble();
+    for (int y = 0; y < INPUT_SIZE; y++) {
+      for (int x = 0; x < INPUT_SIZE; x++) {
+        var pixel = resizedImage.getPixel(x, y);
+        int offset = y * INPUT_SIZE + x;
 
-          input[pixelIndex++] = ((val / 255.0) - MEAN[c]) / STD[c];
-        }
+        input[offset] = (pixel.r / 255.0 - MEAN[0]) / STD[0];
+        input[channelSize + offset] = (pixel.g / 255.0 - MEAN[1]) / STD[1];
+        input[2 * channelSize + offset] = (pixel.b / 255.0 - MEAN[2]) / STD[2];
       }
     }
 
-    // Reshape for the model
-    var inputTensor = input.reshape([1, 3, INPUT_SIZE, INPUT_SIZE]); 
-    
     // Run Inference
-    var outputTensor = List.filled(1 * NUM_CLASSES, 0.0).reshape([1, 589]);
-    _interpreter!.run(inputTensor, outputTensor);
+    var inputTensor = input.reshape([1, 3, INPUT_SIZE, INPUT_SIZE]); 
+    var outputTensor = List.filled(1 * NUM_CLASSES, 0.0).reshape([1, NUM_CLASSES]);
+    
+    try {
+      _interpreter!.run(inputTensor, outputTensor);
+    } catch (e) {
+      debugPrint("Inference Error: $e");
+      return [];
+    }
 
-    // Parse Output with Softmax
+    // Post-process
     List<double> rawLogits = List<double>.from(outputTensor[0]);
     List<double> probabilities = softmax(rawLogits);
-    List<Map<String, dynamic>> sortedResults = [];
-    for (int i = 0; i < rawLogits.length; i++) {
-      sortedResults.add({
-        // NOTE FOR DATABASE: if we match the id's of the plant classes (class_index) 
-        // that the model uses with what we save as the identification number 
-        // in the database that would be goated
+    
+    List<Map<String, dynamic>> results = [];
+    for (int i = 0; i < probabilities.length; i++) {
+      results.add({
         'class_index': i,
-        // this saves the confidence score as a converted percentage, it might be more sound to save
-        // the raw score and then apply the softmax when its actually needed but idk
         'score': probabilities[i],
-        'label': _labels != null ? _labels![i] : 'Class $i',
-        'common_name': getCommonName(i),
+        'label': _labels != null && i < _labels!.length ? _labels![i].trim() : 'Class $i',
+        'common_name': getCommonName(i), // RESTORED KEY: Fixes Null cast crash
       });
     }
 
-    // Sort by score, still have to make the choice options not show in descending order though
-    // I like sorting them like this as cell 0 will always be top option and the show all 5 options
-    // screen will display in order of confidence score inherently
-    sortedResults.sort((a, b) => (b['score'] as double).compareTo(a['score']));
-
-    return sortedResults.take(5).toList();
+    results.sort((a, b) => (b['score'] as double).compareTo(a['score'] as double));
+    
+    // Debug output to flutter terminal to see top1 confidence score
+    var top5 = results.take(5).toList();
+    debugPrint("Top Rank: ${top5[0]['label']} (${(top5[0]['score'] * 100).toStringAsFixed(2)}%)");
+    
+    return top5;
   }
 
   String getCommonName(int current_idx) {
