@@ -22,32 +22,29 @@ class LeaderboardHeaderDisplay extends StatelessWidget {
           ),
           child: Column(
             children: [
-              leaderboardType == "Regional" && userRegion != ""
-                  ? Text(
-                      userRegion,
-                      style: TextStyle(fontSize: 20),
-                      textAlign: TextAlign.center,
-                    )
-                  : Container(),
+              leaderboardType == "Regional" && userRegion != "" ? 
+                Text(
+                  userRegion,
+                  style: TextStyle(fontSize: 20),
+                  textAlign: TextAlign.center,
+                )
+                : Container(),
 
-              leaderboardType == "Regional" && userRegion != ""
-                  ? const SizedBox(height: 16.0)
-                  : Container(),
+              leaderboardType == "Regional" && userRegion != "" ? 
+                const SizedBox(height: 16.0)
+                : Container(),
 
-              leaderboardType == "Regional" && userRegion != ""
-                  ? Divider(
-                      height: 0.5,
-                      thickness: 0.5,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.inverseSurface,
-                    )
-                  : Container(),
+              leaderboardType == "Regional" && userRegion != "" ? 
+                Divider(
+                  height: 0.5,
+                  thickness: 0.5,
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                )
+                : Container(),
                   
               const SizedBox(height: 8.0),
               Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     "Rank",
@@ -72,9 +69,7 @@ class LeaderboardHeaderDisplay extends StatelessWidget {
               Divider(
                 height: 1.0,
                 thickness: 1.0,
-                color: Theme.of(
-                  context,
-                ).colorScheme.inverseSurface,
+                color: Theme.of(context).colorScheme.inverseSurface,
               ),
             ],
           ),
@@ -106,18 +101,21 @@ class LeaderboardUserRankDisplay extends StatelessWidget {
       ),
       child: Row(
         children: [
-          userIndex <= 3
-              ? Icon(
-                  Icons.emoji_events,
-                  color: rankColor,
-                  size: 30,
-                  shadows: [
-                    Shadow(blurRadius: 1.0),
-                  ],
-                )
-              : Icon(null, size: 30),
-          userIndex < 10
-              ? const SizedBox(width: 16.0)
+          userIndex <= 3 ? 
+            Icon(
+              Icons.emoji_events,
+              color: rankColor,
+              size: 30,
+              shadows: [
+                Shadow(blurRadius: 1.0),
+              ],
+            )
+            : Icon(
+              null, 
+              size: 30
+            ),
+          userIndex < 10 ? 
+              const SizedBox(width: 16.0)
               : const SizedBox(width: 6.0),
           Text(
             "#$userIndex",
@@ -148,23 +146,19 @@ class LeaderboardUserDisplay extends StatelessWidget {
       width: screenWidth * 0.45,
       child: Row(
         children: [
-          badgeFilePath != null
-              ? CircleAvatar(
-                  foregroundImage: AssetImage(
-                    badgeFilePath!,
-                  ),
-                  backgroundColor: Theme.of(context).colorScheme.surfaceBright,
-                  radius: 20,
-                )
-              : CircleAvatar(
-                  foregroundImage: AssetImage(
-                    'assets/brand/Identiflora_logo.png',
-                  ),
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surface,
-                  radius: 20,
-                ),
+          badgeFilePath != null ? 
+            CircleAvatar(
+              foregroundImage: AssetImage(
+                badgeFilePath!,
+              ),
+              backgroundColor: Theme.of(context).colorScheme.surfaceBright,
+              radius: 20,
+            )
+            : CircleAvatar(
+              foregroundImage: AssetImage('assets/brand/Identiflora_logo.png'),
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              radius: 20,
+            ),
           const SizedBox(width: 8.0),
           Flexible(
             child: Text(
@@ -206,7 +200,9 @@ class LeaderboardUserPointDisplay extends StatelessWidget {
         maxWidth: screenWidth * 0.3,
       ),
       decoration: BoxDecoration(
-        color: userIndex <= 3 ? rankColor : Theme.of(context).colorScheme.primaryContainer,
+        color: userIndex <= 3 ? 
+          rankColor 
+          : Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.all(
           Radius.elliptical(15, 15),
         ),
@@ -214,7 +210,9 @@ class LeaderboardUserPointDisplay extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Text(
-          userPoints <= getMaxDisplayPoints() ? "$userPoints pts." : "9999+ pts.",
+          userPoints <= getMaxDisplayPoints() ? 
+            "$userPoints pts." 
+            : "9999+ pts.",
           style: TextStyle(fontSize: 12.0, color: Theme.of(context).colorScheme.surface),
           textAlign: TextAlign.right,
         ),
