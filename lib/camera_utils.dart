@@ -277,10 +277,11 @@ class DisplayPictureScreen extends StatelessWidget {
               // If the user dismissed the dialog or clicked "Retake", abort navigation
               if (shouldProceed != true && context.mounted) {
                 Navigator.pop(context);
+                return;
               }
-              return; 
             }
           }
+          
           // Check to see if top label was recently identified
           final topLabel = results[0]['label'] as String;
           final topCommonName = results[0]['common_name'] as String;
@@ -295,7 +296,6 @@ class DisplayPictureScreen extends StatelessWidget {
             // ignore: use_build_context_synchronously
             context,
             MaterialPageRoute<void>(
-              // This is also the location to pass the taken photo to the model and will require rescalling or cropping before this point
               builder: (context) => UserChoiceScreen(predictions: results, capturedImagePath: imgPath),
             ),
           );
