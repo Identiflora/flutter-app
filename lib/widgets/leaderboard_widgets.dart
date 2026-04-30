@@ -119,7 +119,7 @@ class LeaderboardUserRankDisplay extends StatelessWidget {
               : const SizedBox(width: 6.0),
           Text(
             "#$userIndex",
-            style: TextStyle(fontSize: 14.0),
+            style: TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -195,17 +195,29 @@ class LeaderboardUserPointDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       constraints: BoxConstraints(
         maxWidth: screenWidth * 0.3,
       ),
       decoration: BoxDecoration(
-        color: userIndex <= 3 ? 
-          rankColor 
-          : Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.all(
           Radius.elliptical(15, 15),
         ),
+        border: Border.all(
+          color: rankColor == Theme.of(context).colorScheme.surface ? Theme.of(context).colorScheme.primaryContainer : rankColor,
+          width: 3.5
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: rankColor == Theme.of(context).colorScheme.surface ? Theme.of(context).colorScheme.primaryContainer : rankColor,
+          ),
+          BoxShadow(
+            color: Theme.of(context).colorScheme.surface,
+            blurRadius: isDarkMode ? 12.5 : 7.5,
+          )
+        ]
       ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -213,7 +225,7 @@ class LeaderboardUserPointDisplay extends StatelessWidget {
           userPoints <= getMaxDisplayPoints() ? 
             "$userPoints pts." 
             : "9999+ pts.",
-          style: TextStyle(fontSize: 12.0, color: Theme.of(context).colorScheme.surface),
+          style: TextStyle(fontSize: 12.0, color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
           textAlign: TextAlign.right,
         ),
       ),
