@@ -85,7 +85,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   String? leaderboardType = "Global";
   String region = "";
   late Future<List<LeaderboardUser>> _futureUsers;
-  final int maxUsers = 100;
+  final int maxUsers = 99;
 
   /// Gets popup options based on current leaderboard type to insure a dynamic popup view when switching types.
   List<PopupMenuEntry<String>> getPopupOptions(String? leaderboardType) {
@@ -147,7 +147,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
     switch (userIndex) {
       case 1:
-        rankColor = Color.fromARGB(255, 255, 217, 0);
+        rankColor = Color.fromARGB(255, 255, 215, 0);
         break;
       case 2:
         rankColor = Color.fromARGB(255, 192, 192, 192);
@@ -156,7 +156,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         rankColor = Color.fromARGB(255, 205, 127, 50);
         break;
       default:
-        rankColor = Theme.of(context).colorScheme.surface;
+        rankColor = Theme.of(context).colorScheme.primaryContainer;
         break;
     }
 

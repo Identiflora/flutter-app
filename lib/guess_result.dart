@@ -328,7 +328,7 @@ class ResultText extends StatelessWidget {
               style: plantNameStyle.copyWith(color: correctColor),
             ),
             TextSpan(
-              text: "\nand were correct!",
+              text: "\nand the model agrees!",
               style: TextStyle(color: defaultTextColor),
             ),
           ] else if (userChoiceIndex != -1) ...[
@@ -341,7 +341,7 @@ class ResultText extends StatelessWidget {
               style: plantNameStyle.copyWith(color: incorrectColor),
             ),
             TextSpan(
-              text: "but it is actually a\n",
+              text: "but the model suggests it may be a\n",
               style: TextStyle(color: defaultTextColor),
             ),
             TextSpan(
@@ -350,7 +350,7 @@ class ResultText extends StatelessWidget {
             ),
           ] else ...[
             TextSpan(
-              text: "This plant is a\n",
+              text: "The model suggests this may be a\n",
               style: TextStyle(color: defaultTextColor),
             ),
             TextSpan(
