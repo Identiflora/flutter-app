@@ -206,16 +206,12 @@ class LeaderboardUserPointDisplay extends StatelessWidget {
           Radius.elliptical(15, 15),
         ),
         border: Border.all(
-          color: rankColor == Theme.of(context).colorScheme.surface ? 
-            Theme.of(context).colorScheme.primaryContainer 
-            : rankColor,
+          color: rankColor,
           width: 3.5
         ),
         boxShadow: [
           BoxShadow(
-            color: rankColor == Theme.of(context).colorScheme.surface ? 
-              Theme.of(context).colorScheme.primaryContainer 
-              : rankColor,
+            color: rankColor,
           ),
           BoxShadow(
             color: Theme.of(context).colorScheme.surface,

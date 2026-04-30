@@ -156,7 +156,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         rankColor = Color.fromARGB(255, 205, 127, 50);
         break;
       default:
-        rankColor = Theme.of(context).colorScheme.surface;
+        rankColor = Theme.of(context).colorScheme.primaryContainer;
         break;
     }
 
