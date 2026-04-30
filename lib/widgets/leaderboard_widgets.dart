@@ -206,12 +206,16 @@ class LeaderboardUserPointDisplay extends StatelessWidget {
           Radius.elliptical(15, 15),
         ),
         border: Border.all(
-          color: rankColor == Theme.of(context).colorScheme.surface ? Theme.of(context).colorScheme.primaryContainer : rankColor,
+          color: rankColor == Theme.of(context).colorScheme.surface ? 
+            Theme.of(context).colorScheme.primaryContainer 
+            : rankColor,
           width: 3.5
         ),
         boxShadow: [
           BoxShadow(
-            color: rankColor == Theme.of(context).colorScheme.surface ? Theme.of(context).colorScheme.primaryContainer : rankColor,
+            color: rankColor == Theme.of(context).colorScheme.surface ? 
+              Theme.of(context).colorScheme.primaryContainer 
+              : rankColor,
           ),
           BoxShadow(
             color: Theme.of(context).colorScheme.surface,
@@ -225,7 +229,11 @@ class LeaderboardUserPointDisplay extends StatelessWidget {
           userPoints <= getMaxDisplayPoints() ? 
             "$userPoints pts." 
             : "9999+ pts.",
-          style: TextStyle(fontSize: 12.0, color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 12.0, 
+            color: Theme.of(context).colorScheme.onSurface, 
+            fontWeight: FontWeight.bold
+          ),
           textAlign: TextAlign.right,
         ),
       ),
