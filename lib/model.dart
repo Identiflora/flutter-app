@@ -108,6 +108,6 @@ class OfflinePlantService {
     if (_commonNames == null || current_idx < 0 || current_idx >= _commonNames!.length) {
       return '';
     }
-    return _commonNames![current_idx];
+    return _commonNames![current_idx].trim();
   }
 }

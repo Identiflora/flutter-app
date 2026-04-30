@@ -120,7 +120,7 @@ Wild Basil
 Blue bead-lily
 Florida clusia
 Seagrape
-
+Carolina Snailseed
 Dayflower
 Blue Commelina
 Sweetfern
@@ -131,7 +131,7 @@ Wild morning-glory
 Large-flowered Tickseed
 Coreopsis
 Plains coreopsis
-
+Whorled Tickseed
 Alternate-Leaf Dogwood
 Silky dogwood
 Bunchberry dogwood
@@ -332,7 +332,7 @@ Lemon Balm
 Creeping-cucumber
 Moonseed
 Spearmint
-
+Peppermint
 Virginia Bluebell
 Japanese Stilt Grass
 Four-o'clock
@@ -451,7 +451,7 @@ Flame azalea
 California rhododendron
 American Rhododendron
 Aromatic sumac
-
+Shining Sumac
 Smooth sumac
 Stag's-horn Sumac
 Golden currant
@@ -529,7 +529,7 @@ Common lilac
 Marigold
 Feverfew
 Common tansy
-
+Dandelion
 Bald cypress
 Fringecups
 Wild germander
