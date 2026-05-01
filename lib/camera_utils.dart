@@ -122,7 +122,7 @@ class _CameraWidgetState extends State<CameraWidget> {
         child: SizedBox(
           width: controller.value.previewSize?.height,
           height: controller.value.previewSize?.width,
-          child: CameraPreview(controller)
+          child: CameraPreview(controller),
         ),
       ),
     );
@@ -244,7 +244,7 @@ class DisplayPictureScreen extends StatelessWidget {
           List<Map<String, dynamic>> results = await _plantService.predict(
             File(imgPath),
           );
-          
+
           double rawScore = results[0]['score'] as double;
           double calibratedConfidence = calculateAngularConfidence(rawScore);
 
@@ -260,15 +260,19 @@ class DisplayPictureScreen extends StatelessWidget {
                     content: const Text(
                       "We are having trouble identifying this plant clearly. "
                       "For best results, ensure the leaves or flowers are in focus, "
-                      "well-lit, and try taking another photo."
+                      "well-lit, and try taking another photo.",
                     ),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.of(context).pop(false), // User chose to Retake
+                        onPressed: () => Navigator.of(
+                          context,
+                        ).pop(false), // User chose to Retake
                         child: const Text("Retake Photo"),
                       ),
                       TextButton(
-                        onPressed: () => Navigator.of(context).pop(true), // User chose to force proceed
+                        onPressed: () => Navigator.of(
+                          context,
+                        ).pop(true), // User chose to force proceed
                         child: const Text("View Guesses Anyway"),
                       ),
                     ],
@@ -282,22 +286,25 @@ class DisplayPictureScreen extends StatelessWidget {
               }
             }
           }
-          
+
           // Check to see if top label was recently identified
-          final topLabel = results[0]['label'] as String;
-          final topCommonName = results[0]['common_name'] as String;
-          final allowed = await checkIdentification(topLabel);
-          if (!allowed) {
-            if (context.mounted) showCooldownDialog(context, topCommonName);
-            return;
-          }
+          // final topLabel = results[0]['label'] as String;
+          // final topCommonName = results[0]['common_name'] as String;
+          // final allowed = await checkIdentification(topLabel);
+          // if (!allowed) {
+          //   if (context.mounted) showCooldownDialog(context, topCommonName);
+          //   return;
+          // }
 
           // Navigate to next page
           Navigator.pushReplacement(
             // ignore: use_build_context_synchronously
             context,
             MaterialPageRoute<void>(
-              builder: (context) => UserChoiceScreen(predictions: results, capturedImagePath: imgPath),
+              builder: (context) => UserChoiceScreen(
+                predictions: results,
+                capturedImagePath: imgPath,
+              ),
             ),
           );
         },
