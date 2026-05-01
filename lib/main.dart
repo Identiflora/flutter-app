@@ -51,8 +51,6 @@ Future<void> main() async {
   );
 }
 
-// Camera startup logic
-
 class AppSetup extends StatefulWidget {
   const AppSetup({super.key});
 
@@ -76,7 +74,6 @@ class _AppState extends State<AppSetup> {
     super.dispose();
   }
 
-  // Determine if camera is accessible
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
