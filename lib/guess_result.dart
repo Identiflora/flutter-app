@@ -8,7 +8,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'package:identiflora/user_data/user_data_service.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
-import 'dart:math';
 
 class ResultsWidget extends StatefulWidget {
   final int userChoiceIndex;

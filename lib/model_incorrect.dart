@@ -8,7 +8,6 @@ import 'package:identiflora/user_data/history_utils.dart';
 import 'package:identiflora/user_data/offline_utils.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
-import 'dart:math';
 
 // object for plant information for the grid cards
 class PlantMatch {
