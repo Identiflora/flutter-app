@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
-import 'dart:math';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 
@@ -23,9 +22,9 @@ class OfflinePlantService {
   Future<void> loadModel() async {
     try {
       // Load the model
-      _interpreter = await Interpreter.fromAsset('assets/model/plantnet.tflite');
-      
-      // Load the scientific name labels
+      _interpreter = await Interpreter.fromAsset('assets/model/identiflora_mobile_ready_vfinal_float32.tflite');
+
+      // Load the scientific name labels      
       final labelData = await rootBundle.loadString('assets/model/labels.txt');
       _labels = labelData.split('\n');
 
@@ -33,21 +32,18 @@ class OfflinePlantService {
       final commonNameData = await rootBundle.loadString('assets/model/common_names.txt');
       _commonNames = commonNameData.split('\n');
     } catch (e) {
-      // whatever error handling we go with
+      // EXPOSE THE ERROR so it doesn't fail silently
+      debugPrint("Critical Error Loading Model/Labels: $e"); 
     }
   }
 
-  List<double> softmax(List<double> logits) {
-    double maxLogit = logits.reduce((curr, next) => curr > next ? curr : next);
-    List<double> exps = logits.map((e) => exp(e - maxLogit)).toList();
-    double sumExps = exps.reduce((a, b) => a + b);
-    return exps.map((e) => e / sumExps).toList();
-  }
+  // Softmax function has been removed because its automatically done within the model output now
 
   Future<List<Map<String, dynamic>>> predict(File imageFile) async {
     if (_interpreter == null) await loadModel();
+    if (_interpreter == null) return []; // Abort if model still failed to load
 
-    // Decoding Image
+    // Decoding image
     final imageData = await imageFile.readAsBytes();
     final image = img.decodeImage(imageData);
     if (image == null) return [];
@@ -63,23 +59,20 @@ class OfflinePlantService {
     );
     img.Image resizedImage = img.copyResize(croppedImage, width: INPUT_SIZE, height: INPUT_SIZE);
 
-    // Preprocessing and channel loops
-    var input = Float32List(1 * 3 * INPUT_SIZE * INPUT_SIZE);
-    int channelSize = INPUT_SIZE * INPUT_SIZE;
+    var input = Float32List(1 * INPUT_SIZE * INPUT_SIZE * 3);
+    int pixelIndex = 0;
 
     for (int y = 0; y < INPUT_SIZE; y++) {
       for (int x = 0; x < INPUT_SIZE; x++) {
         var pixel = resizedImage.getPixel(x, y);
-        int offset = y * INPUT_SIZE + x;
-
-        input[offset] = (pixel.r / 255.0 - MEAN[0]) / STD[0];
-        input[channelSize + offset] = (pixel.g / 255.0 - MEAN[1]) / STD[1];
-        input[2 * channelSize + offset] = (pixel.b / 255.0 - MEAN[2]) / STD[2];
+        
+        input[pixelIndex++] = (pixel.r / 255.0 - MEAN[0]) / STD[0];
+        input[pixelIndex++] = (pixel.g / 255.0 - MEAN[1]) / STD[1];
+        input[pixelIndex++] = (pixel.b / 255.0 - MEAN[2]) / STD[2];
       }
     }
 
-    // Run Inference
-    var inputTensor = input.reshape([1, 3, INPUT_SIZE, INPUT_SIZE]); 
+    var inputTensor = input.reshape([1, INPUT_SIZE, INPUT_SIZE, 3]); 
     var outputTensor = List.filled(1 * NUM_CLASSES, 0.0).reshape([1, NUM_CLASSES]);
     
     try {
@@ -89,17 +82,16 @@ class OfflinePlantService {
       return [];
     }
 
-    // Post-process
-    List<double> rawLogits = List<double>.from(outputTensor[0]);
-    List<double> probabilities = softmax(rawLogits);
+    // Softmax has been removed from the model file, these are now raw Cosine Similarities (-1.0 to 1.0)
+    List<double> similarities = List<double>.from(outputTensor[0]);
     
     List<Map<String, dynamic>> results = [];
-    for (int i = 0; i < probabilities.length; i++) {
+    for (int i = 0; i < similarities.length; i++) {
       results.add({
         'class_index': i,
-        'score': probabilities[i],
+        'score': similarities[i], // Pushing the raw similarity
         'label': _labels != null && i < _labels!.length ? _labels![i].trim() : 'Class $i',
-        'common_name': getCommonName(i), // RESTORED KEY: Fixes Null cast crash
+        'common_name': getCommonName(i),
       });
     }
 
@@ -108,7 +100,6 @@ class OfflinePlantService {
     // Debug output to flutter terminal to see top1 confidence score
     var top5 = results.take(5).toList();
     debugPrint("Top Rank: ${top5[0]['label']} (${(top5[0]['score'] * 100).toStringAsFixed(2)}%)");
-    
     return top5;
   }
 
@@ -116,6 +107,6 @@ class OfflinePlantService {
     if (_commonNames == null || current_idx < 0 || current_idx >= _commonNames!.length) {
       return '';
     }
-    return _commonNames![current_idx];
+    return _commonNames![current_idx].trim();
   }
 }

@@ -245,6 +245,44 @@ class DisplayPictureScreen extends StatelessWidget {
             File(imgPath),
           );
           
+          double rawScore = results[0]['score'] as double;
+          double calibratedConfidence = calculateAngularConfidence(rawScore);
+
+          // Model threshold gate of 50%
+          if (calibratedConfidence < 0.5) {
+            if (context.mounted) {
+              // Pause the app and ask the user what to do
+              bool? shouldProceed = await showDialog<bool>(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text("⚠️ Low Model Confidence "),
+                    content: const Text(
+                      "We are having trouble identifying this plant clearly. "
+                      "For best results, ensure the leaves or flowers are in focus, "
+                      "well-lit, and try taking another photo."
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false), // User chose to Retake
+                        child: const Text("Retake Photo"),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true), // User chose to force proceed
+                        child: const Text("View Guesses Anyway"),
+                      ),
+                    ],
+                  );
+                },
+              );
+              // If the user dismissed the dialog or clicked "Retake", abort navigation
+              if (shouldProceed != true && context.mounted) {
+                Navigator.pop(context);
+                return;
+              }
+            }
+          }
+          
           // Check to see if top label was recently identified
           final topLabel = results[0]['label'] as String;
           final topCommonName = results[0]['common_name'] as String;
@@ -259,7 +297,6 @@ class DisplayPictureScreen extends StatelessWidget {
             // ignore: use_build_context_synchronously
             context,
             MaterialPageRoute<void>(
-              // This is also the location to pass the taken photo to the model and will require rescalling or cropping before this point
               builder: (context) => UserChoiceScreen(predictions: results, capturedImagePath: imgPath),
             ),
           );
