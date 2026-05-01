@@ -245,10 +245,11 @@ class DisplayPictureScreen extends StatelessWidget {
             File(imgPath),
           );
           
-          double topConfidence = results[0]['score'] as double;
+          double rawScore = results[0]['score'] as double;
+          double calibratedConfidence = calculateAngularConfidence(rawScore);
 
-          // Model threshold gate of 45%
-          if (topConfidence < 0.45) {
+          // Model threshold gate of 50%
+          if (calibratedConfidence < 0.5) {
             if (context.mounted) {
               // Pause the app and ask the user what to do
               bool? shouldProceed = await showDialog<bool>(

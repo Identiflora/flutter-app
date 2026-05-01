@@ -8,6 +8,7 @@ import 'package:identiflora/user_data/history_utils.dart';
 import 'package:identiflora/user_data/offline_utils.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
+import 'dart:math';
 
 // object for plant information for the grid cards
 class PlantMatch {
@@ -47,10 +48,10 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
   ///
   /// These ranges may need tweaking once real-world confidence distributions
   /// are better understood.
-  Color _confidenceColor(double score) {
-    if (score >= 0.6) return Colors.green;
-    if (score >= 0.3) return Colors.orange;
-    return Colors.red;
+  Color _confidenceColor(double calibratedScore) {
+    if (calibratedScore >= 0.60) return Colors.green; // Strong visual match
+    if (calibratedScore >= 0.30) return Colors.orange; // Moderate/Borderline
+    return Colors.red; // Poor match or 0%
   }
 
   /// Converts the raw [widget.predictions] list into a typed [List<PlantMatch>].
@@ -76,9 +77,8 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
   @override
   Widget build(BuildContext context) {
     final List<PlantMatch> allMatches = _buildMatches();
-    final PlantMatch correctMatch = allMatches[widget.correctIndex];
-    final List<PlantMatch> displayMatches = List.from(allMatches)
-      ..removeAt(widget.correctIndex);
+    final PlantMatch modelTopGuess = allMatches[0];
+    final List<PlantMatch> displayMatches = allMatches.skip(1).toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Sorry about that!'), centerTitle: true),
@@ -103,7 +103,7 @@ class _TopMatchesWidgetState extends State<TopMatchesWidget> {
                       confidenceColor: _confidenceColor(
                         displayMatches[index].confidenceScore,
                       ),
-                      correctMatch: correctMatch,
+                      correctMatch: modelTopGuess,
                       allPredictions: widget.predictions,
                       capturedImagePath: widget.capturedImagePath,
                     ),
@@ -256,6 +256,7 @@ class _PlantCardInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double displayScore = calculateAngularConfidence(match.confidenceScore);
     return Padding(
       padding: const EdgeInsets.fromLTRB(10.0, 8.0, 10.0, 8.0),
       child: Column(
@@ -281,7 +282,7 @@ class _PlantCardInfo extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '${(match.confidenceScore * 100).toStringAsFixed(1)}% Likely',
+            '${(displayScore * 100).toStringAsFixed(1)}% Likely',
             style: TextStyle(
               color: confidenceColor,
               fontWeight: FontWeight.bold,
@@ -399,7 +400,8 @@ class DisplayBigPlantScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final String name = match.commonName;
     final String sciName = match.scientificName;
-    final double confidence = match.confidenceScore * 100;
+    final double displayScore = calculateAngularConfidence(match.confidenceScore);
+    final double confidence = displayScore * 100;
 
     return Scaffold(
       appBar: AppBar(title: Text("Is this correct?"), centerTitle: true),

@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:identiflora/widgets/neon_widgets.dart';
 import 'package:identiflora/user_data/user_data_service.dart';
 import 'package:identiflora/widgets/button_widgets.dart';
+import 'dart:math';
 
 class ResultsWidget extends StatefulWidget {
   final int userChoiceIndex;
@@ -122,13 +123,14 @@ class _Results extends State<ResultsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> topMatch =
-        widget.allPredictions[widget.correctIndex];
+    final Map<String, dynamic> topMatch = widget.allPredictions[widget.correctIndex];
     final String modelTopName = (topMatch['common_name'] as String).isNotEmpty
         ? topMatch['common_name'] as String
         : topMatch['label'] as String;
     final Map<String, dynamic> userPick;
     String userPickedName = "";
+    final double rawScore = topMatch['score'] as double? ?? 0.0;
+    final double displayScore = calculateAngularConfidence(rawScore);
 
     // Check for bounds and skip case
     if (widget.userChoiceIndex <= 4 && widget.userChoiceIndex >= 0) {
@@ -175,7 +177,19 @@ class _Results extends State<ResultsWidget> {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  // Added Confidence Display
+                  const SizedBox(height: 12),
+                  Text(
+                    'Model Confidence: ${(displayScore * 100).toStringAsFixed(1)}%',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
                   const Text(
                     'Does this look correct?',
                     textAlign: TextAlign.center,
@@ -190,6 +204,7 @@ class _Results extends State<ResultsWidget> {
                       addPoints,
                     ),
                     allPredictions: widget.allPredictions,
+                    orderedPredictions: widget.orderedPredictions,
                     correctIndex: widget.correctIndex,
                     capturedImagePath: widget.capturedImagePath,
                   ),
@@ -219,12 +234,14 @@ class _Results extends State<ResultsWidget> {
 class GuessResultActionButtons extends StatelessWidget {
   final Future<String> Function() onYesTap;
   final List<Map<String, dynamic>> allPredictions;
+  final List<Map<String, dynamic>> orderedPredictions;
   final int correctIndex;
   final String capturedImagePath;
 
   const GuessResultActionButtons({
     required this.onYesTap,
     required this.allPredictions,
+    required this.orderedPredictions,
     required this.correctIndex,
     required this.capturedImagePath,
     super.key,
@@ -273,7 +290,7 @@ class GuessResultActionButtons extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => TopMatchesWidget(
-                      predictions: allPredictions,
+                      predictions: orderedPredictions,
                       correctIndex: correctIndex,
                       capturedImagePath: capturedImagePath,
                     ),

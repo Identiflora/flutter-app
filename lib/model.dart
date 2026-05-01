@@ -82,14 +82,14 @@ class OfflinePlantService {
       return [];
     }
 
-    // Softmax probabilities are now wrapped inside the model file
-    List<double> probabilities = List<double>.from(outputTensor[0]);
+    // Softmax has been removed from the model file, these are now raw Cosine Similarities (-1.0 to 1.0)
+    List<double> similarities = List<double>.from(outputTensor[0]);
     
     List<Map<String, dynamic>> results = [];
-    for (int i = 0; i < probabilities.length; i++) {
+    for (int i = 0; i < similarities.length; i++) {
       results.add({
         'class_index': i,
-        'score': probabilities[i],
+        'score': similarities[i], // Pushing the raw similarity
         'label': _labels != null && i < _labels!.length ? _labels![i].trim() : 'Class $i',
         'common_name': getCommonName(i),
       });
@@ -100,7 +100,6 @@ class OfflinePlantService {
     // Debug output to flutter terminal to see top1 confidence score
     var top5 = results.take(5).toList();
     debugPrint("Top Rank: ${top5[0]['label']} (${(top5[0]['score'] * 100).toStringAsFixed(2)}%)");
-    
     return top5;
   }
 

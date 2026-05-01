@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:identiflora/user_credentials/auth_objects.dart';
 
@@ -572,4 +572,28 @@ http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.''';
 
   return List.of([mobilenetLicense, litertLicense]);
+}
+
+/// Calculates confidence using Angular Distance, calibrated for ArcFace's cosine similarity output
+double calculateAngularConfidence(double cosineSimilarity) {
+  //  Clamp the similarity to avoid NaN errors from floating point math
+  final double clampedSim = cosineSimilarity.clamp(-1.0, 1.0);
+  
+  // Get the actual angle in radians
+  final double angleRadians = acos(clampedSim);
+  
+  // Defining confidence floor 
+  double noiseFloorAngle = acos(0.35);
+  
+  // Define confidence cieling (this is set to the highest a submission can reasonably match the training data)
+  final double perfectMatchAngle = acos(0.75);
+  
+  // If the angle is worse than the noise floor, it is 0%
+  if (angleRadians >= noiseFloorAngle) return 0.0;
+  
+  //  If the angle is somehow above cieling cap it at 1
+  if (angleRadians <= perfectMatchAngle) return 1.0;
+  
+  // Return confidence percentage
+  return (noiseFloorAngle - angleRadians) / (noiseFloorAngle - perfectMatchAngle);
 }
