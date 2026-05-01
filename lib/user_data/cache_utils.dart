@@ -275,6 +275,10 @@ Future<bool> checkAndRecordIdentification(String scientificName) async {
   return true;
 }
 
+Future<void> deleteRecentIdentifications() async {
+  await storage.delete(key: 'recent_identifications');
+}
+
 /// Clears all cached user data. Call on logout to prevent stale data from
 /// appearing for the next user session.
 Future<void> clearUserCache() async {
@@ -288,5 +292,6 @@ Future<void> clearUserCache() async {
     deleteUserHistory(),
     deleteQueuedIncorrectIDs(),
     deletePasswordHash(),
+    deleteRecentIdentifications(),
   ]);
 }

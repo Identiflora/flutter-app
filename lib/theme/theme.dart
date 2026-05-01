@@ -79,7 +79,7 @@ ThemeData darkMode = ThemeData(
   // Color pallete used across application
   colorScheme: ColorScheme.dark(
     surface: Colors.grey.shade800,
-    surfaceBright: Colors.grey.shade700,
+    surfaceBright: Colors.grey.shade600,
     primary: primaryNeonGreen,
     secondary: secondaryNeonGreen,
     onSurface: Colors.grey.shade300,
